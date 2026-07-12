@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: minihr
+      POSTGRES_PASSWORD: minihr_local_dev
+      POSTGRES_DB: minihr
+      # Local dev only, container never exposed outside this machine.
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      # Non-standard host port — something on this machine (security agent /
+      # leftover proxy) intercepts 5432 and 5433 and answers with a bogus
+      # auth rejection before the connection ever reaches this container.
+      # Confirmed by testing raw TCP auth with node-postgres against several
+      # ports: 5432 and 5433 both failed identically even with trust auth and
+      # a freshly initialized volume; 48321 works cleanly. If this ever
+      # breaks again on a different machine, suspect the same thing before
+      # assuming the container/credentials are wrong.
+      - "48321:5432"
+    volumes:
+      - minihr_db_data:/var/lib/postgresql/data
+
+volumes:
+  minihr_db_data:

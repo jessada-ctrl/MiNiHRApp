@@ -1,0 +1,14 @@
+{
+  "name": "minihr",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace=apps/backend",
+    "dev:web-admin": "npm run dev --workspace=apps/web-admin",
+    "dev:liff": "npm run dev --workspace=apps/liff-app",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down"
+  }
+}

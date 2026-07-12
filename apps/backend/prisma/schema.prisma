@@ -1,0 +1,416 @@
+// MiniHR database schema — mirrors the ERD in Doc/MiniHR_SRS-V1.md §6.
+// Every tenant-scoped model carries tenantId and MUST be filtered by it on every query.
+// See src/tenant/ for the interceptor that enforces this at the application layer (NFR-1).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================== Platform-level (not tenant-scoped) =====================
+
+enum SubscriptionStatus {
+  trial
+  active
+  suspended
+}
+
+model Tenant {
+  id                       String             @id @default(uuid())
+  companyName              String             @map("company_name")
+  subdomain                String             @unique
+  lineChannelId             String?            @map("line_channel_id")
+  lineChannelSecretEnc      String?            @map("line_channel_secret_enc")
+  lineChannelAccessTokenEnc String?            @map("line_channel_access_token_enc")
+  subscriptionStatus       SubscriptionStatus @default(trial) @map("subscription_status")
+  createdAt                DateTime           @default(now()) @map("created_at")
+  updatedAt                DateTime           @updatedAt @map("updated_at")
+
+  branches              Branch[]
+  departments           Department[]
+  employees             Employee[]
+  leaveTypes            LeaveType[]
+  leaveQuotas           LeaveQuota[]
+  leaveRequests         LeaveRequest[]
+  approvalWorkflows     ApprovalWorkflow[]
+  approvalWorkflowSteps ApprovalWorkflowStep[]
+  leaveApprovalActions  LeaveApprovalAction[]
+  attendanceQrCodes     AttendanceQrCode[]
+  attendanceLogs        AttendanceLog[]
+  holidays              Holiday[]
+  notificationLogs      NotificationLog[]
+  auditLogs             AuditLog[]
+  otpVerifications      OtpVerification[]
+
+  @@map("tenants")
+}
+
+model SaasAdmin {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("saas_admins")
+}
+
+// ===================== Organization structure =====================
+
+model Branch {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  branchName    String  @map("branch_name")
+  address       String?
+  latitude      Decimal @db.Decimal(9, 6)
+  longitude     Decimal @db.Decimal(9, 6)
+  radiusMeters  Int     @map("radius_meters")
+
+  departments       Department[]
+  employees         Employee[]
+  attendanceQrCodes AttendanceQrCode[]
+  attendanceLogs    AttendanceLog[]
+
+  @@index([tenantId])
+  @@map("branches")
+}
+
+model Department {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  branchId       String? @map("branch_id")
+  branch         Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  departmentName String  @map("department_name")
+
+  employees Employee[]
+
+  @@index([tenantId])
+  @@map("departments")
+}
+
+enum EmployeeRole {
+  employee
+  approver
+  tenant_admin
+}
+
+enum EmployeeStatus {
+  active
+  inactive
+}
+
+model Employee {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  employeeCode     String         @map("employee_code")
+  fullName         String         @map("full_name")
+  email            String
+  phone            String?
+  departmentId     String?        @map("department_id")
+  department       Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  branchId         String?        @map("branch_id")
+  branch           Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  position         String?
+  hireDate         DateTime?      @map("hire_date") @db.Date
+  lineUserId       String?        @unique @map("line_user_id")
+  role             EmployeeRole   @default(employee)
+  directManagerId  String?        @map("direct_manager_id")
+  directManager    Employee?      @relation("EmployeeManager", fields: [directManagerId], references: [id], onDelete: SetNull)
+  reports          Employee[]     @relation("EmployeeManager")
+  passwordHash     String?        @map("password_hash")
+  status           EmployeeStatus @default(active)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  leaveQuotas          LeaveQuota[]
+  leaveRequests        LeaveRequest[]
+  leaveApprovalActions LeaveApprovalAction[]
+  attendanceLogs       AttendanceLog[]
+  otpVerifications     OtpVerification[]
+  workflowStepAssignee ApprovalWorkflowStep[]
+
+  @@unique([tenantId, employeeCode])
+  @@index([tenantId])
+  @@map("employees")
+}
+
+model OtpVerification {
+  id           String    @id @default(uuid())
+  tenantId     String    @map("tenant_id")
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  employeeId   String?   @map("employee_id")
+  employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeCode String    @map("employee_code")
+  email        String
+  otpCodeHash  String    @map("otp_code_hash")
+  expiresAt    DateTime  @map("expires_at")
+  verifiedAt   DateTime? @map("verified_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@map("otp_verifications")
+}
+
+// ===================== Leave management =====================
+
+model LeaveType {
+  id                       String  @id @default(uuid())
+  tenantId                 String  @map("tenant_id")
+  tenant                   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name                     String
+  defaultQuota             Decimal @default(0) @map("default_quota") @db.Decimal(5, 2)
+  requiresAttachmentAfterDays Int?  @map("requires_attachment_after_days")
+  allowHourly              Boolean @default(true) @map("allow_hourly")
+  isPaid                   Boolean @default(true) @map("is_paid")
+
+  leaveQuotas   LeaveQuota[]
+  leaveRequests LeaveRequest[]
+
+  @@index([tenantId])
+  @@map("leave_types")
+}
+
+model LeaveQuota {
+  id          String    @id @default(uuid())
+  tenantId    String    @map("tenant_id")
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  employeeId  String    @map("employee_id")
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId String    @map("leave_type_id")
+  leaveType   LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+  year        Int
+  totalDays   Decimal   @map("total_days") @db.Decimal(5, 2)
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([tenantId])
+  @@map("leave_quotas")
+}
+
+enum LeaveDurationType {
+  full_day
+  half_am
+  half_pm
+  hourly
+}
+
+enum LeaveRequestStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+model LeaveRequest {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  employeeId       String              @map("employee_id")
+  employee         Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId      String              @map("leave_type_id")
+  leaveType        LeaveType           @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  durationType     LeaveDurationType   @map("duration_type")
+  startDatetime    DateTime            @map("start_datetime")
+  endDatetime      DateTime            @map("end_datetime")
+  totalDays        Decimal             @map("total_days") @db.Decimal(5, 2)
+  reason           String?
+  attachmentUrlEnc String?             @map("attachment_url_enc")
+  isOverQuota      Boolean             @default(false) @map("is_over_quota")
+  lwopAcknowledged Boolean             @default(false) @map("lwop_acknowledged")
+  status           LeaveRequestStatus  @default(pending)
+  currentStep      Int                 @default(0) @map("current_step")
+  workflowSnapshot Json                @map("workflow_snapshot")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  approvalActions LeaveApprovalAction[]
+
+  @@index([tenantId])
+  @@index([tenantId, employeeId])
+  @@index([tenantId, status])
+  @@map("leave_requests")
+}
+
+// ===================== Approval workflow =====================
+
+enum WorkflowScopeType {
+  department
+  branch
+  leave_type
+  global
+}
+
+model ApprovalWorkflow {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name      String
+  scopeType WorkflowScopeType @default(global) @map("scope_type")
+  scopeId   String?           @map("scope_id")
+
+  steps ApprovalWorkflowStep[]
+
+  @@index([tenantId])
+  @@map("approval_workflows")
+}
+
+enum ApproverType {
+  specific_employee
+  direct_manager
+  role
+}
+
+model ApprovalWorkflowStep {
+  id       String @id @default(uuid())
+  // Denormalized from the parent workflow so this table can be filtered by
+  // tenant_id directly (NFR-1) instead of relying on a join through workflow_id.
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  workflowId String            @map("workflow_id")
+  workflow   ApprovalWorkflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  stepOrder           Int          @map("step_order")
+  approverType         ApproverType @map("approver_type")
+  approverEmployeeId   String?      @map("approver_employee_id")
+  approverEmployee     Employee?    @relation(fields: [approverEmployeeId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([workflowId])
+  @@map("approval_workflow_steps")
+}
+
+enum ApprovalActionType {
+  approve
+  reject
+}
+
+model LeaveApprovalAction {
+  id       String @id @default(uuid())
+  // Denormalized from the parent request, same rationale as ApprovalWorkflowStep.tenantId above.
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  requestId String       @map("request_id")
+  request   LeaveRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  stepOrder  Int                 @map("step_order")
+  approverId String              @map("approver_id")
+  approver   Employee            @relation(fields: [approverId], references: [id], onDelete: Restrict)
+  action     ApprovalActionType
+  comment    String?
+  actedAt    DateTime            @default(now()) @map("acted_at")
+
+  @@index([tenantId])
+  @@index([requestId])
+  @@map("leave_approval_actions")
+}
+
+// ===================== Attendance =====================
+
+model AttendanceQrCode {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  branchId  String   @map("branch_id")
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  qrToken   String   @unique @map("qr_token")
+  validDate DateTime @map("valid_date") @db.Date
+
+  @@index([tenantId])
+  @@map("attendance_qr_codes")
+}
+
+enum AttendanceCheckType {
+  in
+  out
+}
+
+enum AttendanceMethod {
+  qr
+  gps
+}
+
+model AttendanceLog {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  employeeId         String               @map("employee_id")
+  employee           Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  branchId           String?              @map("branch_id")
+  branch             Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  checkType          AttendanceCheckType  @map("check_type")
+  timestamp          DateTime             @default(now())
+  latitudeEnc        String?              @map("latitude_enc")
+  longitudeEnc       String?              @map("longitude_enc")
+  method             AttendanceMethod
+  isFlaggedSpoofing  Boolean              @default(false) @map("is_flagged_spoofing")
+
+  @@index([tenantId])
+  @@index([tenantId, employeeId, timestamp])
+  @@map("attendance_logs")
+}
+
+// ===================== Holidays & notifications =====================
+
+model Holiday {
+  id               String   @id @default(uuid())
+  tenantId         String   @map("tenant_id")
+  tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  holidayDate      DateTime @map("holiday_date") @db.Date
+  name             String
+  notifyDaysBefore Int      @map("notify_days_before")
+
+  @@index([tenantId])
+  @@map("holidays")
+}
+
+model NotificationLog {
+  id                 String   @id @default(uuid())
+  tenantId           String   @map("tenant_id")
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  recipientLineUserId String  @map("recipient_line_user_id")
+  messageType         String  @map("message_type")
+  relatedRequestId    String? @map("related_request_id")
+  sentAt              DateTime @default(now()) @map("sent_at")
+  status              String
+
+  @@index([tenantId])
+  @@map("notification_logs")
+}
+
+// ===================== Audit (immutable — see NFR-4) =====================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  tenantId   String?  @map("tenant_id")
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  userId     String   @map("user_id")
+  action     String
+  targetTable String  @map("target_table")
+  targetId   String?  @map("target_id")
+  ipAddress  String   @map("ip_address")
+  timestamp  DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("audit_logs")
+}
