@@ -80,7 +80,7 @@ export class OrgService {
 
   async createDepartment(dto: CreateDepartmentDto) {
     const tenantId = getCurrentTenantId();
-    if (dto.branchId) {
+    if (dto.branchId !== undefined && dto.branchId !== null && dto.branchId !== '') {
       const branch = await this.prisma.branch.findUnique({ where: { id: dto.branchId }, select: { id: true } });
       if (!branch) throw new BadRequestException('branchId does not refer to a valid branch in this company');
     }
@@ -90,7 +90,7 @@ export class OrgService {
   }
 
   async updateDepartment(id: string, dto: UpdateDepartmentDto, actor: ActorContext) {
-    if (dto.branchId) {
+    if (dto.branchId !== undefined && dto.branchId !== null && dto.branchId !== '') {
       const branch = await this.prisma.branch.findUnique({ where: { id: dto.branchId }, select: { id: true } });
       if (!branch) throw new BadRequestException('branchId does not refer to a valid branch in this company');
     }
