@@ -97,3 +97,23 @@ export async function updateEmployeeQuotas(
     await apiFetch(`/employees/${id}/quotas`, { method: "PATCH", body: JSON.stringify({ quotas }) }),
   );
 }
+
+export interface BulkImportRowError {
+  row: number;
+  employeeCode: string;
+  message: string;
+}
+
+export interface BulkImportResult {
+  totalRows: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  errors: BulkImportRowError[];
+}
+
+export async function bulkImportEmployees(csvText: string): Promise<BulkImportResult> {
+  return unwrap(
+    await apiFetch("/employees/bulk-import", { method: "POST", body: JSON.stringify({ csvText }) }),
+  );
+}

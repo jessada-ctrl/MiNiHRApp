@@ -4,11 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   type Branch,
+  type BulkImportResult,
   type Department,
   type Employee,
   type EmployeeQuota,
   type Role,
   type Status,
+  bulkImportEmployees,
   createEmployee,
   getEmployeeQuotas,
   listBranches,
@@ -36,6 +38,7 @@ export default function EmployeesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [editingQuota, setEditingQuota] = useState<Employee | null>(null);
 
@@ -67,12 +70,20 @@ export default function EmployeesPage() {
           <span className="text-neutral-300">/</span>
           <span className="text-sm text-neutral-600">พนักงาน</span>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
-        >
-          + เพิ่มพนักงาน
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowImport(true)}
+            className="rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50"
+          >
+            ⬆ นำเข้าจากไฟล์
+          </button>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+          >
+            + เพิ่มพนักงาน
+          </button>
+        </div>
       </header>
 
       <div className="p-6">
@@ -178,6 +189,15 @@ export default function EmployeesPage() {
 
       {editingQuota && (
         <EditQuotaModal employee={editingQuota} onClose={() => setEditingQuota(null)} onSaved={() => setEditingQuota(null)} />
+      )}
+
+      {showImport && (
+        <ImportEmployeesModal
+          onClose={() => setShowImport(false)}
+          onDone={() => {
+            refresh();
+          }}
+        />
       )}
     </main>
   );
@@ -455,6 +475,110 @@ function EditQuotaModal({
           </div>
         </form>
       )}
+    </Modal>
+  );
+}
+
+const CSV_TEMPLATE =
+  "employeeCode,fullName,email,phone,department,branch,position,role,status,directManagerEmployeeCode\n" +
+  "EMP100,ชื่อ นามสกุล,emp100@example.com,0812345678,ฝ่ายขาย,,ตำแหน่ง,employee,active,EMP001\n";
+
+function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [csvText, setCsvText] = useState<string | null>(null);
+  const [result, setResult] = useState<BulkImportResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    setResult(null);
+    setError(null);
+    const reader = new FileReader();
+    reader.onload = () => setCsvText(String(reader.result ?? ""));
+    reader.readAsText(file, "utf-8");
+  }
+
+  function downloadTemplate() {
+    const blob = new Blob(["﻿" + CSV_TEMPLATE], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "minihr-employee-import-template.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleImport() {
+    if (!csvText) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const r = await bulkImportEmployees(csvText);
+      setResult(r);
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "นำเข้าไม่สำเร็จ");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal onClose={onClose} title="นำเข้าพนักงานจากไฟล์ CSV">
+      <div className="flex flex-col gap-3">
+        <p className="text-xs text-neutral-500">
+          คอลัมน์ที่ต้องมี: employeeCode, fullName, email — คอลัมน์อื่น (phone, department, branch, position, role,
+          status, directManagerEmployeeCode) ไม่บังคับ พนักงานที่มีรหัสตรงกับข้อมูลเดิมจะถูกอัปเดต ไม่สร้างซ้ำ
+          และการเปลี่ยนบทบาท/สายบังคับบัญชา/สถานะ จะถูกบันทึกลง Audit Log เป็นรายบุคคล
+        </p>
+        <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-teal-700 hover:text-teal-900">
+          ⬇ ดาวน์โหลดไฟล์ตัวอย่าง
+        </button>
+
+        <Field label="ไฟล์ CSV">
+          <input type="file" accept=".csv,text/csv" onChange={handleFile} className={inputCls} />
+        </Field>
+        {fileName && <p className="text-xs text-neutral-500">เลือกไฟล์: {fileName}</p>}
+
+        {error && <p className="text-sm text-red-600">{error}</p>}
+
+        {result && (
+          <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm">
+            <p className="font-medium text-neutral-800">
+              ทั้งหมด {result.totalRows} แถว — สร้างใหม่ {result.created} · อัปเดต {result.updated} · ไม่มีการเปลี่ยนแปลง{" "}
+              {result.unchanged} · ผิดพลาด {result.errors.length}
+            </p>
+            {result.errors.length > 0 && (
+              <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-red-600">
+                {result.errors.map((e, i) => (
+                  <li key={i}>
+                    แถวที่ {e.row} ({e.employeeCode}): {e.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        <div className="mt-2 flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+            ปิด
+          </button>
+          <button
+            type="button"
+            onClick={handleImport}
+            disabled={!csvText || submitting}
+            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+          >
+            {submitting ? "กำลังนำเข้า..." : "นำเข้า"}
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 }

@@ -9,6 +9,7 @@ import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { UpdateQuotasDto } from './dto/update-quotas.dto';
+import { BulkImportEmployeesDto } from './dto/bulk-import-employees.dto';
 
 @Controller('employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,6 +26,12 @@ export class EmployeesController {
   @Roles('tenant_admin')
   create(@Body() dto: CreateEmployeeDto) {
     return this.employees.create(dto);
+  }
+
+  @Post('bulk-import')
+  @Roles('tenant_admin')
+  bulkImport(@Body() dto: BulkImportEmployeesDto, @CurrentUser() user: AuthenticatedUser, @Req() req: Request) {
+    return this.employees.bulkImport(dto.csvText, { userId: user.id, ipAddress: req.ip ?? 'unknown' });
   }
 
   @Patch(':id')

@@ -5,10 +5,28 @@ import { getCurrentTenantId } from '../tenant/tenant-context';
 import { AuditService } from '../audit/audit.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { parseCsv } from './csv.util';
 
 interface ActorContext {
   userId: string;
   ipAddress: string;
+}
+
+const IMPORT_ROLES = new Set(['employee', 'approver', 'tenant_admin']);
+const IMPORT_STATUSES = new Set(['active', 'inactive']);
+
+export interface BulkImportRowError {
+  row: number;
+  employeeCode: string;
+  message: string;
+}
+
+export interface BulkImportResult {
+  totalRows: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  errors: BulkImportRowError[];
 }
 
 @Injectable()
@@ -220,5 +238,199 @@ export class EmployeesService {
         orderBy: { leaveType: { name: 'asc' } },
       });
     });
+  }
+
+  /**
+   * FR-4.2: bulk employee import via CSV. Expected header columns
+   * (case-insensitive): employeeCode, fullName, email, phone, department,
+   * branch, position, role, status, directManagerEmployeeCode. Only
+   * employeeCode/fullName/email are required; the rest are optional.
+   *
+   * Each row is its own transaction so one bad row doesn't roll back the
+   * rest of the file. Existing employees (matched by employeeCode) are
+   * updated rather than duplicated. Direct-manager links are resolved in a
+   * second pass so a manager can appear later in the same file.
+   */
+  async bulkImport(csvText: string, actor: ActorContext): Promise<BulkImportResult> {
+    const tenantId = getCurrentTenantId();
+    const rows = parseCsv(csvText);
+    if (rows.length === 0) {
+      throw new BadRequestException('CSV file has no data rows');
+    }
+
+    const [departments, branches, leaveTypes] = await Promise.all([
+      this.prisma.department.findMany({ select: { id: true, departmentName: true } }),
+      this.prisma.branch.findMany({ select: { id: true, branchName: true } }),
+      this.prisma.leaveType.findMany({ select: { id: true, defaultQuota: true } }),
+    ]);
+    const deptByName = new Map(departments.map((d) => [d.departmentName.trim().toLowerCase(), d.id]));
+    const branchByName = new Map(branches.map((b) => [b.branchName.trim().toLowerCase(), b.id]));
+
+    const errors: BulkImportRowError[] = [];
+    let created = 0;
+    let updated = 0;
+    let unchanged = 0;
+    const year = new Date().getFullYear();
+
+    // Pass 1: create/update core fields (everything except directManagerId).
+    const pendingManagerLinks: { row: number; employeeCode: string; managerCode: string }[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const rowNum = i + 2; // +1 for 0-index, +1 for the header row
+      const r = rows[i];
+      const employeeCode = r['employeeCode'] ?? '';
+      const fullName = r['fullName'] ?? '';
+      const email = r['email'] ?? '';
+
+      try {
+        if (!employeeCode) throw new BadRequestException('employeeCode is required');
+        if (!fullName) throw new BadRequestException('fullName is required');
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new BadRequestException('email is missing or invalid');
+
+        let departmentId: string | undefined;
+        if (r['department']) {
+          const found = deptByName.get(r['department'].trim().toLowerCase());
+          if (!found) throw new BadRequestException(`department "${r['department']}" does not exist`);
+          departmentId = found;
+        }
+
+        let branchId: string | undefined;
+        if (r['branch']) {
+          const found = branchByName.get(r['branch'].trim().toLowerCase());
+          if (!found) throw new BadRequestException(`branch "${r['branch']}" does not exist`);
+          branchId = found;
+        }
+
+        const role = r['role']?.trim() || undefined;
+        if (role && !IMPORT_ROLES.has(role)) throw new BadRequestException(`role "${role}" must be one of employee/approver/tenant_admin`);
+
+        const status = r['status']?.trim() || undefined;
+        if (status && !IMPORT_STATUSES.has(status)) throw new BadRequestException(`status "${status}" must be active or inactive`);
+
+        if (r['directManagerEmployeeCode']?.trim()) {
+          pendingManagerLinks.push({ row: rowNum, employeeCode, managerCode: r['directManagerEmployeeCode'].trim() });
+        }
+
+        const outcome = await this.prisma.$transaction(async (tx) => {
+          const existing = await tx.employee.findUnique({ where: { tenantId_employeeCode: { tenantId, employeeCode } } });
+
+          if (!existing) {
+            const employee = await tx.employee.create({
+              data: {
+                tenantId,
+                employeeCode,
+                fullName,
+                email,
+                phone: r['phone']?.trim() || undefined,
+                departmentId,
+                branchId,
+                position: r['position']?.trim() || undefined,
+                role: (role as 'employee' | 'approver' | 'tenant_admin') ?? 'employee',
+                status: (status as 'active' | 'inactive') ?? 'active',
+              },
+            });
+
+            if (leaveTypes.length > 0) {
+              await tx.leaveQuota.createMany({
+                data: leaveTypes.map((t) => ({
+                  tenantId,
+                  employeeId: employee.id,
+                  leaveTypeId: t.id,
+                  year,
+                  totalDays: t.defaultQuota,
+                })),
+                skipDuplicates: true,
+              });
+            }
+
+            return 'created' as const;
+          }
+
+          const data: Record<string, unknown> = {};
+          const changes: string[] = [];
+
+          if (fullName !== existing.fullName) data.fullName = fullName;
+          if (email !== existing.email) data.email = email;
+          if (r['phone']?.trim() && r['phone'].trim() !== existing.phone) data.phone = r['phone'].trim();
+          if (departmentId !== undefined && departmentId !== existing.departmentId) data.departmentId = departmentId;
+          if (branchId !== undefined && branchId !== existing.branchId) data.branchId = branchId;
+          if (r['position']?.trim() && r['position'].trim() !== existing.position) data.position = r['position'].trim();
+
+          if (role && role !== existing.role) {
+            data.role = role;
+            changes.push(`role: ${existing.role} → ${role}`);
+          }
+          if (status && status !== existing.status) {
+            data.status = status;
+            changes.push(`status: ${existing.status} → ${status}`);
+          }
+
+          if (Object.keys(data).length === 0) return 'unchanged' as const;
+
+          await tx.employee.update({ where: { id: existing.id }, data });
+
+          if (changes.length > 0) {
+            await this.audit.record(tx, {
+              userId: actor.userId,
+              action: `employee.bulk-import — ${employeeCode}: ${changes.join('; ')}`,
+              targetTable: 'employees',
+              targetId: existing.id,
+              ipAddress: actor.ipAddress,
+            });
+          }
+
+          return 'updated' as const;
+        });
+
+        if (outcome === 'created') created++;
+        else if (outcome === 'updated') updated++;
+        else unchanged++;
+      } catch (err) {
+        errors.push({
+          row: rowNum,
+          employeeCode: employeeCode || '(missing)',
+          message: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
+    }
+
+    // Pass 2: resolve direct-manager links now that every row's employee exists.
+    if (pendingManagerLinks.length > 0) {
+      const allCodes = [...new Set([...pendingManagerLinks.map((l) => l.employeeCode), ...pendingManagerLinks.map((l) => l.managerCode)])];
+      const allEmployees = await this.prisma.employee.findMany({
+        where: { employeeCode: { in: allCodes } },
+        select: { id: true, employeeCode: true, directManagerId: true },
+      });
+      const byCode = new Map(allEmployees.map((e) => [e.employeeCode, e]));
+
+      for (const link of pendingManagerLinks) {
+        const employee = byCode.get(link.employeeCode);
+        const manager = byCode.get(link.managerCode);
+        if (!employee) continue; // row already failed in pass 1
+
+        if (!manager) {
+          errors.push({ row: link.row, employeeCode: link.employeeCode, message: `directManagerEmployeeCode "${link.managerCode}" does not exist` });
+          continue;
+        }
+        if (manager.id === employee.id) {
+          errors.push({ row: link.row, employeeCode: link.employeeCode, message: 'directManagerEmployeeCode cannot reference the same employee' });
+          continue;
+        }
+        if (employee.directManagerId === manager.id) continue; // no-op
+
+        await this.prisma.$transaction(async (tx) => {
+          await tx.employee.update({ where: { id: employee.id }, data: { directManagerId: manager.id } });
+          await this.audit.record(tx, {
+            userId: actor.userId,
+            action: `employee.bulk-import — ${link.employeeCode}: direct manager changed`,
+            targetTable: 'employees',
+            targetId: employee.id,
+            ipAddress: actor.ipAddress,
+          });
+        });
+      }
+    }
+
+    return { totalRows: rows.length, created, updated, unchanged, errors };
   }
 }
