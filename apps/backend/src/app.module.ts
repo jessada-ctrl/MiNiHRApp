@@ -10,6 +10,7 @@ import { OrgModule } from './org/org.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { WebhookModule } from './webhook/webhook.module';
+import { WorkflowsModule } from './workflows/workflows.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { WebhookModule } from './webhook/webhook.module';
     EmployeesModule,
     OrgModule,
     LeaveTypesModule,
+    WorkflowsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

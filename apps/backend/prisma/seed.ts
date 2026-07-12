@@ -128,6 +128,40 @@ async function main() {
     }
   }
 
+  const defaultWorkflow = await prisma.approvalWorkflow.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000031' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000031',
+      tenantId: tenant.id,
+      name: 'สายอนุมัติมาตรฐาน',
+      scopeType: 'global',
+    },
+  });
+  await prisma.approvalWorkflowStep.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000032' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000032',
+      tenantId: tenant.id,
+      workflowId: defaultWorkflow.id,
+      stepOrder: 0,
+      approverType: 'direct_manager',
+    },
+  });
+  await prisma.approvalWorkflowStep.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000033' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000033',
+      tenantId: tenant.id,
+      workflowId: defaultWorkflow.id,
+      stepOrder: 1,
+      approverType: 'specific_employee',
+      approverEmployeeId: hrAdmin.id,
+    },
+  });
+
   console.log(`Seeded tenant: ${tenant.companyName} (${tenant.subdomain}) — id ${tenant.id}`);
   console.log(`Login as HR Admin: ${hrAdmin.email} / ${DEMO_PASSWORD}`);
   console.log(`Login as Approver: ${approver.email} / ${DEMO_PASSWORD}`);

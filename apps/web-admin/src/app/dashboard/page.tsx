@@ -82,6 +82,12 @@ export default function DashboardPage() {
           >
             🏷️ ประเภทการลา
           </Link>
+          <Link
+            href="/workflows"
+            className="rounded-lg border border-neutral-200 bg-white px-5 py-4 text-sm font-medium text-neutral-800 shadow-sm hover:border-teal-300 hover:bg-teal-50"
+          >
+            🔀 สายอนุมัติ
+          </Link>
         </div>
       </div>
     </main>
