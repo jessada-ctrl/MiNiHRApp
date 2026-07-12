@@ -10,6 +10,7 @@ import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
 import { LeaveTypesModule } from './leave-types/leave-types.module';
 import { OrgModule } from './org/org.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ReportsModule } from './reports/reports.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { WebhookModule } from './webhook/webhook.module';
 import { WorkflowsModule } from './workflows/workflows.module';
@@ -27,6 +28,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     WorkflowsModule,
     LeaveRequestsModule,
     HolidaysModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

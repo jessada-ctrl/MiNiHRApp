@@ -100,6 +100,12 @@ export default function DashboardPage() {
           >
             🗓️ ปฏิทินวันหยุด
           </Link>
+          <Link
+            href="/reports"
+            className="rounded-lg border border-neutral-200 bg-white px-5 py-4 text-sm font-medium text-neutral-800 shadow-sm hover:border-teal-300 hover:bg-teal-50"
+          >
+            🗂 รายงาน
+          </Link>
         </div>
       </div>
     </main>
