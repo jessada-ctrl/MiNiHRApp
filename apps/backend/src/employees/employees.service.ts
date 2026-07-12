@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { TENANT_PRISMA } from '../prisma/prisma.module';
 import { getCurrentTenantId } from '../tenant/tenant-context';
@@ -26,7 +26,28 @@ export class EmployeesService {
     });
   }
 
+  /**
+   * NFR-1 / same class of bug as BUG-002: a client-supplied id referencing
+   * another tenant-scoped model (department, branch, employee-as-manager)
+   * must be looked up through the tenant-scoped client before being written
+   * as a foreign key — otherwise a cross-tenant or wholly bogus id either
+   * gets silently accepted (leak) or crashes as an unhandled FK-violation
+   * 500 instead of a clean 400.
+   */
+  private async assertInTenant(model: 'department' | 'branch' | 'employee', id: string, label: string) {
+    const found =
+      model === 'department'
+        ? await this.prisma.department.findUnique({ where: { id }, select: { id: true } })
+        : model === 'branch'
+          ? await this.prisma.branch.findUnique({ where: { id }, select: { id: true } })
+          : await this.prisma.employee.findUnique({ where: { id }, select: { id: true } });
+    if (!found) throw new BadRequestException(`${label} does not refer to a valid record in this company`);
+  }
+
   async create(dto: CreateEmployeeDto) {
+    if (dto.departmentId) await this.assertInTenant('department', dto.departmentId, 'departmentId');
+    if (dto.branchId) await this.assertInTenant('branch', dto.branchId, 'branchId');
+
     const tenantId = getCurrentTenantId();
     const year = new Date().getFullYear();
 
@@ -72,6 +93,10 @@ export class EmployeesService {
   }
 
   async update(id: string, dto: UpdateEmployeeDto, actor: ActorContext) {
+    if (dto.departmentId) await this.assertInTenant('department', dto.departmentId, 'departmentId');
+    if (dto.branchId) await this.assertInTenant('branch', dto.branchId, 'branchId');
+    if (dto.directManagerId) await this.assertInTenant('employee', dto.directManagerId, 'directManagerId');
+
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.employee.findUnique({ where: { id }, omit: { passwordHash: true } });
       if (!before) throw new NotFoundException('Employee not found');
@@ -142,6 +167,14 @@ export class EmployeesService {
     year = new Date().getFullYear(),
   ) {
     const tenantId = getCurrentTenantId();
+
+    const leaveTypeIds = quotas.map((q) => q.leaveTypeId);
+    const foundTypes = await this.prisma.leaveType.findMany({ where: { id: { in: leaveTypeIds } }, select: { id: true } });
+    const foundTypeIds = new Set(foundTypes.map((t) => t.id));
+    const missingTypes = leaveTypeIds.filter((id) => !foundTypeIds.has(id));
+    if (missingTypes.length > 0) {
+      throw new BadRequestException(`leaveTypeId does not refer to a valid leave type in this company: ${missingTypes.join(', ')}`);
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const employee = await tx.employee.findUnique({ where: { id: employeeId }, select: { fullName: true } });

@@ -1,15 +1,17 @@
 ---
 title: Pre-implementation test cases — core validation & isolation flows
-status: partially executed — FR-4.6 audit-logging rows executed against the live Auth + Employee CRUD implementation on 2026-07-12; all other sections remain draft/unexecuted (no application code exists yet for NFR-1 end-to-end, FR-2.2, FR-3.2 areas)
+status: partially executed — FR-4.6 (employee audit logging), FR-4.8 (leave type/quota policy), and FR-4.1 (approval workflow builder) rows executed against live implementations as of 2026-07-12; NFR-1, FR-2.2, FR-3.2 sections remain draft/unexecuted (no application code exists yet for those areas)
 derived_by: qa-tester
 derived_date: 2026-07-12
 updated_date: 2026-07-12
-covers_fr: NFR-1, FR-2.2, FR-3.2, FR-4.6
+covers_fr: NFR-1, FR-2.2, FR-3.2, FR-4.1, FR-4.6, FR-4.8
 ---
 
 Derived directly from `Doc/MiniHR_SRS-V1.md` before any implementation exists. Execute these once the corresponding feature lands — do not treat them as passed/failed until actually run against real code.
 
 **Update 2026-07-12:** all 8 spec ambiguities originally flagged below were resolved in SRS v1.2. Rows and the summary section have been updated to match the now-explicit requirements — re-derive/verify against the SRS again if it changes further.
+
+**Update 2026-07-12 (later pass):** FR-4.8 (Leave Type & Quota Policy) and FR-4.1 (Approval Workflow Builder) landed and were executed against the running app — see sections 5 and 6 below. One critical bug filed: **BUG-002** (cross-tenant employee reference accepted on `approval_workflow_steps.approverEmployeeId`, plus the same missing check causes an unhandled 500 for a bogus employee id) — this is also a concrete, reproduced instance of the general NFR-1 risk class described in section 1 below, now that a second tenant was seeded via direct SQL to actually prove it end-to-end.
 
 ## 1. NFR-1 — Strict Data Isolation (Global Query Filtering)
 
@@ -90,6 +92,36 @@ Ties to NFR-4: Immutable Audit Logs (insert-only, DB-level `UPDATE`/`DELETE` den
 | TC-FR46-09 | Two different HR Admins change different employees' roles concurrently. | Each log entry attributes the correct `user_id` — no cross-attribution under concurrency. | Not executed — only one seeded `tenant_admin` account exists; would need a second HR Admin account to reproduce meaningfully. Gap, not a filed bug. |
 | TC-FR46-10 | Tenant A's HR Admin attempts to query Tenant B's `audit_logs` via API manipulation. | Denied — ties to NFR-1; audit logs are tenant-scoped like every other table. | Not executed — only one seeded tenant (`testco`) exists in this environment, so true cross-tenant leakage can't be reproduced end-to-end. `tenant-scoping.extension.ts`/`tenant.middleware.ts` were read directly instead — see summary. Gap, not a filed bug. |
 | TC-FR46-11 | Simulate an audit-log insert failure occurring at the same time as the underlying role update. | **Resolved in SRS v1.2 (NFR-4 Atomicity):** the audit-log write and the underlying change must be in the same DB transaction. If the log insert fails, the role change must roll back too — no silent unlogged permission change. | Not executed — would require fault injection (e.g. temporarily breaking the audit insert) not available via black-box API/DB testing. Source inspection confirms `EmployeesService.update` wraps both the `employee.update` and `audit.record` calls in a single `prisma.$transaction`, which is structurally correct, but this wasn't proven under an actual induced failure. Gap, not a filed bug. |
+
+## 5. FR-4.8 — Leave Type & Quota Policy Configuration
+
+Executed 2026-07-12 against `apps/backend/src/leave-types/` and the `updateQuotas` path in `apps/backend/src/employees/employees.service.ts`, via direct API calls (`curl`) with DB verification (`psql`), logged in as `hr@testco.local` (tenant_admin) and `approver@testco.local` (approver).
+
+| ID | Steps | Expected Result | Status |
+|---|---|---|---|
+| TC-FR48-01 | Create a new leave type (`POST /leave-types`) while N employees already exist. | A `leave_quotas` row is backfilled for every existing employee, `totalDays` = the new type's `defaultQuota`. | **PASS** — created "QA Leave Type A" (`defaultQuota=12`) with 7 existing employees; `psql` confirmed exactly 7 `leave_quotas` rows, all `total_days=12.00`. |
+| TC-FR48-02 | Create a new employee (`POST /employees`) while M leave types already exist. | A `leave_quotas` row is backfilled for every existing leave type, at each type's own `defaultQuota`. | **PASS** — created "QA New Employee" with 4 existing leave types; `psql` confirmed 4 rows, each matching its leave type's own `defaultQuota` (12 / 3 / 40 / 6). |
+| TC-FR48-03 | Edit an existing leave type's `defaultQuota` (`PATCH /leave-types/:id`). | Already-granted `leave_quotas.total_days` for existing employees must NOT change — only future backfills use the new default. | **PASS** — changed "QA Leave Type A" `defaultQuota` 12→99; all 8 employees' existing `leave_quotas` rows for that type stayed at `12.00` after the edit. |
+| TC-FR48-04 | Quota override via `PATCH /employees/:id/quotas` with a real change. | Exactly one new `audit_logs` row, `target_table='leave_quotas'`, describing the change. | **PASS** — one PATCH changing 1 of 4 submitted quota values produced exactly one new row (`employee.quota-override — QA New Employee: ลาป่วย: 40 → 20`); the 3 unchanged values in the same request did not add extra rows. |
+| TC-FR48-05 | Immediately re-send the identical `PATCH /employees/:id/quotas` payload (no-op). | Zero additional `audit_logs` rows. | **PASS** — `audit_logs` count for `target_table='leave_quotas'` unchanged (2→2) after the no-op re-PATCH; HTTP 200 still returned. |
+| TC-FR48-06 | Delete a leave type with zero `leave_requests` referencing it (`DELETE /leave-types/:id`). | Succeeds; the leave type and its `leave_quotas` rows are gone (cascade). | **PASS** — created and deleted a throwaway leave type; `psql` confirmed both the `leave_types` row and its `leave_quotas` rows were gone afterward. |
+| TC-FR48-07 | Delete a leave type that DOES have `leave_requests` referencing it. | Per FR-4.8 ("หากมีการลบประเภทการลาที่มีคำขอลาอ้างอิงอยู่แล้ว... ระบบต้องปฏิเสธการลบ"), must be rejected with a clear error, not deleted. | **Not executed — gap, not a bug.** No leave-request-creation feature exists yet (FR-2.2 not implemented), so no real `leave_requests` row can be made to reference a leave type. Code inspection (`leave-types.service.ts:70-81`) shows a `BadRequestException` guard keyed on `leaveRequest.count({ where: { leaveTypeId: id } }) > 0`, which looks structurally correct, but this is unproven against a real referencing row — re-run this case once FR-2.2 lands. |
+| TC-FR48-08 | As `approver`, attempt `POST`/`PATCH`/`DELETE /leave-types` and `PATCH /employees/:id/quotas`. | All rejected `403`; `GET /leave-types` still allowed. | **PASS** — all four write attempts returned `403`; `GET /leave-types` returned `200`. |
+
+## 6. FR-4.1 — Drag & Drop Approval Workflow Builder
+
+Executed 2026-07-12 against `apps/backend/src/workflows/`, via direct API calls with DB verification, same accounts as section 5.
+
+| ID | Steps | Expected Result | Status |
+|---|---|---|---|
+| TC-FR41-01 | `POST /approval-workflows` with 2 valid steps (`direct_manager`, `specific_employee`). | Workflow + ordered steps created and returned, `stepOrder` 0/1. | **PASS**. |
+| TC-FR41-02 | `PATCH /approval-workflows/:id/steps` — same endpoint the drag-and-drop UI calls — reorder existing steps and add a third. | Old steps replaced entirely by the new ordered list; response reflects new order/count. | **PASS** — reordered 2→3 steps (moved `specific_employee` to position 0, added a second `specific_employee` step); response and DB matched the new order. |
+| TC-FR41-03 | `PATCH .../steps` again, shrinking to a single step. | Removed steps are actually gone from `approval_workflow_steps`, not just hidden. | **PASS** — `psql` confirmed exactly 1 row remained for the workflow after the PATCH. |
+| TC-FR41-04 | `POST /approval-workflows` (and separately `PATCH .../steps`) with a step `approverType='specific_employee'` and `approverEmployeeId` omitted. | Clean `400`, not a `500`/raw DB error. | **PASS** — both endpoints returned `400 {"message":"approverEmployeeId is required when approverType is specific_employee"}`. |
+| TC-FR41-05 | `POST /approval-workflows` (and separately `PATCH .../steps`) with `approverType='specific_employee'` and `approverEmployeeId` set to a syntactically-valid but non-existent employee id. | Clean `400` (SRS's intent per FR-4.1 is every step resolves to a real approver). | **FAIL — see BUG-002.** Both endpoints returned an unhandled `500 {"statusCode":500,"message":"Internal server error"}` (a raw Prisma FK-violation, uncaught). Transaction rollback did work correctly — no partial workflow/step was left behind either time. |
+| TC-FR41-06 | `POST /approval-workflows` with `approverType='specific_employee'` and `approverEmployeeId` pointing at a real employee belonging to a **different tenant**. | Rejected — an approver must resolve to a real employee within the *same* company (ties to NFR-1). | **FAIL — CRITICAL, see BUG-002.** Seeded a second tenant + employee directly via SQL (no tenant-registration UI/API exists to do this through the app) and, logged in as `testco`'s admin, successfully created a workflow (`201`) whose step's `approverEmployeeId` points at the other tenant's employee. `psql` confirmed the step's own `tenant_id` (testco) differs from the referenced employee's real `tenant_id` (the seeded other tenant) — a persisted cross-tenant reference, and the leaked employee's `fullName` is returned in the API response to any `testco` user (including the `approver` role) who lists workflows. |
+| TC-FR41-07 | `DELETE /approval-workflows/:id` on a workflow with steps. | Workflow and all its `approval_workflow_steps` rows are gone (cascade). | **PASS** — `psql` confirmed 0 rows remained in `approval_workflow_steps` for the deleted workflow's id. |
+| TC-FR41-08 | As `approver`, attempt `POST`/`PATCH .../:id`/`PATCH .../:id/steps`/`DELETE /approval-workflows`. `GET` should still work. | All writes rejected `403`; `GET` returns `200`. | **PASS** — all four write attempts returned `403`; `GET /approval-workflows` returned `200` (including a request that incidentally exposed the leaked cross-tenant employee name from TC-FR41-06 — see BUG-002). |
 
 ## Cross-cutting note
 

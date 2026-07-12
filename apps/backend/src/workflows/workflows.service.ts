@@ -22,16 +22,35 @@ export class WorkflowsService {
     });
   }
 
-  private validateSteps(steps: WorkflowStepDto[]) {
+  /**
+   * NFR-1 / BUG-002: approverEmployeeId is client-supplied and was only ever
+   * checked for presence, never that it resolves to a real employee in THIS
+   * tenant. Looking it up through `this.prisma` (the tenant-scoped client)
+   * means a cross-tenant or wholly bogus id simply won't be found — one
+   * check closes both the cross-tenant leak and the unhandled-500 symptom.
+   */
+  private async validateSteps(steps: WorkflowStepDto[]) {
+    const ids: string[] = [];
     for (const s of steps) {
-      if (s.approverType === 'specific_employee' && !s.approverEmployeeId) {
-        throw new BadRequestException('approverEmployeeId is required when approverType is specific_employee');
+      if (s.approverType === 'specific_employee') {
+        if (!s.approverEmployeeId) {
+          throw new BadRequestException('approverEmployeeId is required when approverType is specific_employee');
+        }
+        ids.push(s.approverEmployeeId);
       }
+    }
+    if (ids.length === 0) return;
+
+    const found = await this.prisma.employee.findMany({ where: { id: { in: ids } }, select: { id: true } });
+    const foundIds = new Set(found.map((e) => e.id));
+    const missing = ids.filter((id) => !foundIds.has(id));
+    if (missing.length > 0) {
+      throw new BadRequestException(`approverEmployeeId does not refer to a valid employee in this company: ${missing.join(', ')}`);
     }
   }
 
   async create(dto: CreateWorkflowDto) {
-    this.validateSteps(dto.steps);
+    await this.validateSteps(dto.steps);
     const tenantId = getCurrentTenantId();
 
     return this.prisma.$transaction(async (tx) => {
@@ -74,7 +93,7 @@ export class WorkflowsService {
    * approvals.
    */
   async updateSteps(workflowId: string, steps: WorkflowStepDto[]) {
-    this.validateSteps(steps);
+    await this.validateSteps(steps);
     const tenantId = getCurrentTenantId();
 
     const workflow = await this.prisma.approvalWorkflow.findUnique({ where: { id: workflowId } });
