@@ -77,6 +77,12 @@ export default function DashboardPage() {
             👥 พนักงาน
           </Link>
           <Link
+            href="/organization"
+            className="rounded-lg border border-neutral-200 bg-white px-5 py-4 text-sm font-medium text-neutral-800 shadow-sm hover:border-teal-300 hover:bg-teal-50"
+          >
+            🏢 สาขา/แผนก
+          </Link>
+          <Link
             href="/leave-types"
             className="rounded-lg border border-neutral-200 bg-white px-5 py-4 text-sm font-medium text-neutral-800 shadow-sm hover:border-teal-300 hover:bg-teal-50"
           >
