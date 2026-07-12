@@ -13,11 +13,16 @@ export class AuthService {
   ) {}
 
   async login(email: string, password: string): Promise<{ accessToken: string; user: AuthenticatedUser }> {
-    // Only tenant_admin and approver log in via email/password on the web
-    // dashboard — regular employees authenticate through LINE OTP binding
-    // (FR-2.1), not this endpoint.
+    // In the target design, regular employees authenticate through LINE OTP
+    // binding (FR-2.1), not email/password — that's still true and this
+    // endpoint isn't meant to become the LIFF app's login. But FR-2.1 needs
+    // a real LINE Developers account (external dependency, not yet set up),
+    // so email/password is temporarily open to every active role — including
+    // 'employee' — purely so the leave-request/approval flow can be built
+    // and tested end-to-end before LINE integration lands. Re-add the
+    // role:{in:['tenant_admin','approver']} restriction once FR-2.1 ships.
     const employee = await this.prisma.employee.findFirst({
-      where: { email, role: { in: ['tenant_admin', 'approver'] }, status: 'active' },
+      where: { email, status: 'active' },
     });
 
     // Same generic error whether the email doesn't exist or the password is

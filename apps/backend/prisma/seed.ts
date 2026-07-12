@@ -56,7 +56,7 @@ async function main() {
 
   const hrAdmin = await prisma.employee.upsert({
     where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP004' } },
-    update: {},
+    update: { passwordHash, status: 'active', role: 'tenant_admin' },
     create: {
       tenantId: tenant.id,
       employeeCode: 'EMP004',
@@ -72,7 +72,7 @@ async function main() {
 
   const approver = await prisma.employee.upsert({
     where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP003' } },
-    update: {},
+    update: { passwordHash, status: 'active', role: 'approver' },
     create: {
       tenantId: tenant.id,
       employeeCode: 'EMP003',
@@ -88,7 +88,7 @@ async function main() {
 
   const employee1 = await prisma.employee.upsert({
     where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP001' } },
-    update: {},
+    update: { passwordHash, status: 'active', role: 'employee', directManagerId: approver.id },
     create: {
       tenantId: tenant.id,
       employeeCode: 'EMP001',
@@ -99,6 +99,7 @@ async function main() {
       status: 'active',
       branchId: branch.id,
       departmentId: salesDept.id,
+      passwordHash, // temporary — see auth.service.ts note; real employees use LINE OTP (FR-2.1)
     },
   });
 

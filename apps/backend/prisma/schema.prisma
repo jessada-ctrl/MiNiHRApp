@@ -132,12 +132,13 @@ model Employee {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  leaveQuotas          LeaveQuota[]
-  leaveRequests        LeaveRequest[]
-  leaveApprovalActions LeaveApprovalAction[]
-  attendanceLogs       AttendanceLog[]
-  otpVerifications     OtpVerification[]
-  workflowStepAssignee ApprovalWorkflowStep[]
+  leaveQuotas             LeaveQuota[]
+  leaveRequests           LeaveRequest[]
+  currentApproverForLeave LeaveRequest[] @relation("LeaveRequestCurrentApprover")
+  leaveApprovalActions    LeaveApprovalAction[]
+  attendanceLogs          AttendanceLog[]
+  otpVerifications        OtpVerification[]
+  workflowStepAssignee    ApprovalWorkflowStep[]
 
   @@unique([tenantId, employeeCode])
   @@index([tenantId])
@@ -233,6 +234,11 @@ model LeaveRequest {
   status           LeaveRequestStatus  @default(pending)
   currentStep      Int                 @default(0) @map("current_step")
   workflowSnapshot Json                @map("workflow_snapshot")
+  // Denormalized from workflowSnapshot[currentStep] and kept in sync on
+  // every step advance — lets the approver queue query be a plain indexed
+  // WHERE instead of filtering JSON in application code for every request.
+  currentApproverId String?  @map("current_approver_id")
+  currentApprover    Employee? @relation("LeaveRequestCurrentApprover", fields: [currentApproverId], references: [id], onDelete: SetNull)
   createdAt        DateTime            @default(now()) @map("created_at")
   updatedAt        DateTime            @updatedAt @map("updated_at")
 
@@ -241,6 +247,7 @@ model LeaveRequest {
   @@index([tenantId])
   @@index([tenantId, employeeId])
   @@index([tenantId, status])
+  @@index([tenantId, currentApproverId, status])
   @@map("leave_requests")
 }
 
