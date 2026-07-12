@@ -27,24 +27,47 @@ export class EmployeesService {
   }
 
   async create(dto: CreateEmployeeDto) {
-    return this.prisma.employee.create({
-      omit: { passwordHash: true },
-      data: {
-        // The tenant-scoping extension injects this too at runtime, but the
-        // static Prisma types don't know that — pass it explicitly so this
-        // still type-checks (and stays correct if the extension is ever
-        // bypassed for some reason).
-        tenantId: getCurrentTenantId(),
-        employeeCode: dto.employeeCode,
-        fullName: dto.fullName,
-        email: dto.email,
-        phone: dto.phone,
-        departmentId: dto.departmentId,
-        branchId: dto.branchId,
-        position: dto.position,
-        role: dto.role ?? 'employee',
-        status: 'active',
-      },
+    const tenantId = getCurrentTenantId();
+    const year = new Date().getFullYear();
+
+    return this.prisma.$transaction(async (tx) => {
+      const employee = await tx.employee.create({
+        omit: { passwordHash: true },
+        data: {
+          // The tenant-scoping extension injects this too at runtime, but the
+          // static Prisma types don't know that — pass it explicitly so this
+          // still type-checks (and stays correct if the extension is ever
+          // bypassed for some reason).
+          tenantId,
+          employeeCode: dto.employeeCode,
+          fullName: dto.fullName,
+          email: dto.email,
+          phone: dto.phone,
+          departmentId: dto.departmentId,
+          branchId: dto.branchId,
+          position: dto.position,
+          role: dto.role ?? 'employee',
+          status: 'active',
+        },
+      });
+
+      // FR-4.8: new employees start with each leave type's current default
+      // quota for this year.
+      const leaveTypes = await tx.leaveType.findMany({ select: { id: true, defaultQuota: true } });
+      if (leaveTypes.length > 0) {
+        await tx.leaveQuota.createMany({
+          data: leaveTypes.map((t) => ({
+            tenantId,
+            employeeId: employee.id,
+            leaveTypeId: t.id,
+            year,
+            totalDays: t.defaultQuota,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      return employee;
     });
   }
 
@@ -97,6 +120,72 @@ export class EmployeesService {
       }
 
       return updated;
+    });
+  }
+
+  async getQuotas(employeeId: string, year = new Date().getFullYear()) {
+    return this.prisma.leaveQuota.findMany({
+      where: { employeeId, year },
+      include: { leaveType: { select: { id: true, name: true } } },
+      orderBy: { leaveType: { name: 'asc' } },
+    });
+  }
+
+  /**
+   * Per-employee quota override (FR-4.8) — does not touch the leave type's
+   * company-wide default. Every real change is audited.
+   */
+  async updateQuotas(
+    employeeId: string,
+    quotas: { leaveTypeId: string; totalDays: number }[],
+    actor: ActorContext,
+    year = new Date().getFullYear(),
+  ) {
+    const tenantId = getCurrentTenantId();
+
+    return this.prisma.$transaction(async (tx) => {
+      const employee = await tx.employee.findUnique({ where: { id: employeeId }, select: { fullName: true } });
+      if (!employee) throw new NotFoundException('Employee not found');
+
+      const changes: string[] = [];
+
+      for (const q of quotas) {
+        const before = await tx.leaveQuota.findUnique({
+          where: { employeeId_leaveTypeId_year: { employeeId, leaveTypeId: q.leaveTypeId, year } },
+          include: { leaveType: { select: { name: true } } },
+        });
+
+        if (before && before.totalDays.toNumber() === q.totalDays) continue; // no-op, skip
+
+        await tx.leaveQuota.upsert({
+          where: { employeeId_leaveTypeId_year: { employeeId, leaveTypeId: q.leaveTypeId, year } },
+          update: { totalDays: q.totalDays },
+          create: { tenantId, employeeId, leaveTypeId: q.leaveTypeId, year, totalDays: q.totalDays },
+        });
+
+        const label = before?.leaveType.name ?? q.leaveTypeId;
+        const fromVal = before ? before.totalDays.toNumber() : '(none)';
+        changes.push(`${label}: ${fromVal} → ${q.totalDays}`);
+      }
+
+      if (changes.length > 0) {
+        await this.audit.record(tx, {
+          userId: actor.userId,
+          action: `employee.quota-override — ${employee.fullName}: ${changes.join('; ')}`,
+          targetTable: 'leave_quotas',
+          targetId: employeeId,
+          ipAddress: actor.ipAddress,
+        });
+      }
+
+      // Read back via `tx`, not `this.prisma` — the update above hasn't
+      // committed yet, so a query on a different connection would see stale
+      // (pre-update) rows under READ COMMITTED isolation.
+      return tx.leaveQuota.findMany({
+        where: { employeeId, year },
+        include: { leaveType: { select: { id: true, name: true } } },
+        orderBy: { leaveType: { name: 'asc' } },
+      });
     });
   }
 }

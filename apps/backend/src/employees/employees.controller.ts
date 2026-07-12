@@ -8,6 +8,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { UpdateQuotasDto } from './dto/update-quotas.dto';
 
 @Controller('employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,5 +36,22 @@ export class EmployeesController {
     @Req() req: Request,
   ) {
     return this.employees.update(id, dto, { userId: user.id, ipAddress: req.ip ?? 'unknown' });
+  }
+
+  @Get(':id/quotas')
+  @Roles('tenant_admin')
+  getQuotas(@Param('id') id: string) {
+    return this.employees.getQuotas(id);
+  }
+
+  @Patch(':id/quotas')
+  @Roles('tenant_admin')
+  updateQuotas(
+    @Param('id') id: string,
+    @Body() dto: UpdateQuotasDto,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() req: Request,
+  ) {
+    return this.employees.updateQuotas(id, dto.quotas, { userId: user.id, ipAddress: req.ip ?? 'unknown' });
   }
 }

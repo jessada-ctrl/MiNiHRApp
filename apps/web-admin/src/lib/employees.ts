@@ -77,3 +77,23 @@ export async function updateEmployee(id: string, input: UpdateEmployeeInput): Pr
     await apiFetch(`/employees/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
   );
 }
+
+export interface EmployeeQuota {
+  id: string;
+  leaveTypeId: string;
+  totalDays: string;
+  leaveType: { id: string; name: string };
+}
+
+export async function getEmployeeQuotas(id: string): Promise<EmployeeQuota[]> {
+  return unwrap(await apiFetch(`/employees/${id}/quotas`));
+}
+
+export async function updateEmployeeQuotas(
+  id: string,
+  quotas: { leaveTypeId: string; totalDays: number }[],
+): Promise<EmployeeQuota[]> {
+  return unwrap(
+    await apiFetch(`/employees/${id}/quotas`, { method: "PATCH", body: JSON.stringify({ quotas }) }),
+  );
+}

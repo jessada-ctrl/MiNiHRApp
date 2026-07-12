@@ -6,13 +6,16 @@ import {
   type Branch,
   type Department,
   type Employee,
+  type EmployeeQuota,
   type Role,
   type Status,
   createEmployee,
+  getEmployeeQuotas,
   listBranches,
   listDepartments,
   listEmployees,
   updateEmployee,
+  updateEmployeeQuotas,
 } from "@/lib/employees";
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -34,6 +37,7 @@ export default function EmployeesPage() {
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
+  const [editingQuota, setEditingQuota] = useState<Employee | null>(null);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -127,7 +131,13 @@ export default function EmployeesPage() {
                       {STATUS_LABEL[e.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <button
+                      onClick={() => setEditingQuota(e)}
+                      className="mr-3 text-sm font-medium text-neutral-600 hover:text-neutral-900"
+                    >
+                      ⚙ โควตา
+                    </button>
                     <button
                       onClick={() => setEditing(e)}
                       className="text-sm font-medium text-teal-700 hover:text-teal-900"
@@ -164,6 +174,10 @@ export default function EmployeesPage() {
             refresh();
           }}
         />
+      )}
+
+      {editingQuota && (
+        <EditQuotaModal employee={editingQuota} onClose={() => setEditingQuota(null)} onSaved={() => setEditingQuota(null)} />
       )}
     </main>
   );
@@ -357,6 +371,90 @@ function EditEmployeeModal({
           </button>
         </div>
       </form>
+    </Modal>
+  );
+}
+
+function EditQuotaModal({
+  employee,
+  onClose,
+  onSaved,
+}: {
+  employee: Employee;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [quotas, setQuotas] = useState<EmployeeQuota[]>([]);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    getEmployeeQuotas(employee.id)
+      .then((qs) => {
+        setQuotas(qs);
+        setValues(Object.fromEntries(qs.map((q) => [q.leaveTypeId, q.totalDays])));
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : "โหลดโควตาไม่สำเร็จ"))
+      .finally(() => setLoading(false));
+  }, [employee.id]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await updateEmployeeQuotas(
+        employee.id,
+        quotas.map((q) => ({ leaveTypeId: q.leaveTypeId, totalDays: Number(values[q.leaveTypeId]) })),
+      );
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal onClose={onClose} title={`แก้ไขโควตา — ${employee.fullName}`}>
+      <p className="mb-3 text-xs text-neutral-500">
+        ปรับเฉพาะพนักงานคนนี้ ไม่กระทบค่ามาตรฐานบริษัท การเปลี่ยนแปลงจะถูกบันทึกลง Audit Log
+      </p>
+      {loading && <p className="text-sm text-neutral-400">กำลังโหลด...</p>}
+      {!loading && (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {quotas.map((q) => (
+            <Field key={q.leaveTypeId} label={`${q.leaveType.name} (วัน/ปี)`}>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                value={values[q.leaveTypeId] ?? ""}
+                onChange={(e) => setValues((v) => ({ ...v, [q.leaveTypeId]: e.target.value }))}
+                className={inputCls}
+              />
+            </Field>
+          ))}
+          {quotas.length === 0 && <p className="text-sm text-neutral-400">ยังไม่มีประเภทการลาในระบบ</p>}
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div className="mt-2 flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+              ยกเลิก
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || quotas.length === 0}
+              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            >
+              {submitting ? "กำลังบันทึก..." : "บันทึก"}
+            </button>
+          </div>
+        </form>
+      )}
     </Modal>
   );
 }

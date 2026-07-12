@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { EmployeesModule } from './employees/employees.module';
+import { LeaveTypesModule } from './leave-types/leave-types.module';
 import { OrgModule } from './org/org.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
@@ -19,6 +20,7 @@ import { WebhookModule } from './webhook/webhook.module';
     AuthModule,
     EmployeesModule,
     OrgModule,
+    LeaveTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

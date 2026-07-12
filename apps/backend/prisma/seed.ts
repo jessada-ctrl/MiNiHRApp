@@ -86,7 +86,7 @@ async function main() {
     },
   });
 
-  await prisma.employee.upsert({
+  const employee1 = await prisma.employee.upsert({
     where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP001' } },
     update: {},
     create: {
@@ -101,6 +101,32 @@ async function main() {
       departmentId: salesDept.id,
     },
   });
+
+  const leaveTypeSeeds = [
+    { id: '00000000-0000-0000-0000-000000000021', name: 'ลาป่วย', defaultQuota: 30, requiresAttachmentAfterDays: 3, allowHourly: true },
+    { id: '00000000-0000-0000-0000-000000000022', name: 'ลากิจ', defaultQuota: 3, requiresAttachmentAfterDays: null, allowHourly: true },
+    { id: '00000000-0000-0000-0000-000000000023', name: 'ลาพักร้อน', defaultQuota: 6, requiresAttachmentAfterDays: null, allowHourly: false },
+  ];
+  const leaveTypes = await Promise.all(
+    leaveTypeSeeds.map((lt) =>
+      prisma.leaveType.upsert({
+        where: { id: lt.id },
+        update: {},
+        create: { ...lt, tenantId: tenant.id },
+      }),
+    ),
+  );
+
+  const year = new Date().getFullYear();
+  for (const emp of [hrAdmin, approver, employee1]) {
+    for (const lt of leaveTypes) {
+      await prisma.leaveQuota.upsert({
+        where: { employeeId_leaveTypeId_year: { employeeId: emp.id, leaveTypeId: lt.id, year } },
+        update: {},
+        create: { tenantId: tenant.id, employeeId: emp.id, leaveTypeId: lt.id, year, totalDays: lt.defaultQuota },
+      });
+    }
+  }
 
   console.log(`Seeded tenant: ${tenant.companyName} (${tenant.subdomain}) — id ${tenant.id}`);
   console.log(`Login as HR Admin: ${hrAdmin.email} / ${DEMO_PASSWORD}`);
