@@ -1,12 +1,14 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
-  imports: [PrismaModule, WebhookModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, WebhookModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
