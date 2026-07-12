@@ -94,6 +94,12 @@ export default function DashboardPage() {
           >
             ✅ รออนุมัติ
           </Link>
+          <Link
+            href="/holidays"
+            className="rounded-lg border border-neutral-200 bg-white px-5 py-4 text-sm font-medium text-neutral-800 shadow-sm hover:border-teal-300 hover:bg-teal-50"
+          >
+            🗓️ ปฏิทินวันหยุด
+          </Link>
         </div>
       </div>
     </main>

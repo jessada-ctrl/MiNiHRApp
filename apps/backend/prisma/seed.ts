@@ -171,6 +171,18 @@ async function main() {
     },
   });
 
+  const holidaySeeds = [
+    { id: '00000000-0000-0000-0000-000000000041', date: '2026-08-12', name: 'วันแม่แห่งชาติ', notifyDaysBefore: 7 },
+    { id: '00000000-0000-0000-0000-000000000042', date: '2026-10-23', name: 'วันปิยมหาราช', notifyDaysBefore: 3 },
+  ];
+  for (const h of holidaySeeds) {
+    await prisma.holiday.upsert({
+      where: { id: h.id },
+      update: {},
+      create: { id: h.id, tenantId: tenant.id, holidayDate: new Date(`${h.date}T00:00:00.000Z`), name: h.name, notifyDaysBefore: h.notifyDaysBefore },
+    });
+  }
+
   console.log(`Seeded tenant: ${tenant.companyName} (${tenant.subdomain}) — id ${tenant.id}`);
   console.log(`Login as HR Admin: ${hrAdmin.email} / ${DEMO_PASSWORD}`);
   console.log(`Login as Approver: ${approver.email} / ${DEMO_PASSWORD}`);

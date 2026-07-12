@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { EmployeesModule } from './employees/employees.module';
+import { HolidaysModule } from './holidays/holidays.module';
 import { LeaveRequestsModule } from './leave-requests/leave-requests.module';
 import { LeaveTypesModule } from './leave-types/leave-types.module';
 import { OrgModule } from './org/org.module';
@@ -25,6 +26,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     LeaveTypesModule,
     WorkflowsModule,
     LeaveRequestsModule,
+    HolidaysModule,
   ],
   controllers: [AppController],
   providers: [AppService],
