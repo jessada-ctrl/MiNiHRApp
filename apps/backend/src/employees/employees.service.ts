@@ -243,8 +243,11 @@ export class EmployeesService {
   /**
    * FR-4.2: bulk employee import via CSV. Expected header columns
    * (case-insensitive): employeeCode, fullName, email, phone, department,
-   * branch, position, role, status, directManagerEmployeeCode. Only
-   * employeeCode/fullName/email are required; the rest are optional.
+   * branch, position, role, status, directManagerEmployeeCode, plus one
+   * optional `quota:<leave type name>` column per leave type configured for
+   * this company (e.g. `quota:ลาป่วย`) — FR-4.8: a value there overrides that
+   * leave type's company default for this employee; an empty/missing cell
+   * falls back to the default. Only employeeCode/fullName/email are required.
    *
    * Each row is its own transaction so one bad row doesn't roll back the
    * rest of the file. Existing employees (matched by employeeCode) are
@@ -261,7 +264,7 @@ export class EmployeesService {
     const [departments, branches, leaveTypes] = await Promise.all([
       this.prisma.department.findMany({ select: { id: true, departmentName: true } }),
       this.prisma.branch.findMany({ select: { id: true, branchName: true } }),
-      this.prisma.leaveType.findMany({ select: { id: true, defaultQuota: true } }),
+      this.prisma.leaveType.findMany({ select: { id: true, name: true, defaultQuota: true } }),
     ]);
     const deptByName = new Map(departments.map((d) => [d.departmentName.trim().toLowerCase(), d.id]));
     const branchByName = new Map(branches.map((b) => [b.branchName.trim().toLowerCase(), b.id]));
@@ -311,6 +314,17 @@ export class EmployeesService {
           pendingManagerLinks.push({ row: rowNum, employeeCode, managerCode: r['directManagerEmployeeCode'].trim() });
         }
 
+        const quotaOverrides = new Map<string, number>(); // leaveTypeId -> totalDays
+        for (const lt of leaveTypes) {
+          const cell = r[`quota:${lt.name}`]?.trim();
+          if (!cell) continue;
+          const value = Number(cell);
+          if (!Number.isFinite(value) || value < 0) {
+            throw new BadRequestException(`quota:${lt.name} must be a non-negative number, got "${cell}"`);
+          }
+          quotaOverrides.set(lt.id, value);
+        }
+
         const outcome = await this.prisma.$transaction(async (tx) => {
           const existing = await tx.employee.findUnique({ where: { tenantId_employeeCode: { tenantId, employeeCode } } });
 
@@ -337,7 +351,7 @@ export class EmployeesService {
                   employeeId: employee.id,
                   leaveTypeId: t.id,
                   year,
-                  totalDays: t.defaultQuota,
+                  totalDays: quotaOverrides.get(t.id) ?? t.defaultQuota,
                 })),
                 skipDuplicates: true,
               });
@@ -365,9 +379,32 @@ export class EmployeesService {
             changes.push(`status: ${existing.status} → ${status}`);
           }
 
-          if (Object.keys(data).length === 0) return 'unchanged' as const;
+          if (quotaOverrides.size > 0) {
+            const currentQuotas = await tx.leaveQuota.findMany({
+              where: { employeeId: existing.id, year, leaveTypeId: { in: [...quotaOverrides.keys()] } },
+            });
+            const currentByType = new Map(currentQuotas.map((q) => [q.leaveTypeId, q.totalDays.toNumber()]));
 
-          await tx.employee.update({ where: { id: existing.id }, data });
+            for (const [leaveTypeId, totalDays] of quotaOverrides) {
+              const before = currentByType.get(leaveTypeId);
+              if (before === totalDays) continue;
+
+              await tx.leaveQuota.upsert({
+                where: { employeeId_leaveTypeId_year: { employeeId: existing.id, leaveTypeId, year } },
+                update: { totalDays },
+                create: { tenantId, employeeId: existing.id, leaveTypeId, year, totalDays },
+              });
+
+              const label = leaveTypes.find((t) => t.id === leaveTypeId)?.name ?? leaveTypeId;
+              changes.push(`quota ${label}: ${before ?? '(none)'} → ${totalDays}`);
+            }
+          }
+
+          if (Object.keys(data).length === 0 && changes.length === 0) return 'unchanged' as const;
+
+          if (Object.keys(data).length > 0) {
+            await tx.employee.update({ where: { id: existing.id }, data });
+          }
 
           if (changes.length > 0) {
             await this.audit.record(tx, {

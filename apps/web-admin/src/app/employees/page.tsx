@@ -19,6 +19,7 @@ import {
   updateEmployee,
   updateEmployeeQuotas,
 } from "@/lib/employees";
+import { type LeaveType, listLeaveTypes } from "@/lib/leaveTypes";
 
 const ROLE_LABEL: Record<Role, string> = {
   tenant_admin: "ฝ่ายบุคคล",
@@ -479,16 +480,17 @@ function EditQuotaModal({
   );
 }
 
-const CSV_TEMPLATE =
-  "employeeCode,fullName,email,phone,department,branch,position,role,status,directManagerEmployeeCode\n" +
-  "EMP100,ชื่อ นามสกุล,emp100@example.com,0812345678,ฝ่ายขาย,,ตำแหน่ง,employee,active,EMP001\n";
-
 function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [csvText, setCsvText] = useState<string | null>(null);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+
+  useEffect(() => {
+    listLeaveTypes().then(setLeaveTypes).catch(() => {});
+  }, []);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -502,7 +504,12 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
   }
 
   function downloadTemplate() {
-    const blob = new Blob(["﻿" + CSV_TEMPLATE], { type: "text/csv;charset=utf-8" });
+    const quotaCols = leaveTypes.map((t) => `quota:${t.name}`);
+    const header = ["employeeCode", "fullName", "email", "phone", "department", "branch", "position", "role", "status", "directManagerEmployeeCode", ...quotaCols].join(",");
+    const sampleQuotas = leaveTypes.map((t) => t.defaultQuota).join(",");
+    const sample = `EMP100,ชื่อ นามสกุล,emp100@example.com,0812345678,ฝ่ายขาย,,ตำแหน่ง,employee,active,EMP001${quotaCols.length > 0 ? "," + sampleQuotas : ""}`;
+    const csv = `${header}\n${sample}\n`;
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -534,8 +541,14 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
         <p className="text-xs text-neutral-500">
           คอลัมน์ที่ต้องมี: employeeCode, fullName, email — คอลัมน์อื่น (phone, department, branch, position, role,
           status, directManagerEmployeeCode) ไม่บังคับ พนักงานที่มีรหัสตรงกับข้อมูลเดิมจะถูกอัปเดต ไม่สร้างซ้ำ
-          และการเปลี่ยนบทบาท/สายบังคับบัญชา/สถานะ จะถูกบันทึกลง Audit Log เป็นรายบุคคล
+          และการเปลี่ยนบทบาท/สายบังคับบัญชา/สถานะ/โควตา จะถูกบันทึกลง Audit Log เป็นรายบุคคล
         </p>
+        {leaveTypes.length > 0 && (
+          <p className="text-xs text-neutral-500">
+            กำหนดโควตาเฉพาะรายคนได้ด้วยคอลัมน์ (ไม่บังคับ, ค่าว่าง = ใช้ค่ามาตรฐาน):{" "}
+            {leaveTypes.map((t) => `quota:${t.name}`).join(", ")}
+          </p>
+        )}
         <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-teal-700 hover:text-teal-900">
           ⬇ ดาวน์โหลดไฟล์ตัวอย่าง
         </button>
