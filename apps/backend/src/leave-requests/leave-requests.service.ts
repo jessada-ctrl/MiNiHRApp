@@ -81,13 +81,16 @@ export class LeaveRequestsService {
     });
     const total = quota ? quota.totalDays.toNumber() : 0;
 
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+
     const [approvedAgg, pendingAgg] = await Promise.all([
       this.prisma.leaveRequest.aggregate({
-        where: { employeeId, leaveTypeId, status: 'approved' },
+        where: { employeeId, leaveTypeId, status: 'approved', startDatetime: { gte: yearStart, lt: yearEnd } },
         _sum: { totalDays: true },
       }),
       this.prisma.leaveRequest.aggregate({
-        where: { employeeId, leaveTypeId, status: 'pending' },
+        where: { employeeId, leaveTypeId, status: 'pending', startDatetime: { gte: yearStart, lt: yearEnd } },
         _sum: { totalDays: true },
       }),
     ]);
