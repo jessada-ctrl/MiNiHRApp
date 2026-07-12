@@ -8,11 +8,19 @@ const DEMO_PASSWORD = 'Passw0rd!'; // local dev only — never do this in a real
 async function main() {
   const tenant = await prisma.tenant.upsert({
     where: { subdomain: 'testco' },
-    update: {},
+    update: {
+      // Fake — not a real LINE channel. Only exists so LineSignatureGuard
+      // (NFR-3) has something to verify against in local dev. Real values
+      // come from FR-1.2 (Dynamic LINE OA Config), not built yet.
+      lineChannelId: 'FAKE_CHANNEL_ID_LOCAL_DEV',
+      lineChannelSecretEnc: 'fake-local-dev-channel-secret-not-real',
+    },
     create: {
       companyName: 'บริษัท เทสต์โก จำกัด',
       subdomain: 'testco',
       subscriptionStatus: 'trial',
+      lineChannelId: 'FAKE_CHANNEL_ID_LOCAL_DEV',
+      lineChannelSecretEnc: 'fake-local-dev-channel-secret-not-real',
     },
   });
 

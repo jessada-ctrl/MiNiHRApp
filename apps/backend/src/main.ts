@@ -3,7 +3,10 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: true — LineSignatureGuard (NFR-3) needs the exact raw bytes LINE
+  // signed, not the re-serialized parsed JSON (which can differ byte-for-byte
+  // from what was actually sent and would make every signature check fail).
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.enableCors({
     // Local dev origins for the two frontends. Tighten to real domains
