@@ -18,6 +18,42 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
+  const branch = await prisma.branch.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
+      tenantId: tenant.id,
+      branchName: 'สำนักงานใหญ่ กรุงเทพฯ',
+      address: '123 ถนนสุขุมวิท กรุงเทพฯ',
+      latitude: 13.7563,
+      longitude: 100.5018,
+      radiusMeters: 50,
+    },
+  });
+
+  const hrDept = await prisma.department.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000011' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000011',
+      tenantId: tenant.id,
+      branchId: branch.id,
+      departmentName: 'ฝ่ายบุคคล',
+    },
+  });
+
+  const salesDept = await prisma.department.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000012' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000012',
+      tenantId: tenant.id,
+      branchId: branch.id,
+      departmentName: 'ฝ่ายขาย',
+    },
+  });
+
   const hrAdmin = await prisma.employee.upsert({
     where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP004' } },
     update: {},
@@ -29,6 +65,8 @@ async function main() {
       role: 'tenant_admin',
       passwordHash,
       status: 'active',
+      branchId: branch.id,
+      departmentId: hrDept.id,
     },
   });
 
@@ -43,6 +81,8 @@ async function main() {
       role: 'approver',
       passwordHash,
       status: 'active',
+      branchId: branch.id,
+      departmentId: salesDept.id,
     },
   });
 
@@ -57,6 +97,8 @@ async function main() {
       role: 'employee',
       directManagerId: approver.id,
       status: 'active',
+      branchId: branch.id,
+      departmentId: salesDept.id,
     },
   });
 

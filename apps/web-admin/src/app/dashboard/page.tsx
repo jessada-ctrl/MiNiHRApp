@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getCurrentUser, logout, type AuthUser } from "@/lib/auth";
 
@@ -65,9 +66,17 @@ export default function DashboardPage() {
       <div className="p-6">
         <h1 className="text-xl font-semibold text-neutral-900">ภาพรวม</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          เข้าสู่ระบบสำเร็จในนาม <span className="font-medium text-neutral-700">{user.email}</span> — โมดูลพนักงาน,
-          คำขอลา และรายงานจะมาต่อในเฟสถัดไป
+          เข้าสู่ระบบสำเร็จในนาม <span className="font-medium text-neutral-700">{user.email}</span>
         </p>
+
+        <div className="mt-6 flex gap-4">
+          <Link
+            href="/employees"
+            className="rounded-lg border border-neutral-200 bg-white px-5 py-4 text-sm font-medium text-neutral-800 shadow-sm hover:border-teal-300 hover:bg-teal-50"
+          >
+            👥 พนักงาน
+          </Link>
+        </div>
       </div>
     </main>
   );
