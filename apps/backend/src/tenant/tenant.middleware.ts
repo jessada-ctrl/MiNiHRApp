@@ -40,7 +40,13 @@ export class TenantMiddleware implements NestMiddleware {
       return tenantContext.run({ tenantId }, () => next());
     }
 
-    const headerOverride = req.header('x-tenant-subdomain');
+    // The X-Tenant-Subdomain override is a local-dev/API-testing convenience
+    // ONLY — honoring a client-supplied header for tenant resolution in
+    // production would let any caller point their request at a different
+    // tenant's subdomain context. (JwtStrategy's tenantId cross-check would
+    // still catch an authenticated request that tried to pivot tenants this
+    // way, but there's no reason to accept the header at all outside dev.)
+    const headerOverride = process.env.NODE_ENV === 'production' ? undefined : req.header('x-tenant-subdomain');
     const subdomain = headerOverride ?? req.hostname.split('.')[0];
 
     if (!subdomain) {
