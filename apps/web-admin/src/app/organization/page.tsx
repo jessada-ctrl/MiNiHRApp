@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { getCurrentUser } from "@/lib/auth";
 import {
   type Branch,
   type Department,
@@ -22,6 +23,11 @@ export default function OrganizationPage() {
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
   const [showAddDept, setShowAddDept] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    getCurrentUser().then((u) => setCanManage(u?.role === "tenant_admin"));
+  }, []);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -53,12 +59,14 @@ export default function OrganizationPage() {
         <section className="mt-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-neutral-800">สาขา</h2>
-            <button
-              onClick={() => setShowAddBranch(true)}
-              className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800"
-            >
-              + เพิ่มสาขา
-            </button>
+            {canManage && (
+              <button
+                onClick={() => setShowAddBranch(true)}
+                className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800"
+              >
+                + เพิ่มสาขา
+              </button>
+            )}
           </div>
           <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
             <table className="min-w-full divide-y divide-neutral-200 text-sm">
@@ -99,9 +107,13 @@ export default function OrganizationPage() {
                       <StatusBadge active={b.isActive} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-teal-700 hover:text-teal-900">
-                        แก้ไข
-                      </button>
+                      {canManage ? (
+                        <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-teal-700 hover:text-teal-900">
+                          แก้ไข
+                        </button>
+                      ) : (
+                        <span className="text-xs text-neutral-300">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -113,12 +125,14 @@ export default function OrganizationPage() {
         <section className="mt-8">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-neutral-800">แผนก</h2>
-            <button
-              onClick={() => setShowAddDept(true)}
-              className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800"
-            >
-              + เพิ่มแผนก
-            </button>
+            {canManage && (
+              <button
+                onClick={() => setShowAddDept(true)}
+                className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800"
+              >
+                + เพิ่มแผนก
+              </button>
+            )}
           </div>
           <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
             <table className="min-w-full divide-y divide-neutral-200 text-sm">
@@ -153,9 +167,13 @@ export default function OrganizationPage() {
                       <StatusBadge active={d.isActive} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-teal-700 hover:text-teal-900">
-                        แก้ไข
-                      </button>
+                      {canManage ? (
+                        <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-teal-700 hover:text-teal-900">
+                          แก้ไข
+                        </button>
+                      ) : (
+                        <span className="text-xs text-neutral-300">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -47,7 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/employees", label: "พนักงาน", icon: IconUsers, roles: ["tenant_admin", "approver"] },
   { href: "/organization", label: "สาขา/แผนก", icon: IconBuilding, roles: ["tenant_admin", "approver"] },
   { href: "/leave-types", label: "ประเภทการลา", icon: IconTag, roles: ["tenant_admin"] },
-  { href: "/workflows", label: "สายอนุมัติ", icon: IconFlow, roles: ["tenant_admin", "approver"] },
+  { href: "/workflows", label: "สายอนุมัติ", icon: IconFlow, roles: ["tenant_admin"] },
   { href: "/approvals", label: "รออนุมัติ", icon: IconCheck, roles: ["tenant_admin", "approver"] },
   { href: "/holidays", label: "ปฏิทินวันหยุด", icon: IconCalendar, roles: ["tenant_admin", "approver", "employee"] },
   { href: "/reports", label: "รายงาน", icon: IconChart, roles: ["tenant_admin"] },

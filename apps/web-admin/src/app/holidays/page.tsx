@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { getCurrentUser } from "@/lib/auth";
 import { type Holiday, createHoliday, deleteHoliday, listHolidays } from "@/lib/holidays";
 
 export default function HolidaysPage() {
@@ -10,6 +11,11 @@ export default function HolidaysPage() {
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    getCurrentUser().then((u) => setCanManage(u?.role === "tenant_admin"));
+  }, []);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -42,12 +48,14 @@ export default function HolidaysPage() {
     <AppShell
       title="ปฏิทินวันหยุด"
       actions={
-        <button
-          onClick={() => setShowAdd(true)}
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
-        >
-          + เพิ่มวันหยุด
-        </button>
+        canManage && (
+          <button
+            onClick={() => setShowAdd(true)}
+            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+          >
+            + เพิ่มวันหยุด
+          </button>
+        )
       }
     >
       <div>
@@ -68,13 +76,15 @@ export default function HolidaysPage() {
               </span>
               <span className="flex-1 font-medium text-neutral-900">{h.name}</span>
               <span className="text-xs text-neutral-400">🔔 ล่วงหน้า {h.notifyDaysBefore} วัน</span>
-              <button
-                onClick={() => handleDelete(h.id)}
-                disabled={busyId === h.id}
-                className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
-              >
-                ลบ
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => handleDelete(h.id)}
+                  disabled={busyId === h.id}
+                  className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  ลบ
+                </button>
+              )}
             </div>
           ))}
         </div>

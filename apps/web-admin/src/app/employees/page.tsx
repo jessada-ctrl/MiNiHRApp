@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { getCurrentUser } from "@/lib/auth";
 import {
   type Branch,
   type BulkImportResult,
@@ -42,6 +43,11 @@ export default function EmployeesPage() {
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [editingQuota, setEditingQuota] = useState<Employee | null>(null);
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    getCurrentUser().then((u) => setCanManage(u?.role === "tenant_admin"));
+  }, []);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -65,20 +71,22 @@ export default function EmployeesPage() {
     <AppShell
       title="พนักงาน"
       actions={
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowImport(true)}
-            className="rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50"
-          >
-            ⬆ นำเข้าจากไฟล์
-          </button>
-          <button
-            onClick={() => setShowAdd(true)}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
-          >
-            + เพิ่มพนักงาน
-          </button>
-        </div>
+        canManage && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowImport(true)}
+              className="rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50"
+            >
+              ⬆ นำเข้าจากไฟล์
+            </button>
+            <button
+              onClick={() => setShowAdd(true)}
+              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+            >
+              + เพิ่มพนักงาน
+            </button>
+          </div>
+        )
       }
     >
       <div>
@@ -138,18 +146,24 @@ export default function EmployeesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <button
-                      onClick={() => setEditingQuota(e)}
-                      className="mr-3 text-sm font-medium text-neutral-600 hover:text-neutral-900"
-                    >
-                      ⚙ โควตา
-                    </button>
-                    <button
-                      onClick={() => setEditing(e)}
-                      className="text-sm font-medium text-teal-700 hover:text-teal-900"
-                    >
-                      แก้ไข
-                    </button>
+                    {canManage ? (
+                      <>
+                        <button
+                          onClick={() => setEditingQuota(e)}
+                          className="mr-3 text-sm font-medium text-neutral-600 hover:text-neutral-900"
+                        >
+                          ⚙ โควตา
+                        </button>
+                        <button
+                          onClick={() => setEditing(e)}
+                          className="text-sm font-medium text-teal-700 hover:text-teal-900"
+                        >
+                          แก้ไข
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-neutral-300">—</span>
+                    )}
                   </td>
                 </tr>
               ))}
