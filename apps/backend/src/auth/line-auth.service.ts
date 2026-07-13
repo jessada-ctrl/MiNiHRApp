@@ -30,6 +30,15 @@ export class LineAuthService {
    * app; if they match an active employee, generate + email a 6-digit OTP.
    * Always returns the same generic message regardless of match, so this
    * endpoint can't be used to enumerate valid employeeCode/email pairs.
+   *
+   * BUG-007: an `otp_verifications` row is created (and `attempts` gets
+   * incremented on wrong guesses) regardless of whether employeeCode+email
+   * actually matched a real employee — only the *email send* is skipped for
+   * a non-match. If row creation were conditional on a real match,
+   * `verifyOtp` could tell a real pair from a fake one purely by whether a
+   * row exists, defeating this endpoint's own anti-enumeration guarantee
+   * the moment someone calls both endpoints in sequence. See `verifyOtp`
+   * for the other half of this fix.
    */
   async requestOtp(employeeCode: string, email: string): Promise<{ message: string }> {
     const tenantId = getCurrentTenantId();
@@ -39,17 +48,16 @@ export class LineAuthService {
       where: { tenantId, employeeCode, email, status: 'active' },
       select: { id: true },
     });
-    if (!employee) return { message };
 
     const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, '0');
     const otpCodeHash = await bcrypt.hash(code, 10);
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
     await this.prisma.otpVerification.create({
-      data: { tenantId, employeeId: employee.id, employeeCode, email, otpCodeHash, expiresAt },
+      data: { tenantId, employeeId: employee?.id ?? null, employeeCode, email, otpCodeHash, expiresAt },
     });
 
-    await this.mailer.send(email, code);
+    if (employee) await this.mailer.send(email, code);
     return { message };
   }
 
@@ -65,6 +73,18 @@ export class LineAuthService {
    * value. Once real LIFF credentials exist, verifying the LIFF ID token's
    * signature server-side (via LINE's JWKS) instead of trusting this value
    * at face value is the remaining NFR-3 hardening step for this endpoint.
+   *
+   * BUG-007: the OTP row (looked up by employeeCode+email, not by employee
+   * id) is checked — and its expiry/attempts/code compared — *before* ever
+   * looking up whether a real employee backs it. Since `requestOtp` now
+   * creates a row for every employeeCode+email pair regardless of match,
+   * "no row found" only happens if `requestOtp` was never called for this
+   * exact pair, which is equally true for a real and a fake pair — it no
+   * longer signals which. The real-employee check only runs after a
+   * correct code match, so guessing right on a fake pair (a ~1-in-1e6
+   * chance, capped at 5 tries before lockout) is the only way to reach it —
+   * an accepted residual risk for OTP-based systems, not a distinguishable
+   * error path.
    */
   async verifyOtp(
     employeeCode: string,
@@ -74,27 +94,30 @@ export class LineAuthService {
     actor: ActorContext,
   ): Promise<{ accessToken: string; user: AuthenticatedUser }> {
     const tenantId = getCurrentTenantId();
-
-    const employee = await this.prisma.employee.findFirst({
-      where: { tenantId, employeeCode, email, status: 'active' },
-    });
-    if (!employee) throw new BadRequestException('Invalid employee code, email, or OTP');
+    const genericInvalid = 'Invalid employee code, email, or OTP';
 
     const otp = await this.prisma.otpVerification.findFirst({
       where: { tenantId, employeeCode, email, verifiedAt: null },
       orderBy: { createdAt: 'desc' },
     });
-    if (!otp) throw new BadRequestException('Invalid employee code, email, or OTP');
-    if (otp.expiresAt < new Date()) throw new BadRequestException('OTP has expired — please request a new one');
+    if (!otp) throw new BadRequestException(genericInvalid);
     if (otp.attempts >= MAX_OTP_ATTEMPTS) {
       throw new BadRequestException('Too many incorrect attempts — please request a new OTP');
     }
+    if (otp.expiresAt < new Date()) throw new BadRequestException('OTP has expired — please request a new one');
 
     const codeOk = await bcrypt.compare(otpCode, otp.otpCodeHash);
     if (!codeOk) {
       await this.prisma.otpVerification.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
       throw new BadRequestException('Invalid OTP code');
     }
+
+    // Only reachable with a correct code match — see the BUG-007 note above
+    // for why the real-employee check has to live here, not earlier.
+    const employee = await this.prisma.employee.findFirst({
+      where: { tenantId, employeeCode, email, status: 'active' },
+    });
+    if (!employee) throw new BadRequestException(genericInvalid);
 
     const boundToSomeoneElse = await this.prisma.employee.findFirst({
       where: { tenantId, lineUserId, id: { not: employee.id } },
