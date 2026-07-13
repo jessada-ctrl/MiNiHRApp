@@ -45,7 +45,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "แดชบอร์ด", icon: IconHome, roles: ["tenant_admin", "approver", "employee"] },
   { href: "/employees", label: "พนักงาน", icon: IconUsers, roles: ["tenant_admin", "approver"] },
-  { href: "/organization", label: "สาขา/แผนก", icon: IconBuilding, roles: ["tenant_admin", "approver"] },
+  { href: "/organization", label: "สาขา/แผนก", icon: IconBuilding, roles: ["tenant_admin"] },
   { href: "/leave-types", label: "ประเภทการลา", icon: IconTag, roles: ["tenant_admin"] },
   { href: "/workflows", label: "สายอนุมัติ", icon: IconFlow, roles: ["tenant_admin"] },
   { href: "/approvals", label: "รออนุมัติ", icon: IconCheck, roles: ["tenant_admin", "approver"] },
