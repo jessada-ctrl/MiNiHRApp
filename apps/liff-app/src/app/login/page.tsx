@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { login } from "@/lib/auth";
 
 export default function LoginPage() {
@@ -70,6 +71,13 @@ export default function LoginPage() {
             {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </button>
         </form>
+
+        <p className="mt-4 text-center text-xs text-neutral-400">
+          ยังไม่ได้ผูกบัญชี LINE?{" "}
+          <Link href="/register" className="text-teal-700 underline">
+            ผูกบัญชีด้วย OTP
+          </Link>
+        </p>
       </div>
     </main>
   );

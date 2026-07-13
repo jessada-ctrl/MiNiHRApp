@@ -157,6 +157,7 @@ model OtpVerification {
   employeeCode String    @map("employee_code")
   email        String
   otpCodeHash  String    @map("otp_code_hash")
+  attempts     Int       @default(0)
   expiresAt    DateTime  @map("expires_at")
   verifiedAt   DateTime? @map("verified_at")
   createdAt    DateTime  @default(now()) @map("created_at")

@@ -4,6 +4,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { LineAuthService } from './line-auth.service';
+import { OtpMailerService } from './otp-mailer.service';
 import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
 
@@ -21,7 +23,7 @@ import { RolesGuard } from './roles.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RolesGuard],
+  providers: [AuthService, LineAuthService, OtpMailerService, JwtStrategy, RolesGuard],
   exports: [RolesGuard],
 })
 export class AuthModule {}

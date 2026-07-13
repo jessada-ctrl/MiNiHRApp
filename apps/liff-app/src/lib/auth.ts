@@ -31,3 +31,26 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 export function logout(): void {
   clearToken();
 }
+
+export async function requestLineOtp(employeeCode: string, email: string): Promise<{ message: string }> {
+  const res = await apiFetch("/auth/line/request-otp", {
+    method: "POST",
+    body: JSON.stringify({ employeeCode, email }),
+  });
+  return unwrap(res);
+}
+
+export async function verifyLineOtp(
+  employeeCode: string,
+  email: string,
+  otpCode: string,
+  lineUserId: string,
+): Promise<AuthUser> {
+  const res = await apiFetch("/auth/line/verify-otp", {
+    method: "POST",
+    body: JSON.stringify({ employeeCode, email, otpCode, lineUserId }),
+  });
+  const data: { accessToken: string; user: AuthUser } = await unwrap(res);
+  setToken(data.accessToken);
+  return data.user;
+}
