@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import {
   type LeaveType,
   createLeaveType,
@@ -84,24 +85,18 @@ export default function LeaveTypesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-lg font-semibold text-teal-800">
-            MiniHR
-          </Link>
-          <span className="text-neutral-300">/</span>
-          <span className="text-sm text-neutral-600">ประเภทการลา</span>
-        </div>
+    <AppShell
+      title="ประเภทการลา"
+      actions={
         <button
           onClick={() => setShowAdd(true)}
           className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
         >
           + เพิ่มประเภทการลา
         </button>
-      </header>
-
-      <div className="p-6">
+      }
+    >
+      <div>
         <h1 className="text-xl font-semibold text-neutral-900">ประเภทการลา</h1>
         <p className="mt-1 text-sm text-neutral-500">
           การแก้ไขโควตามาตรฐานที่นี่มีผลกับพนักงานที่เพิ่มใหม่เท่านั้น ไม่ย้อนเปลี่ยนโควตาของพนักงานปัจจุบัน — ปรับรายบุคคลได้ที่หน้า{" "}
@@ -197,7 +192,7 @@ export default function LeaveTypesPage() {
           }}
         />
       )}
-    </main>
+    </AppShell>
   );
 }
 

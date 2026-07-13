@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import { type Employee, listEmployees } from "@/lib/employees";
 import {
   type ApproverType,
@@ -46,24 +46,18 @@ export default function WorkflowsPage() {
   }, [refresh]);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-lg font-semibold text-teal-800">
-            MiniHR
-          </Link>
-          <span className="text-neutral-300">/</span>
-          <span className="text-sm text-neutral-600">สายอนุมัติ</span>
-        </div>
+    <AppShell
+      title="สายอนุมัติ"
+      actions={
         <button
           onClick={() => setShowAdd(true)}
           className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
         >
           + สร้างสายอนุมัติ
         </button>
-      </header>
-
-      <div className="p-6">
+      }
+    >
+      <div>
         <h1 className="text-xl font-semibold text-neutral-900">สายอนุมัติ (Approval Workflow Builder)</h1>
         <p className="mt-1 text-sm text-neutral-500">ลากบล็อกเพื่อสลับลำดับขั้นตอน แล้วกดบันทึกในแต่ละสาย</p>
 
@@ -90,7 +84,7 @@ export default function WorkflowsPage() {
           }}
         />
       )}
-    </main>
+    </AppShell>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import { type LeaveType, listLeaveTypes } from "@/lib/leaveTypes";
 import { type ReportFilters, type ReportRow, downloadLeaveReportCsv, fetchLeaveReport } from "@/lib/reports";
 
@@ -62,15 +62,9 @@ export default function ReportsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-lg font-semibold text-teal-800">
-            MiniHR
-          </Link>
-          <span className="text-neutral-300">/</span>
-          <span className="text-sm text-neutral-600">รายงาน</span>
-        </div>
+    <AppShell
+      title="รายงาน"
+      actions={
         <button
           onClick={handleExport}
           disabled={exporting}
@@ -78,9 +72,9 @@ export default function ReportsPage() {
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>
-      </header>
-
-      <div className="p-6">
+      }
+    >
+      <div>
         <h1 className="text-xl font-semibold text-neutral-900">รายงานคำขอลา</h1>
         <p className="mt-1 text-sm text-neutral-500">การ Export แต่ละครั้งจะถูกบันทึกลง Audit Log</p>
 
@@ -171,7 +165,7 @@ export default function ReportsPage() {
           </table>
         </div>
       </div>
-    </main>
+    </AppShell>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import {
   type LeaveRequest,
   approveLeaveRequest,
@@ -38,16 +38,8 @@ export default function ApprovalsPage() {
   }, [refresh]);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <header className="flex items-center gap-4 border-b border-neutral-200 bg-white px-6 py-4">
-        <Link href="/dashboard" className="text-lg font-semibold text-teal-800">
-          MiniHR
-        </Link>
-        <span className="text-neutral-300">/</span>
-        <span className="text-sm text-neutral-600">รออนุมัติ</span>
-      </header>
-
-      <div className="p-6">
+    <AppShell title="รออนุมัติ">
+      <div>
         <h1 className="text-xl font-semibold text-neutral-900">คำขอลาที่รออนุมัติ</h1>
         <p className="mt-1 text-sm text-neutral-500">แสดงเฉพาะคำขอที่ถึงคิวคุณในขั้นตอนปัจจุบัน</p>
 
@@ -93,7 +85,7 @@ export default function ApprovalsPage() {
           }}
         />
       )}
-    </main>
+    </AppShell>
   );
 }
 

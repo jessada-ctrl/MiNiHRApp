@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import {
   type Branch,
   type BulkImportResult,
@@ -62,15 +62,9 @@ export default function EmployeesPage() {
   }, [refresh]);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-lg font-semibold text-teal-800">
-            MiniHR
-          </Link>
-          <span className="text-neutral-300">/</span>
-          <span className="text-sm text-neutral-600">พนักงาน</span>
-        </div>
+    <AppShell
+      title="พนักงาน"
+      actions={
         <div className="flex gap-2">
           <button
             onClick={() => setShowImport(true)}
@@ -85,9 +79,9 @@ export default function EmployeesPage() {
             + เพิ่มพนักงาน
           </button>
         </div>
-      </header>
-
-      <div className="p-6">
+      }
+    >
+      <div>
         <h1 className="text-xl font-semibold text-neutral-900">พนักงาน</h1>
         <p className="mt-1 text-sm text-neutral-500">
           จัดการโครงสร้างองค์กรและสิทธิ์การใช้งาน — การเปลี่ยนบทบาท สายบังคับบัญชา หรือสถานะ จะถูกบันทึกลง Audit Log
@@ -200,7 +194,7 @@ export default function EmployeesPage() {
           }}
         />
       )}
-    </main>
+    </AppShell>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import {
   type Branch,
   type Department,
@@ -41,18 +41,8 @@ export default function OrganizationPage() {
   }, [refresh]);
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-lg font-semibold text-teal-800">
-            MiniHR
-          </Link>
-          <span className="text-neutral-300">/</span>
-          <span className="text-sm text-neutral-600">โครงสร้างองค์กร</span>
-        </div>
-      </header>
-
-      <div className="p-6">
+    <AppShell title="สาขา/แผนก">
+      <div>
         <h1 className="text-xl font-semibold text-neutral-900">โครงสร้างองค์กร</h1>
         <p className="mt-1 text-sm text-neutral-500">
           จัดการสาขา (พร้อมพิกัดและรัศมีสำหรับเช็คอินเข้างาน) และแผนก — การปิดใช้งานจะถูกบันทึกลง Audit Log
@@ -215,7 +205,7 @@ export default function OrganizationPage() {
           }}
         />
       )}
-    </main>
+    </AppShell>
   );
 }
 

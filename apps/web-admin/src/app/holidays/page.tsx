@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
 import { type Holiday, createHoliday, deleteHoliday, listHolidays } from "@/lib/holidays";
 
 export default function HolidaysPage() {
@@ -39,24 +39,18 @@ export default function HolidaysPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-lg font-semibold text-teal-800">
-            MiniHR
-          </Link>
-          <span className="text-neutral-300">/</span>
-          <span className="text-sm text-neutral-600">ปฏิทินวันหยุด</span>
-        </div>
+    <AppShell
+      title="ปฏิทินวันหยุด"
+      actions={
         <button
           onClick={() => setShowAdd(true)}
           className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
         >
           + เพิ่มวันหยุด
         </button>
-      </header>
-
-      <div className="p-6">
+      }
+    >
+      <div>
         <h1 className="text-xl font-semibold text-neutral-900">ปฏิทินวันหยุดประจำปี</h1>
         <p className="mt-1 text-sm text-neutral-500">
           ระบบจะแจ้งเตือนพนักงานผ่าน LINE ล่วงหน้าตามจำนวนวันที่กำหนด — ส่วนการส่งแจ้งเตือนอัตโนมัติจริงยังไม่เปิดใช้งาน (รอเชื่อมต่อ LINE)
@@ -95,7 +89,7 @@ export default function HolidaysPage() {
           }}
         />
       )}
-    </main>
+    </AppShell>
   );
 }
 
