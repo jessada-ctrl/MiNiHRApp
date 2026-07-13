@@ -416,7 +416,16 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
       }}
     >
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-        <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+          <button
+            onClick={onClose}
+            aria-label="ปิด"
+            className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          >
+            ✕
+          </button>
+        </div>
         <div className="mt-4">{children}</div>
       </div>
     </div>

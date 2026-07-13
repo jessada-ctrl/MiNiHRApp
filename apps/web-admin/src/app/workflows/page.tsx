@@ -287,7 +287,16 @@ function AddWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
       }}
     >
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-        <h2 className="text-lg font-semibold text-neutral-900">สร้างสายอนุมัติ</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-lg font-semibold text-neutral-900">สร้างสายอนุมัติ</h2>
+          <button
+            onClick={onClose}
+            aria-label="ปิด"
+            className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          >
+            ✕
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
           <label className="block">
             <span className="block text-sm font-medium text-neutral-700">ชื่อสายอนุมัติ</span>

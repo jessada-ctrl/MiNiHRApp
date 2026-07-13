@@ -141,14 +141,23 @@ function ReviewModal({
       }}
     >
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-teal-800">
-            {request.employee.fullName.charAt(0)}
-          </span>
-          <div>
-            <h2 className="font-semibold text-neutral-900">{request.employee.fullName}</h2>
-            <p className="text-xs text-neutral-500">ตรวจสอบคำขอลา</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-teal-800">
+              {request.employee.fullName.charAt(0)}
+            </span>
+            <div>
+              <h2 className="font-semibold text-neutral-900">{request.employee.fullName}</h2>
+              <p className="text-xs text-neutral-500">ตรวจสอบคำขอลา</p>
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            aria-label="ปิด"
+            className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          >
+            ✕
+          </button>
         </div>
 
         <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
