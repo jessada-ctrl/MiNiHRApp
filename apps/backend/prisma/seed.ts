@@ -96,7 +96,16 @@ async function main() {
 
   const employee1 = await prisma.employee.upsert({
     where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP001' } },
-    update: { passwordHash, status: 'active', role: 'employee', directManagerId: approver.id },
+    update: {
+      passwordHash,
+      status: 'active',
+      role: 'employee',
+      directManagerId: approver.id,
+      // Fake — not a real LINE user id, so the chatbot demo (scripts/demo-chatbot.sh)
+      // has an employee to resolve without needing to run the real OTP binding
+      // flow (FR-2.1) against a live LINE account first.
+      lineUserId: 'Udemo0000000000000000000000001',
+    },
     create: {
       tenantId: tenant.id,
       employeeCode: 'EMP001',
@@ -108,6 +117,7 @@ async function main() {
       branchId: branch.id,
       departmentId: salesDept.id,
       passwordHash, // temporary — see auth.service.ts note; real employees use LINE OTP (FR-2.1)
+      lineUserId: 'Udemo0000000000000000000000001',
     },
   });
 
@@ -188,6 +198,7 @@ async function main() {
   console.log(`Login as Approver: ${approver.email} / ${DEMO_PASSWORD}`);
   console.log(`Try: curl -X POST http://localhost:3001/v1/webhook/line/${tenant.id} -H "Content-Type: application/json" -d "{}"`);
   console.log('Try: curl http://localhost:3001/health');
+  console.log(`Try the LINE chatbot: ./scripts/demo-chatbot.sh ${tenant.id} "ลาป่วยเหลือกี่วัน"`);
 }
 
 main()

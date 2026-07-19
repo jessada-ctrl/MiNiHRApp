@@ -40,8 +40,12 @@ export class ChatbotOrchestratorService {
       return;
     }
 
-    this.logger.log(`Chatbot question from employee ${employee.id}`);
+    this.logger.log(`Chatbot question from employee ${employee.id}: "${text}"`);
     const answer = await this.chatbot.answer(employee.id, text);
+    // Logged at info level (not just sent via push) so the answer is visible
+    // in server logs even when a tenant has no LINE access token configured
+    // yet (e.g. local dev / demo) — pushText degrades to a warning in that case.
+    this.logger.log(`Chatbot answer for employee ${employee.id}: "${answer}"`);
     await this.lineMessaging.pushText(tenantId, lineUserId, answer);
   }
 }
