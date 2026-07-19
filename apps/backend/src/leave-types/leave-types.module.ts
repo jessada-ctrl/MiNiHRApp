@@ -5,5 +5,6 @@ import { LeaveTypesService } from './leave-types.service';
 @Module({
   controllers: [LeaveTypesController],
   providers: [LeaveTypesService],
+  exports: [LeaveTypesService],
 })
 export class LeaveTypesModule {}

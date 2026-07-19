@@ -166,6 +166,18 @@ export class EmployeesService {
     });
   }
 
+  /**
+   * Used by the LINE chatbot (and anywhere else routing an inbound LINE
+   * event needs to resolve "who sent this"). `tenantId` is passed explicitly
+   * alongside `lineUserId` — matching the convention in line-auth.service.ts —
+   * even though TENANT_PRISMA already scopes the query, so this stays
+   * correct if that extension is ever bypassed.
+   */
+  findByLineUserId(lineUserId: string) {
+    const tenantId = getCurrentTenantId();
+    return this.prisma.employee.findFirst({ where: { tenantId, lineUserId } });
+  }
+
   async getQuotas(employeeId: string, year = new Date().getFullYear()) {
     return this.prisma.leaveQuota.findMany({
       where: { employeeId, year },

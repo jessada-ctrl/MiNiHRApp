@@ -5,5 +5,6 @@ import { LeaveRequestsService } from './leave-requests.service';
 @Module({
   controllers: [LeaveRequestsController],
   providers: [LeaveRequestsService],
+  exports: [LeaveRequestsService],
 })
 export class LeaveRequestsModule {}
