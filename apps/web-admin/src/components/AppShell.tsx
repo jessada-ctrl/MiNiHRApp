@@ -31,6 +31,9 @@ const IconFlow = Icon("M6 4h4v4H6zM14 16h4v4h-4zM8 8v4a2 2 0 0 0 2 2h4M14 8v-.5"
 const IconCheck = Icon("M9 12.5 11.2 15 15.5 9M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z");
 const IconCalendar = Icon("M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z");
 const IconChart = Icon("M4 20V10M11 20V4M18 20v-7M3 20h18");
+const IconGear = Icon(
+  "M10.3 3.4a1.5 1.5 0 0 1 3.4 0l.2.9a1.5 1.5 0 0 0 2.2.9l.8-.5a1.5 1.5 0 0 1 2 2l-.5.8a1.5 1.5 0 0 0 .9 2.2l.9.2a1.5 1.5 0 0 1 0 3.4l-.9.2a1.5 1.5 0 0 0-.9 2.2l.5.8a1.5 1.5 0 0 1-2 2l-.8-.5a1.5 1.5 0 0 0-2.2.9l-.2.9a1.5 1.5 0 0 1-3.4 0l-.2-.9a1.5 1.5 0 0 0-2.2-.9l-.8.5a1.5 1.5 0 0 1-2-2l.5-.8a1.5 1.5 0 0 0-.9-2.2l-.9-.2a1.5 1.5 0 0 1 0-3.4l.9-.2a1.5 1.5 0 0 0 .9-2.2l-.5-.8a1.5 1.5 0 0 1 2-2l.8.5a1.5 1.5 0 0 0 2.2-.9l.2-.9ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
+);
 const IconMenu = Icon("M4 6h16M4 12h16M4 18h16");
 const IconPanel = Icon("M4 5h16v14H4zM9 5v14");
 const IconLogout = Icon("M15 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1M10 12h10m0 0-3-3m3 3-3 3");
@@ -51,6 +54,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/approvals", label: "รออนุมัติ", icon: IconCheck, roles: ["tenant_admin", "approver"] },
   { href: "/holidays", label: "ปฏิทินวันหยุด", icon: IconCalendar, roles: ["tenant_admin", "approver", "employee"] },
   { href: "/reports", label: "รายงาน", icon: IconChart, roles: ["tenant_admin"] },
+  { href: "/settings", label: "ตั้งค่า LINE OA", icon: IconGear, roles: ["tenant_admin"] },
 ];
 
 export default function AppShell({

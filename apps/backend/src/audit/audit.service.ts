@@ -6,6 +6,14 @@ export interface AuditLogInput {
   targetTable: string;
   targetId?: string;
   ipAddress: string;
+  /**
+   * Only needed when `tx` comes from the *unscoped* PrismaService (e.g.
+   * writes against the Tenant model itself, which is excluded from
+   * tenant-scoping — see tenant-scoping.extension.ts). Tenant-scoped callers
+   * should omit this and let the extension auto-inject it on create, same
+   * as every other tenant-scoped model.
+   */
+  tenantId?: string;
 }
 
 /** Minimal shape AuditService needs from a (possibly transactional) Prisma client. */
