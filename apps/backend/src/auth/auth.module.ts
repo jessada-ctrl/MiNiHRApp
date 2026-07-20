@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LineAuthService } from './line-auth.service';
+import { LineModule } from '../line/line.module';
 import { OtpMailerService } from './otp-mailer.service';
 import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
@@ -13,6 +14,7 @@ import { RolesGuard } from './roles.guard';
   imports: [
     PassportModule,
     ConfigModule,
+    LineModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

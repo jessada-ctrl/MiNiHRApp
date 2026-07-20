@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 
 const LINE_PUSH_URL = 'https://api.line.me/v2/bot/message/push';
+const LINE_API = 'https://api.line.me';
 
 interface LineMessage {
   type: string;
@@ -40,6 +41,55 @@ export class LineMessagingService {
     await this.push(tenantId, lineUserId, [{ type: 'flex', altText, contents }], messageType, relatedRequestId);
   }
 
+  /**
+   * FR-2.1: switches a single user's Rich Menu (e.g. to the "registered"
+   * menu right after their OTP binding succeeds) — separate from the
+   * channel-wide default set once by scripts/setup-line-rich-menu.ts.
+   */
+  async linkRichMenu(tenantId: string, lineUserId: string, richMenuId: string): Promise<void> {
+    const accessToken = await this.getAccessToken(tenantId);
+    if (!accessToken) return;
+
+    try {
+      const res = await fetch(`${LINE_API}/v2/bot/user/${lineUserId}/richmenu/${richMenuId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) {
+        this.logger.error(`Rich menu link failed for tenant ${tenantId}: ${res.status} ${await res.text()}`);
+      }
+    } catch (err) {
+      this.logger.error(`Rich menu link threw for tenant ${tenantId}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  /** Convenience wrapper for the one call site that needs it (post-OTP-binding) — looks up the tenant's saved "registered" menu id itself. */
+  async linkRegisteredRichMenu(tenantId: string, lineUserId: string): Promise<void> {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { lineRichMenuRegisteredId: true } });
+    if (!tenant?.lineRichMenuRegisteredId) return;
+    await this.linkRichMenu(tenantId, lineUserId, tenant.lineRichMenuRegisteredId);
+  }
+
+  // Uses the *unscoped* PrismaService — Tenant isn't a tenant-scoped model,
+  // same reasoning as LineSignatureGuard.
+  //
+  // NFR-2 note: lineChannelAccessTokenEnc is not actually encrypted yet
+  // (same gap already flagged on lineChannelSecretEnc in
+  // line-signature.guard.ts) — read directly as plaintext until AES-256
+  // at-rest encryption for these columns is implemented.
+  private async getAccessToken(tenantId: string): Promise<string | null> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { lineChannelAccessTokenEnc: true },
+    });
+    const accessToken = tenant?.lineChannelAccessTokenEnc;
+    if (!accessToken) {
+      this.logger.warn(`Tenant ${tenantId} has no LINE channel access token configured`);
+      return null;
+    }
+    return accessToken;
+  }
+
   private async push(
     tenantId: string,
     lineUserId: string,
@@ -47,23 +97,8 @@ export class LineMessagingService {
     messageType: string,
     relatedRequestId?: string,
   ): Promise<void> {
-    // Uses the *unscoped* PrismaService — Tenant isn't a tenant-scoped model,
-    // same reasoning as LineSignatureGuard.
-    //
-    // NFR-2 note: lineChannelAccessTokenEnc is not actually encrypted yet
-    // (same gap already flagged on lineChannelSecretEnc in
-    // line-signature.guard.ts) — read directly as plaintext until AES-256
-    // at-rest encryption for these columns is implemented.
-    const tenant = await this.prisma.tenant.findUnique({
-      where: { id: tenantId },
-      select: { lineChannelAccessTokenEnc: true },
-    });
-    const accessToken = tenant?.lineChannelAccessTokenEnc;
-
-    if (!accessToken) {
-      this.logger.warn(`Tenant ${tenantId} has no LINE channel access token configured — cannot push message`);
-      return;
-    }
+    const accessToken = await this.getAccessToken(tenantId);
+    if (!accessToken) return;
 
     let status = 'sent';
     try {

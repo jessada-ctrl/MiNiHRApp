@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 import { TENANT_PRISMA } from '../prisma/prisma.module';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { AuditService } from '../audit/audit.service';
+import { LineMessagingService } from '../line/line-messaging.service';
 import { AuthenticatedUser, JwtPayload } from './jwt-payload.interface';
 import { OtpMailerService } from './otp-mailer.service';
 
@@ -18,11 +19,14 @@ interface ActorContext {
 
 @Injectable()
 export class LineAuthService {
+  private readonly logger = new Logger(LineAuthService.name);
+
   constructor(
     @Inject(TENANT_PRISMA) private readonly prisma: PrismaClient,
     private readonly jwt: JwtService,
     private readonly audit: AuditService,
     private readonly mailer: OtpMailerService,
+    private readonly lineMessaging: LineMessagingService,
   ) {}
 
   /**
@@ -137,6 +141,13 @@ export class LineAuthService {
         targetId: employee.id,
         ipAddress: actor.ipAddress,
       });
+    });
+
+    // FR-2.1: switch this user's Rich Menu from "unregistered" to
+    // "registered" now that binding succeeded. Fire-and-forget — a Rich
+    // Menu API hiccup must never fail an otherwise-successful registration.
+    this.lineMessaging.linkRegisteredRichMenu(employee.tenantId, lineUserId).catch((err) => {
+      this.logger.error(`Rich menu switch failed after binding employee ${employee.id}: ${err instanceof Error ? err.message : String(err)}`);
     });
 
     const payload: JwtPayload = {
