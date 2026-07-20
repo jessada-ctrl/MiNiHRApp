@@ -1,20 +1,52 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 
 const LINE_PUSH_URL = 'https://api.line.me/v2/bot/message/push';
 
+interface LineMessage {
+  type: string;
+  [key: string]: unknown;
+}
+
 /**
  * Sends LINE push messages (as opposed to replies — a reply token is
  * single-use and expires quickly, which doesn't fit a flow where an LLM
- * call sits between the inbound webhook and the outbound reply).
+ * call or an approval-workflow transition sits between the triggering event
+ * and the outbound message).
  */
 @Injectable()
 export class LineMessagingService {
   private readonly logger = new Logger(LineMessagingService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
 
   async pushText(tenantId: string, lineUserId: string, text: string): Promise<void> {
+    await this.push(tenantId, lineUserId, [{ type: 'text', text }], 'chatbot_reply');
+  }
+
+  /** Same delivery path as pushText, but for Flex Message cards (e.g. FR-3.1 approval notifications). */
+  async pushFlex(
+    tenantId: string,
+    lineUserId: string,
+    altText: string,
+    contents: Record<string, unknown>,
+    messageType: string,
+    relatedRequestId?: string,
+  ): Promise<void> {
+    await this.push(tenantId, lineUserId, [{ type: 'flex', altText, contents }], messageType, relatedRequestId);
+  }
+
+  private async push(
+    tenantId: string,
+    lineUserId: string,
+    messages: LineMessage[],
+    messageType: string,
+    relatedRequestId?: string,
+  ): Promise<void> {
     // Uses the *unscoped* PrismaService — Tenant isn't a tenant-scoped model,
     // same reasoning as LineSignatureGuard.
     //
@@ -41,7 +73,7 @@ export class LineMessagingService {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ to: lineUserId, messages: [{ type: 'text', text }] }),
+        body: JSON.stringify({ to: lineUserId, messages }),
       });
 
       if (!res.ok) {
@@ -60,9 +92,15 @@ export class LineMessagingService {
       data: {
         tenantId,
         recipientLineUserId: lineUserId,
-        messageType: 'chatbot_reply',
+        messageType,
+        relatedRequestId,
         status,
       },
     });
+  }
+
+  /** Base URL of the web-admin app the "🔎 ตรวจสอบ" button in Flex cards deep-links into (FR-3.1). */
+  get webAdminUrl(): string {
+    return this.config.get<string>('WEB_ADMIN_URL') ?? 'http://localhost:3000';
   }
 }

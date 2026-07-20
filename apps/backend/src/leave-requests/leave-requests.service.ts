@@ -1,7 +1,9 @@
-import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { TENANT_PRISMA } from '../prisma/prisma.module';
 import { getCurrentTenantId } from '../tenant/tenant-context';
+import { buildLeaveRequestFlex } from '../line/leave-request-flex';
+import { LineMessagingService } from '../line/line-messaging.service';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
 
 interface WorkflowStepSnapshot {
@@ -28,7 +30,48 @@ function daysBetweenISO(a: Date, b: Date): number {
 
 @Injectable()
 export class LeaveRequestsService {
-  constructor(@Inject(TENANT_PRISMA) private readonly prisma: PrismaClient) {}
+  private readonly logger = new Logger(LeaveRequestsService.name);
+
+  constructor(
+    @Inject(TENANT_PRISMA) private readonly prisma: PrismaClient,
+    private readonly lineMessaging: LineMessagingService,
+  ) {}
+
+  /**
+   * FR-3.1: pushes a LINE Flex Message to whichever approver is now
+   * responsible for this request. Best-effort — a missing LINE binding or a
+   * push failure (handled inside LineMessagingService itself) must never
+   * block the approval action that triggered it, so callers fire this
+   * without awaiting and only log if the lookup itself throws.
+   */
+  private async notifyApprover(params: {
+    approverEmployeeId: string;
+    employeeName: string;
+    leaveTypeName: string;
+    startDatetime: Date;
+    endDatetime: Date;
+    totalDays: number;
+    isOverQuota: boolean;
+    requestId: string;
+  }) {
+    const approver = await this.prisma.employee.findUnique({
+      where: { id: params.approverEmployeeId },
+      select: { lineUserId: true },
+    });
+    if (!approver?.lineUserId) return;
+
+    const tenantId = getCurrentTenantId();
+    const { altText, contents } = buildLeaveRequestFlex({
+      employeeName: params.employeeName,
+      leaveTypeName: params.leaveTypeName,
+      startDatetime: params.startDatetime,
+      endDatetime: params.endDatetime,
+      totalDays: params.totalDays,
+      isOverQuota: params.isOverQuota,
+      webAdminUrl: this.lineMessaging.webAdminUrl,
+    });
+    await this.lineMessaging.pushFlex(tenantId, approver.lineUserId, altText, contents, 'leave_request_pending', params.requestId);
+  }
 
   private computeTotalDays(dto: CreateLeaveRequestDto): { totalDays: number; startDatetime: Date; endDatetime: Date } {
     const start = new Date(`${dto.startDate}T00:00:00.000Z`);
@@ -203,7 +246,7 @@ export class LeaveRequestsService {
 
     const workflowSnapshot = await this.resolveWorkflowSnapshot(employeeId, dto.leaveTypeId);
 
-    return this.prisma.leaveRequest.create({
+    const leaveRequest = await this.prisma.leaveRequest.create({
       data: {
         tenantId,
         employeeId,
@@ -221,8 +264,23 @@ export class LeaveRequestsService {
         workflowSnapshot: workflowSnapshot as unknown as object,
         currentApproverId: workflowSnapshot[0].approverEmployeeId,
       },
-      include: { leaveType: { select: { name: true } } },
+      include: { leaveType: { select: { name: true } }, employee: { select: { fullName: true } } },
     });
+
+    this.notifyApprover({
+      approverEmployeeId: workflowSnapshot[0].approverEmployeeId,
+      employeeName: leaveRequest.employee.fullName,
+      leaveTypeName: leaveRequest.leaveType.name,
+      startDatetime,
+      endDatetime,
+      totalDays,
+      isOverQuota,
+      requestId: leaveRequest.id,
+    }).catch((err) =>
+      this.logger.error(`Failed to notify approver for leave request ${leaveRequest.id}: ${err instanceof Error ? err.message : String(err)}`),
+    );
+
+    return leaveRequest;
   }
 
   listMine(employeeId: string) {
@@ -269,7 +327,7 @@ export class LeaveRequestsService {
   private async actOnRequest(id: string, approverId: string, action: 'approve' | 'reject', comment?: string) {
     const tenantId = getCurrentTenantId();
 
-    return this.prisma.$transaction(async (tx) => {
+    const { updated, notifyApproverId } = await this.prisma.$transaction(async (tx) => {
       const request = await tx.leaveRequest.findUnique({ where: { id } });
       if (!request) throw new NotFoundException('Leave request not found');
       if (request.status !== 'pending') throw new BadRequestException('This request is no longer pending');
@@ -285,7 +343,8 @@ export class LeaveRequestsService {
 
       if (action === 'reject') {
         // FR-3.2 resolved rule: rejection at ANY step ends the whole request now.
-        return tx.leaveRequest.update({ where: { id }, data: { status: 'rejected', currentApproverId: null } });
+        const rejected = await tx.leaveRequest.update({ where: { id }, data: { status: 'rejected', currentApproverId: null } });
+        return { updated: rejected, notifyApproverId: null as string | null };
       }
 
       const isFinalStep = request.currentStep >= snapshot.length - 1;
@@ -293,14 +352,38 @@ export class LeaveRequestsService {
         // TODO FR-4.4: once notifications exist, fire the HR over-quota alert
         // here when request.isOverQuota is true — no notification channel
         // built yet (depends on LINE integration / notification_logs writer).
-        return tx.leaveRequest.update({ where: { id }, data: { status: 'approved', currentApproverId: null } });
+        const approved = await tx.leaveRequest.update({ where: { id }, data: { status: 'approved', currentApproverId: null } });
+        return { updated: approved, notifyApproverId: null as string | null };
       }
 
       const nextStep = snapshot[request.currentStep + 1];
-      return tx.leaveRequest.update({
+      const advanced = await tx.leaveRequest.update({
         where: { id },
         data: { currentStep: request.currentStep + 1, currentApproverId: nextStep.approverEmployeeId },
       });
+      return { updated: advanced, notifyApproverId: nextStep.approverEmployeeId };
     });
+
+    // FR-3.1: notify the next step's approver, once the transaction has actually committed.
+    if (notifyApproverId) {
+      const [employee, leaveType] = await Promise.all([
+        this.prisma.employee.findUnique({ where: { id: updated.employeeId }, select: { fullName: true } }),
+        this.prisma.leaveType.findUnique({ where: { id: updated.leaveTypeId }, select: { name: true } }),
+      ]);
+      this.notifyApprover({
+        approverEmployeeId: notifyApproverId,
+        employeeName: employee?.fullName ?? '',
+        leaveTypeName: leaveType?.name ?? '',
+        startDatetime: updated.startDatetime,
+        endDatetime: updated.endDatetime,
+        totalDays: updated.totalDays.toNumber(),
+        isOverQuota: updated.isOverQuota,
+        requestId: updated.id,
+      }).catch((err) =>
+        this.logger.error(`Failed to notify next approver for leave request ${id}: ${err instanceof Error ? err.message : String(err)}`),
+      );
+    }
+
+    return updated;
   }
 }

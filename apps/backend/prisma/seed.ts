@@ -80,7 +80,15 @@ async function main() {
 
   const approver = await prisma.employee.upsert({
     where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP003' } },
-    update: { passwordHash, status: 'active', role: 'approver' },
+    update: {
+      passwordHash,
+      status: 'active',
+      role: 'approver',
+      // Fake — not a real LINE user id, so the FR-3.1 leave-request
+      // notification demo has an approver to push a Flex Message to without
+      // needing the real OTP binding flow (FR-2.1) against a live LINE account.
+      lineUserId: 'Uapprover0000000000000000000001',
+    },
     create: {
       tenantId: tenant.id,
       employeeCode: 'EMP003',
@@ -91,6 +99,7 @@ async function main() {
       status: 'active',
       branchId: branch.id,
       departmentId: salesDept.id,
+      lineUserId: 'Uapprover0000000000000000000001',
     },
   });
 

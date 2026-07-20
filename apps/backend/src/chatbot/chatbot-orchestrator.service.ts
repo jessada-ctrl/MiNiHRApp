@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EmployeesService } from '../employees/employees.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { ChatbotService } from './chatbot.service';
-import { LineMessagingService } from './line-messaging.service';
+import { LineMessagingService } from '../line/line-messaging.service';
 
 /**
  * Glues an inbound LINE text message to a chatbot answer and the outbound
