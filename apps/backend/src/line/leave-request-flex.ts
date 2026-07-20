@@ -79,3 +79,47 @@ export function buildLeaveRequestFlex(input: LeaveRequestFlexInput) {
 
   return { altText: `คำขอลาของ ${input.employeeName} รออนุมัติ`, contents };
 }
+
+interface OverQuotaAlertFlexInput {
+  employeeName: string;
+  leaveTypeName: string;
+  startDatetime: Date;
+  endDatetime: Date;
+  totalDays: number;
+  reportsUrl: string;
+}
+
+/** FR-4.4: Flex Message alerting HR the moment an over-quota leave request finishes its approval chain. */
+export function buildOverQuotaAlertFlex(input: OverQuotaAlertFlexInput) {
+  const dateRange =
+    input.startDatetime.getTime() === input.endDatetime.getTime()
+      ? formatDate(input.startDatetime)
+      : `${formatDate(input.startDatetime)} – ${formatDate(input.endDatetime)}`;
+
+  const contents = {
+    type: 'bubble',
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        { type: 'text', text: '🚩 คำขอลาเกินโควตาได้รับการอนุมัติแล้ว', weight: 'bold', size: 'sm', color: '#dc2626', wrap: true },
+        { type: 'text', text: input.employeeName, weight: 'bold', size: 'lg', margin: 'sm', wrap: true },
+        {
+          type: 'box',
+          layout: 'vertical',
+          margin: 'md',
+          spacing: 'sm',
+          contents: [row('ประเภท', input.leaveTypeName), row('ช่วงเวลา', dateRange), row('จำนวน', `${input.totalDays} วัน`)],
+        },
+        { type: 'text', text: 'เตรียมพิจารณาหักค่าจ้าง (LWOP) ตอนสิ้นเดือน', size: 'xs', color: '#9ca3af', margin: 'md', wrap: true },
+      ],
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [{ type: 'button', style: 'primary', color: '#dc2626', action: { type: 'uri', label: '📊 ดูรายงาน', uri: input.reportsUrl } }],
+    },
+  };
+
+  return { altText: `คำขอลาเกินโควตาของ ${input.employeeName} ได้รับการอนุมัติครบแล้ว`, contents };
+}

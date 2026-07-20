@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, No
 import { PrismaClient } from '@prisma/client';
 import { TENANT_PRISMA } from '../prisma/prisma.module';
 import { getCurrentTenantId } from '../tenant/tenant-context';
-import { buildLeaveRequestFlex } from '../line/leave-request-flex';
+import { buildLeaveRequestFlex, buildOverQuotaAlertFlex } from '../line/leave-request-flex';
 import { LineMessagingService } from '../line/line-messaging.service';
 import { checkHighAbsenceFrequencyRisk } from './absence-frequency';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
@@ -340,7 +340,7 @@ export class LeaveRequestsService {
   private async actOnRequest(id: string, approverId: string, action: 'approve' | 'reject', comment?: string) {
     const tenantId = getCurrentTenantId();
 
-    const { updated, notifyApproverId } = await this.prisma.$transaction(async (tx) => {
+    const { updated, notifyApproverId, alertHrOverQuota } = await this.prisma.$transaction(async (tx) => {
       const request = await tx.leaveRequest.findUnique({ where: { id } });
       if (!request) throw new NotFoundException('Leave request not found');
       if (request.status !== 'pending') throw new BadRequestException('This request is no longer pending');
@@ -357,14 +357,14 @@ export class LeaveRequestsService {
       if (action === 'reject') {
         // FR-3.2 resolved rule: rejection at ANY step ends the whole request now.
         const rejected = await tx.leaveRequest.update({ where: { id }, data: { status: 'rejected', currentApproverId: null } });
-        return { updated: rejected, notifyApproverId: null as string | null };
+        return { updated: rejected, notifyApproverId: null as string | null, alertHrOverQuota: false };
       }
 
       const isFinalStep = request.currentStep >= snapshot.length - 1;
       if (isFinalStep) {
         const approved = await tx.leaveRequest.update({ where: { id }, data: { status: 'approved', currentApproverId: null } });
-        // TODO FR-4.4: alert HR immediately if approved.isOverQuota.
-        return { updated: approved, notifyApproverId: null as string | null };
+        // FR-4.4: fires below, once the transaction has committed.
+        return { updated: approved, notifyApproverId: null as string | null, alertHrOverQuota: request.isOverQuota };
       }
 
       const nextStep = snapshot[request.currentStep + 1];
@@ -372,7 +372,7 @@ export class LeaveRequestsService {
         where: { id },
         data: { currentStep: request.currentStep + 1, currentApproverId: nextStep.approverEmployeeId },
       });
-      return { updated: advanced, notifyApproverId: nextStep.approverEmployeeId };
+      return { updated: advanced, notifyApproverId: nextStep.approverEmployeeId, alertHrOverQuota: false };
     });
 
     // FR-3.1: notify the next step's approver, once the transaction has actually committed.
@@ -396,7 +396,41 @@ export class LeaveRequestsService {
       );
     }
 
+    // FR-4.4: alert HR immediately once an over-quota request finishes its approval chain.
+    if (alertHrOverQuota) {
+      this.notifyHrOverQuota(updated.id).catch((err) =>
+        this.logger.error(`Failed to send HR over-quota alert for leave request ${id}: ${err instanceof Error ? err.message : String(err)}`),
+      );
+    }
+
     return updated;
+  }
+
+  /** FR-4.4: pushes a Flex Message to every tenant_admin the moment an over-quota request is fully approved. */
+  private async notifyHrOverQuota(requestId: string) {
+    const request = await this.prisma.leaveRequest.findUniqueOrThrow({
+      where: { id: requestId },
+      include: { employee: { select: { fullName: true } }, leaveType: { select: { name: true } } },
+    });
+
+    const hrAdmins = await this.prisma.employee.findMany({
+      where: { role: 'tenant_admin', status: 'active', lineUserId: { not: null } },
+      select: { lineUserId: true },
+    });
+    if (hrAdmins.length === 0) return;
+
+    const tenantId = getCurrentTenantId();
+    const { altText, contents } = buildOverQuotaAlertFlex({
+      employeeName: request.employee.fullName,
+      leaveTypeName: request.leaveType.name,
+      startDatetime: request.startDatetime,
+      endDatetime: request.endDatetime,
+      totalDays: request.totalDays.toNumber(),
+      reportsUrl: `${this.lineMessaging.webAdminUrl}/reports`,
+    });
+    await Promise.all(
+      hrAdmins.map((hr) => this.lineMessaging.pushFlex(tenantId, hr.lineUserId!, altText, contents, 'hr_over_quota_alert', requestId)),
+    );
   }
 
   /**
