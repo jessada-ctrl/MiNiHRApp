@@ -7,6 +7,10 @@ interface LeaveRequestFlexInput {
   isOverQuota: boolean;
   /** Pre-built target for the "🔎 ตรวจสอบ" button — LIFF Review page (FR-3.2) if available, else the web-admin approvals page. */
   reviewUrl: string;
+  /** FR-3.4: employee has an unusually frequent leave pattern — see absence-frequency.ts. */
+  highAbsenceRisk?: boolean;
+  /** FR-3.3: true when this is a repeat nudge, not the first notification for this step. */
+  isReminder?: boolean;
 }
 
 function formatDate(d: Date): string {
@@ -32,7 +36,13 @@ export function buildLeaveRequestFlex(input: LeaveRequestFlexInput) {
       : `${formatDate(input.startDatetime)} – ${formatDate(input.endDatetime)}`;
 
   const bodyContents: Record<string, unknown>[] = [
-    { type: 'text', text: 'คำขอลารออนุมัติ', weight: 'bold', size: 'sm', color: '#0f766e' },
+    {
+      type: 'text',
+      text: input.isReminder ? '⏰ ทวงถาม — คำขอลารออนุมัติ' : 'คำขอลารออนุมัติ',
+      weight: 'bold',
+      size: 'sm',
+      color: '#0f766e',
+    },
     { type: 'text', text: input.employeeName, weight: 'bold', size: 'lg', margin: 'sm', wrap: true },
     {
       type: 'box',
@@ -45,6 +55,9 @@ export function buildLeaveRequestFlex(input: LeaveRequestFlexInput) {
 
   if (input.isOverQuota) {
     bodyContents.push({ type: 'text', text: '⚠️ เกินโควตา', color: '#dc2626', weight: 'bold', size: 'sm', margin: 'md' });
+  }
+  if (input.highAbsenceRisk) {
+    bodyContents.push({ type: 'text', text: '🚩 High Absence Frequency Risk', color: '#b45309', weight: 'bold', size: 'sm', margin: 'md', wrap: true });
   }
 
   const contents = {

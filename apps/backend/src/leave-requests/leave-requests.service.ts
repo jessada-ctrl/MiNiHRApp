@@ -4,7 +4,10 @@ import { TENANT_PRISMA } from '../prisma/prisma.module';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { buildLeaveRequestFlex } from '../line/leave-request-flex';
 import { LineMessagingService } from '../line/line-messaging.service';
+import { checkHighAbsenceFrequencyRisk } from './absence-frequency';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
+
+const REMINDER_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 interface WorkflowStepSnapshot {
   stepOrder: number;
@@ -46,6 +49,7 @@ export class LeaveRequestsService {
    */
   private async notifyApprover(params: {
     approverEmployeeId: string;
+    employeeId: string;
     employeeName: string;
     leaveTypeName: string;
     startDatetime: Date;
@@ -53,6 +57,7 @@ export class LeaveRequestsService {
     totalDays: number;
     isOverQuota: boolean;
     requestId: string;
+    isReminder?: boolean;
   }) {
     const approver = await this.prisma.employee.findUnique({
       where: { id: params.approverEmployeeId },
@@ -61,7 +66,10 @@ export class LeaveRequestsService {
     if (!approver?.lineUserId) return;
 
     const tenantId = getCurrentTenantId();
-    const reviewUrl = (await this.lineMessaging.getLiffReviewUrl(tenantId, params.requestId)) ?? `${this.lineMessaging.webAdminUrl}/approvals`;
+    const [reviewUrl, highAbsenceRisk] = await Promise.all([
+      this.lineMessaging.getLiffReviewUrl(tenantId, params.requestId).then((url) => url ?? `${this.lineMessaging.webAdminUrl}/approvals`),
+      checkHighAbsenceFrequencyRisk(this.prisma, params.employeeId, new Date()),
+    ]);
     const { altText, contents } = buildLeaveRequestFlex({
       employeeName: params.employeeName,
       leaveTypeName: params.leaveTypeName,
@@ -70,8 +78,11 @@ export class LeaveRequestsService {
       totalDays: params.totalDays,
       isOverQuota: params.isOverQuota,
       reviewUrl,
+      highAbsenceRisk,
+      isReminder: params.isReminder,
     });
-    await this.lineMessaging.pushFlex(tenantId, approver.lineUserId, altText, contents, 'leave_request_pending', params.requestId);
+    const messageType = params.isReminder ? 'leave_request_reminder' : 'leave_request_pending';
+    await this.lineMessaging.pushFlex(tenantId, approver.lineUserId, altText, contents, messageType, params.requestId);
   }
 
   private computeTotalDays(dto: CreateLeaveRequestDto): { totalDays: number; startDatetime: Date; endDatetime: Date } {
@@ -270,6 +281,7 @@ export class LeaveRequestsService {
 
     this.notifyApprover({
       approverEmployeeId: workflowSnapshot[0].approverEmployeeId,
+      employeeId,
       employeeName: leaveRequest.employee.fullName,
       leaveTypeName: leaveRequest.leaveType.name,
       startDatetime,
@@ -350,10 +362,8 @@ export class LeaveRequestsService {
 
       const isFinalStep = request.currentStep >= snapshot.length - 1;
       if (isFinalStep) {
-        // TODO FR-4.4: once notifications exist, fire the HR over-quota alert
-        // here when request.isOverQuota is true — no notification channel
-        // built yet (depends on LINE integration / notification_logs writer).
         const approved = await tx.leaveRequest.update({ where: { id }, data: { status: 'approved', currentApproverId: null } });
+        // TODO FR-4.4: alert HR immediately if approved.isOverQuota.
         return { updated: approved, notifyApproverId: null as string | null };
       }
 
@@ -373,6 +383,7 @@ export class LeaveRequestsService {
       ]);
       this.notifyApprover({
         approverEmployeeId: notifyApproverId,
+        employeeId: updated.employeeId,
         employeeName: employee?.fullName ?? '',
         leaveTypeName: leaveType?.name ?? '',
         startDatetime: updated.startDatetime,
@@ -386,5 +397,46 @@ export class LeaveRequestsService {
     }
 
     return updated;
+  }
+
+  /**
+   * FR-3.3: re-nudges whichever approver is currently responsible for each
+   * still-pending request, if it's been >= 24h since the last notification
+   * (initial or a previous reminder) for that request. Called by
+   * SchedulerService once per tenant per day — safe to call more often too,
+   * since the 24h check is derived from NotificationLog, not a separate
+   * "last reminded" field that could drift.
+   */
+  async remindPendingApprovers(): Promise<number> {
+    const pending = await this.prisma.leaveRequest.findMany({
+      where: { status: 'pending' },
+      include: { employee: { select: { id: true, fullName: true } }, leaveType: { select: { name: true } } },
+    });
+
+    let sent = 0;
+    for (const request of pending) {
+      if (!request.currentApproverId) continue;
+
+      const lastNotification = await this.prisma.notificationLog.findFirst({
+        where: { relatedRequestId: request.id, messageType: { in: ['leave_request_pending', 'leave_request_reminder'] } },
+        orderBy: { sentAt: 'desc' },
+      });
+      if (lastNotification && Date.now() - lastNotification.sentAt.getTime() < REMINDER_INTERVAL_MS) continue;
+
+      await this.notifyApprover({
+        approverEmployeeId: request.currentApproverId,
+        employeeId: request.employee.id,
+        employeeName: request.employee.fullName,
+        leaveTypeName: request.leaveType.name,
+        startDatetime: request.startDatetime,
+        endDatetime: request.endDatetime,
+        totalDays: request.totalDays.toNumber(),
+        isOverQuota: request.isOverQuota,
+        requestId: request.id,
+        isReminder: true,
+      });
+      sent++;
+    }
+    return sent;
   }
 }
