@@ -77,6 +77,19 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // FR-3.2: the Flex Message "🔎 ตรวจสอบ" button is a
+    // https://liff.line.me/{liffId}/review/{id} URL. LINE does NOT
+    // substitute that extra path directly into the final URL the way its
+    // docs imply — confirmed by testing, it always opens this bare root
+    // page — but it does show up as a `liff.state` query param on the
+    // redirect (e.g. ?liff.state=%2Freview%2F{id}), which we read and
+    // redirect from ourselves.
+    const liffState = new URLSearchParams(window.location.search).get("liff.state");
+    if (liffState && liffState.startsWith("/")) {
+      router.replace(liffState);
+      return;
+    }
+
     let cancelled = false;
     getCurrentUser().then(async (u) => {
       if (cancelled) return;

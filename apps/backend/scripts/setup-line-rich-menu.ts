@@ -1,5 +1,5 @@
 /**
- * One-time (rerunnable) setup for FR-2.1: creates the "unregistered"/
+ * One-time (rerunnable) setup for FR-2.1/FR-3.2: creates the "unregistered"/
  * "registered" Rich Menus, uploads their images, sets "unregistered" as the
  * channel-wide default, and saves everything onto the Tenant row.
  *
@@ -10,8 +10,16 @@
  * already include LIFF, and that flag can only be set by adding the first
  * LIFF app through the Console UI once (LINE Developers Console -> your
  * channel -> LIFF tab -> Add). Create it there, copy the LIFF ID it gives
- * you, and pass it here — if its Endpoint URL ever needs to change (e.g.
- * the ngrok URL rotated), edit it in that same Console tab.
+ * you, and pass it here.
+ *
+ * IMPORTANT: that LIFF app's Endpoint URL must be the app's ROOT
+ * (e.g. https://xxxx.trycloudflare.com/liff — no /register suffix), NOT a
+ * specific page. LINE forwards any extra path after the liffId in a
+ * `https://liff.line.me/{liffId}/...` URL onto the Endpoint URL as-is, and
+ * both the "ลงทะเบียน" Rich Menu button (-> /register, below) and FR-3.2's
+ * Flex Message review button (-> /review/{id}, see line-messaging.service.ts)
+ * rely on that. If the ngrok/tunnel URL rotates, update the Endpoint URL in
+ * that same Console tab.
  *
  * Rerunning replaces both rich menus (deletes the old ones first) rather
  * than accumulating duplicates.
@@ -95,7 +103,7 @@ async function main() {
 
   console.log('Creating "unregistered" rich menu...');
   const unregisteredId = await createRichMenu(accessToken, 'unregistered', 'เมนู', [
-    { bounds: { x: 0, y: 0, width: 2500, height: 1686 }, action: { type: 'uri', label: 'ลงทะเบียน', uri: liffUrl } },
+    { bounds: { x: 0, y: 0, width: 2500, height: 1686 }, action: { type: 'uri', label: 'ลงทะเบียน', uri: `${liffUrl}/register` } },
   ]);
   await uploadRichMenuImage(accessToken, unregisteredId, path.join(assetsDir, 'richmenu-unregistered.png'));
 

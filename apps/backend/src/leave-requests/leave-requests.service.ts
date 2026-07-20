@@ -61,6 +61,7 @@ export class LeaveRequestsService {
     if (!approver?.lineUserId) return;
 
     const tenantId = getCurrentTenantId();
+    const reviewUrl = (await this.lineMessaging.getLiffReviewUrl(tenantId, params.requestId)) ?? `${this.lineMessaging.webAdminUrl}/approvals`;
     const { altText, contents } = buildLeaveRequestFlex({
       employeeName: params.employeeName,
       leaveTypeName: params.leaveTypeName,
@@ -68,7 +69,7 @@ export class LeaveRequestsService {
       endDatetime: params.endDatetime,
       totalDays: params.totalDays,
       isOverQuota: params.isOverQuota,
-      webAdminUrl: this.lineMessaging.webAdminUrl,
+      reviewUrl,
     });
     await this.lineMessaging.pushFlex(tenantId, approver.lineUserId, altText, contents, 'leave_request_pending', params.requestId);
   }

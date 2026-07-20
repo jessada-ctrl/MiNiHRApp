@@ -134,8 +134,31 @@ export class LineMessagingService {
     });
   }
 
-  /** Base URL of the web-admin app the "🔎 ตรวจสอบ" button in Flex cards deep-links into (FR-3.1). */
+  /** Base URL of the web-admin app — fallback target for the "🔎 ตรวจสอบ" button when a tenant has no LIFF app configured yet. */
   get webAdminUrl(): string {
     return this.config.get<string>('WEB_ADMIN_URL') ?? 'http://localhost:3000';
+  }
+
+  /**
+   * FR-3.2: the LIFF Review page URL for a specific leave request, if this
+   * tenant has completed FR-2.1 setup (has a lineLiffId).
+   *
+   * MUST go through `https://liff.line.me/{liffId}/...`, not a direct link
+   * to our own tunnel URL — confirmed by testing that LINE's in-app browser
+   * uses a separate storage context for plain https:// URI actions than for
+   * the LIFF-session browser, so a direct link can't see the JWT that
+   * registration stored. Going through liff.line.me keeps it in the same
+   * LIFF session/storage.
+   *
+   * The extra `/review/{id}` path is NOT substituted directly into the
+   * final URL the way LINE's docs imply — in testing it always opened the
+   * bare Endpoint URL. It shows up as a `liff.state` query param on the
+   * redirected URL instead, which the root page (page.tsx) reads and
+   * redirects from client-side.
+   */
+  async getLiffReviewUrl(tenantId: string, requestId: string): Promise<string | null> {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { lineLiffId: true } });
+    if (!tenant?.lineLiffId) return null;
+    return `https://liff.line.me/${tenant.lineLiffId}/review/${requestId}`;
   }
 }

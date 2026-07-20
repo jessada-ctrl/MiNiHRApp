@@ -5,7 +5,8 @@ interface LeaveRequestFlexInput {
   endDatetime: Date;
   totalDays: number;
   isOverQuota: boolean;
-  webAdminUrl: string;
+  /** Pre-built target for the "🔎 ตรวจสอบ" button — LIFF Review page (FR-3.2) if available, else the web-admin approvals page. */
+  reviewUrl: string;
 }
 
 function formatDate(d: Date): string {
@@ -57,7 +58,7 @@ export function buildLeaveRequestFlex(input: LeaveRequestFlexInput) {
           type: 'button',
           style: 'primary',
           color: '#0f766e',
-          action: { type: 'uri', label: '🔎 ตรวจสอบ', uri: `${input.webAdminUrl}/approvals` },
+          action: { type: 'uri', label: '🔎 ตรวจสอบ', uri: input.reviewUrl },
         },
       ],
     },
