@@ -35,3 +35,25 @@ export async function getLineUserId(): Promise<string | null> {
 export function isLiffConfigured(): boolean {
   return configuredLiffId() !== null;
 }
+
+/**
+ * `liff.login()` (called from getLineUserId, above) redirects out to LINE and
+ * back — but the callback always lands on this app's bare LIFF Endpoint URL
+ * (root `/`), never on whichever page called login() in the first place.
+ * `liff.init()` is what actually reads the callback params from the URL and
+ * persists the resulting session — if nothing on the root page ever calls
+ * it, the login the user just completed is silently thrown away, and
+ * `isLoggedIn()` keeps coming back false forever on every later page.
+ * Call this once from the root page's mount effect so that callback always
+ * gets a chance to complete, regardless of which page originally triggered it.
+ */
+export async function completePendingLiffLogin(): Promise<void> {
+  const liffId = configuredLiffId();
+  if (!liffId) return;
+  try {
+    const liff = (await import('@line/liff')).default;
+    await liff.init({ liffId });
+  } catch {
+    // best-effort — getLineUserId() will surface a real error later if LIFF is genuinely broken
+  }
+}

@@ -13,6 +13,7 @@ import {
   submitLeaveRequest,
 } from "@/lib/leaveRequests";
 import { apiFetch, unwrap } from "@/lib/api";
+import { completePendingLiffLogin } from "@/lib/liff";
 
 interface QuotaSummary {
   leaveTypeId: string;
@@ -64,6 +65,7 @@ export default function HomePage() {
   const [quotas, setQuotas] = useState<QuotaSummary[]>([]);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const [lts, qs, reqs] = await Promise.all([
@@ -95,16 +97,34 @@ export default function HomePage() {
     if (params.get("tab") === "history") setTab("history");
 
     let cancelled = false;
-    getCurrentUser().then(async (u) => {
-      if (cancelled) return;
-      if (!u) {
-        router.replace("/login");
-        return;
+    (async () => {
+      try {
+        // Must run before getCurrentUser(): this is where a liff.login()
+        // redirect (started from e.g. /register) always lands, and it's the
+        // only chance the SDK gets to persist that login — otherwise
+        // isLoggedIn() reports false forever afterward. See completePendingLiffLogin's
+        // doc comment for why this can't just live on the page that called login().
+        //
+        // Bounded with a timeout: liff.init() has been observed to hang
+        // indefinitely (never resolving or rejecting) while processing an
+        // OAuth callback in some external-browser cases — this must never be
+        // allowed to block the rest of the page (and the user) forever.
+        await Promise.race([completePendingLiffLogin(), new Promise((resolve) => setTimeout(resolve, 4000))]);
+        const u = await getCurrentUser();
+        if (cancelled) return;
+        if (!u) {
+          router.replace("/login");
+          return;
+        }
+        setUser(u);
+        await refresh();
+        if (!cancelled) setLoading(false);
+      } catch {
+        // Network hiccup (tunnel down, backend not reachable, etc.) — surface
+        // an error with a retry instead of leaving "กำลังโหลด..." stuck forever.
+        if (!cancelled) setLoadError("เชื่อมต่อระบบไม่ได้ กรุณาลองใหม่อีกครั้ง");
       }
-      setUser(u);
-      await refresh();
-      if (!cancelled) setLoading(false);
-    });
+    })();
     return () => {
       cancelled = true;
     };
@@ -113,6 +133,20 @@ export default function HomePage() {
   function handleLogout() {
     logout();
     router.replace("/login");
+  }
+
+  if (loadError) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
+        <p className="text-sm text-neutral-500">{loadError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white"
+        >
+          ลองใหม่
+        </button>
+      </main>
+    );
   }
 
   if (loading || !user) {

@@ -19,6 +19,8 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
   headers.set("X-Tenant-Subdomain", TENANT_SUBDOMAIN);
+  // Skips ngrok's free-tier browser-warning interstitial when the tunnel is ngrok — harmless no-op for any other host.
+  headers.set("ngrok-skip-browser-warning", "true");
   const token = getToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
   return fetch(`${API_URL}${path}`, { ...options, headers });
