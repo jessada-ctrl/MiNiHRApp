@@ -1,4 +1,4 @@
-# MiniHR
+# LaLa'
 
 LINE-integrated Leave & Attendance Management System (Multi-Tenant SaaS). See [Doc/MiniHR_SRS-V1.md](Doc/MiniHR_SRS-V1.md) for the full specification.
 

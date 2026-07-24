@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MiniHR — HR Admin",
-  description: "MiniHR Tenant Admin dashboard",
+  title: "LaLa' — HR Admin",
+  description: "LaLa' Tenant Admin dashboard",
 };
 
 export default function RootLayout({

@@ -118,10 +118,10 @@ export default function AppShell({
         } ${collapsed ? "md:w-16" : "md:w-60"}`}
       >
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-teal-600 text-sm font-bold text-white">M</div>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-teal-600 text-sm font-bold text-white">L</div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">MiniHR</p>
+              <p className="truncate text-sm font-semibold text-white">LaLa&apos;</p>
               <p className="truncate text-[11px] text-slate-400">Leave &amp; Attendance</p>
             </div>
           )}

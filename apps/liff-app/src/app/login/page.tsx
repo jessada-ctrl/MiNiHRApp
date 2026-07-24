@@ -31,9 +31,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-700 text-xl font-bold text-white">
-            HR
+            L
           </div>
-          <h1 className="mt-3 text-lg font-semibold text-neutral-900">MiniHR</h1>
+          <h1 className="mt-3 text-lg font-semibold text-neutral-900">LaLa&apos;</h1>
           <p className="text-xs text-neutral-500">
             ต้นแบบสำหรับทดสอบ — ระบบจริงจะเข้าผ่าน LINE (LIFF) ไม่ต้อง Login แบบนี้
           </p>

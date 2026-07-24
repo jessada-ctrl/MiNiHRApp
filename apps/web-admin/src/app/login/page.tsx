@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-neutral-900">MiniHR</h1>
+        <h1 className="text-xl font-semibold text-neutral-900">LaLa&apos;</h1>
         <p className="mt-1 text-sm text-neutral-500">เข้าสู่ระบบสำหรับฝ่ายบุคคล / หัวหน้างาน</p>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">

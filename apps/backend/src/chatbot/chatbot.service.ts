@@ -7,7 +7,7 @@ import { HolidaysService } from '../holidays/holidays.service';
 const MODEL = 'claude-haiku-4-5';
 const MAX_TOOL_TURNS = 4;
 
-const SYSTEM_PROMPT = `You are the HR assistant for a company's LINE Official Account, part of the MiniHR leave & attendance system.
+const SYSTEM_PROMPT = `You are the HR assistant for a company's LINE Official Account, part of the LaLa' leave & attendance system.
 
 Scope — only answer questions about the employee's OWN data:
 - their leave quota / remaining leave days

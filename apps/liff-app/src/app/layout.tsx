@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MiniHR",
-  description: "MiniHR — ลางาน / ลงเวลา",
+  title: "LaLa'",
+  description: "LaLa' — ลางาน / ลงเวลา",
 };
 
 export default function RootLayout({
