@@ -10,7 +10,10 @@ set -e
 npx prisma migrate deploy --schema apps/backend/prisma/schema.prisma
 
 node apps/backend/dist/main.js &
-(cd apps/web-admin && npx next start -p 3000) &
+# NEXT_BASE_PATH must be set here too, not just at build time (Dockerfile) —
+# next.config.ts reads it fresh on every `next start`, and without it Next
+# thinks there's no basePath and 404s every route under /admin.
+(cd apps/web-admin && NEXT_BASE_PATH=/admin npx next start -p 3000) &
 (cd apps/liff-app && npx next start -p 3002) &
 
 # If any one of the three dies, exit so Fly restarts the whole machine
