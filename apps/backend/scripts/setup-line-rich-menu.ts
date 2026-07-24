@@ -83,6 +83,31 @@ async function setDefaultRichMenu(accessToken: string, richMenuId: string) {
   if (!res.ok) throw new Error(`Set default rich menu failed: ${res.status} ${await res.text()}`);
 }
 
+/**
+ * Deleting the old "registered" rich menu (above) silently drops every
+ * already-registered employee's per-user link to it — LINE just falls them
+ * back to the channel-wide default ("unregistered"), with no error anywhere.
+ * Re-link every employee who already has a lineUserId so a rerun (e.g. to
+ * push updated menu images) doesn't regress everyone who'd already bound
+ * their LINE account back to the "please register" menu.
+ */
+async function relinkAlreadyRegisteredEmployees(accessToken: string, tenantId: string, richMenuId: string) {
+  const employees = await prisma.employee.findMany({
+    where: { tenantId, lineUserId: { not: null } },
+    select: { lineUserId: true },
+  });
+  for (const { lineUserId } of employees) {
+    const res = await fetch(`${LINE_API}/v2/bot/user/${lineUserId}/richmenu/${richMenuId}`, {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    });
+    if (!res.ok) {
+      console.warn(`Could not relink user ${lineUserId} to the new registered rich menu: ${res.status} ${await res.text()}`);
+    }
+  }
+  return employees.length;
+}
+
 async function main() {
   const [, , tenantId, liffId] = process.argv;
   if (!tenantId || !liffId) {
@@ -108,8 +133,17 @@ async function main() {
   await uploadRichMenuImage(accessToken, unregisteredId, path.join(assetsDir, 'richmenu-unregistered.png'));
 
   console.log('Creating "registered" rich menu...');
+  const colWidth = Math.floor(2500 / 3);
   const registeredId = await createRichMenu(accessToken, 'registered', 'เมนู', [
-    { bounds: { x: 0, y: 0, width: 2500, height: 1686 }, action: { type: 'message', label: 'ถามคำถาม HR', text: 'สวัสดี' } },
+    { bounds: { x: 0, y: 0, width: colWidth, height: 1686 }, action: { type: 'uri', label: 'ขอลา', uri: liffUrl } },
+    {
+      bounds: { x: colWidth, y: 0, width: colWidth, height: 1686 },
+      action: { type: 'uri', label: 'ประวัติการลา', uri: `${liffUrl}?tab=history` },
+    },
+    {
+      bounds: { x: colWidth * 2, y: 0, width: 2500 - colWidth * 2, height: 1686 },
+      action: { type: 'message', label: 'ถาม HR', text: 'สวัสดี' },
+    },
   ]);
   await uploadRichMenuImage(accessToken, registeredId, path.join(assetsDir, 'richmenu-registered.png'));
 
@@ -120,6 +154,10 @@ async function main() {
     where: { id: tenantId },
     data: { lineLiffId: liffId, lineRichMenuUnregisteredId: unregisteredId, lineRichMenuRegisteredId: registeredId },
   });
+
+  console.log('Relinking already-registered employees to the new "registered" rich menu...');
+  const relinked = await relinkAlreadyRegisteredEmployees(accessToken, tenantId, registeredId);
+  console.log(`Relinked ${relinked} employee(s).`);
 
   console.log('Done.');
   console.log(`liffId: ${liffId} (liff URL: ${liffUrl})`);

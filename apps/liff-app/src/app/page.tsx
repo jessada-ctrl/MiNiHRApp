@@ -84,11 +84,15 @@ export default function HomePage() {
     // page — but it does show up as a `liff.state` query param on the
     // redirect (e.g. ?liff.state=%2Freview%2F{id}), which we read and
     // redirect from ourselves.
-    const liffState = new URLSearchParams(window.location.search).get("liff.state");
+    const params = new URLSearchParams(window.location.search);
+    const liffState = params.get("liff.state");
     if (liffState && liffState.startsWith("/")) {
       router.replace(liffState);
       return;
     }
+
+    // Rich Menu's "ประวัติการลา" button deep-links here via ?tab=history.
+    if (params.get("tab") === "history") setTab("history");
 
     let cancelled = false;
     getCurrentUser().then(async (u) => {
