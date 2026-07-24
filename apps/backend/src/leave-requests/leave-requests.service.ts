@@ -2,7 +2,8 @@ import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, No
 import { PrismaClient } from '@prisma/client';
 import { TENANT_PRISMA } from '../prisma/prisma.module';
 import { getCurrentTenantId } from '../tenant/tenant-context';
-import { buildLeaveRequestFlex, buildOverQuotaAlertFlex } from '../line/leave-request-flex';
+import { buildLeaveDecisionFlex, buildLeaveRequestFlex, buildOverQuotaAlertFlex } from '../line/leave-request-flex';
+import { buildHrDigestFlex } from '../line/hr-digest-flex';
 import { LineMessagingService } from '../line/line-messaging.service';
 import { checkHighAbsenceFrequencyRisk } from './absence-frequency';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
@@ -71,6 +72,7 @@ export class LeaveRequestsService {
       checkHighAbsenceFrequencyRisk(this.prisma, params.employeeId, new Date()),
     ]);
     const { altText, contents } = buildLeaveRequestFlex({
+      requestId: params.requestId,
       employeeName: params.employeeName,
       leaveTypeName: params.leaveTypeName,
       startDatetime: params.startDatetime,
@@ -340,7 +342,7 @@ export class LeaveRequestsService {
   private async actOnRequest(id: string, approverId: string, action: 'approve' | 'reject', comment?: string) {
     const tenantId = getCurrentTenantId();
 
-    const { updated, notifyApproverId, alertHrOverQuota } = await this.prisma.$transaction(async (tx) => {
+    const { updated, notifyApproverId, alertHrOverQuota, notifyEmployeeDecision } = await this.prisma.$transaction(async (tx) => {
       const request = await tx.leaveRequest.findUnique({ where: { id } });
       if (!request) throw new NotFoundException('Leave request not found');
       if (request.status !== 'pending') throw new BadRequestException('This request is no longer pending');
@@ -357,14 +359,14 @@ export class LeaveRequestsService {
       if (action === 'reject') {
         // FR-3.2 resolved rule: rejection at ANY step ends the whole request now.
         const rejected = await tx.leaveRequest.update({ where: { id }, data: { status: 'rejected', currentApproverId: null } });
-        return { updated: rejected, notifyApproverId: null as string | null, alertHrOverQuota: false };
+        return { updated: rejected, notifyApproverId: null as string | null, alertHrOverQuota: false, notifyEmployeeDecision: true };
       }
 
       const isFinalStep = request.currentStep >= snapshot.length - 1;
       if (isFinalStep) {
         const approved = await tx.leaveRequest.update({ where: { id }, data: { status: 'approved', currentApproverId: null } });
         // FR-4.4: fires below, once the transaction has committed.
-        return { updated: approved, notifyApproverId: null as string | null, alertHrOverQuota: request.isOverQuota };
+        return { updated: approved, notifyApproverId: null as string | null, alertHrOverQuota: request.isOverQuota, notifyEmployeeDecision: true };
       }
 
       const nextStep = snapshot[request.currentStep + 1];
@@ -372,7 +374,7 @@ export class LeaveRequestsService {
         where: { id },
         data: { currentStep: request.currentStep + 1, currentApproverId: nextStep.approverEmployeeId },
       });
-      return { updated: advanced, notifyApproverId: nextStep.approverEmployeeId, alertHrOverQuota: false };
+      return { updated: advanced, notifyApproverId: nextStep.approverEmployeeId, alertHrOverQuota: false, notifyEmployeeDecision: false };
     });
 
     // FR-3.1: notify the next step's approver, once the transaction has actually committed.
@@ -403,7 +405,34 @@ export class LeaveRequestsService {
       );
     }
 
+    // Closes the loop back to the employee themselves — previously only approvers/HR got notified.
+    if (notifyEmployeeDecision) {
+      this.notifyEmployeeOfDecision(updated.id, action === 'approve', comment).catch((err) =>
+        this.logger.error(`Failed to notify employee of decision for leave request ${id}: ${err instanceof Error ? err.message : String(err)}`),
+      );
+    }
+
     return updated;
+  }
+
+  /** Pushes a Flex Message to the employee themselves once their request reaches a final decision (approved, or rejected at any step). */
+  private async notifyEmployeeOfDecision(requestId: string, approved: boolean, rejectionComment?: string) {
+    const request = await this.prisma.leaveRequest.findUniqueOrThrow({
+      where: { id: requestId },
+      include: { employee: { select: { lineUserId: true } }, leaveType: { select: { name: true } } },
+    });
+    if (!request.employee.lineUserId) return;
+
+    const tenantId = getCurrentTenantId();
+    const { altText, contents } = buildLeaveDecisionFlex({
+      leaveTypeName: request.leaveType.name,
+      startDatetime: request.startDatetime,
+      endDatetime: request.endDatetime,
+      totalDays: request.totalDays.toNumber(),
+      approved,
+      rejectionComment,
+    });
+    await this.lineMessaging.pushFlex(tenantId, request.employee.lineUserId, altText, contents, 'leave_request_decision', requestId);
   }
 
   /** FR-4.4: pushes a Flex Message to every tenant_admin the moment an over-quota request is fully approved. */
@@ -413,11 +442,8 @@ export class LeaveRequestsService {
       include: { employee: { select: { fullName: true } }, leaveType: { select: { name: true } } },
     });
 
-    const hrAdmins = await this.prisma.employee.findMany({
-      where: { role: 'tenant_admin', status: 'active', lineUserId: { not: null } },
-      select: { lineUserId: true },
-    });
-    if (hrAdmins.length === 0) return;
+    const hrAdminLineUserIds = await this.getHrAdminLineUserIds();
+    if (hrAdminLineUserIds.length === 0) return;
 
     const tenantId = getCurrentTenantId();
     const { altText, contents } = buildOverQuotaAlertFlex({
@@ -429,8 +455,46 @@ export class LeaveRequestsService {
       reportsUrl: `${this.lineMessaging.webAdminUrl}/reports`,
     });
     await Promise.all(
-      hrAdmins.map((hr) => this.lineMessaging.pushFlex(tenantId, hr.lineUserId!, altText, contents, 'hr_over_quota_alert', requestId)),
+      hrAdminLineUserIds.map((lineUserId) => this.lineMessaging.pushFlex(tenantId, lineUserId, altText, contents, 'hr_over_quota_alert', requestId)),
     );
+  }
+
+  /** Every active tenant_admin's lineUserId — shared by the over-quota alert (FR-4.4) and the weekly HR digest. */
+  private async getHrAdminLineUserIds(): Promise<string[]> {
+    const hrAdmins = await this.prisma.employee.findMany({
+      where: { role: 'tenant_admin', status: 'active', lineUserId: { not: null } },
+      select: { lineUserId: true },
+    });
+    return hrAdmins.map((hr) => hr.lineUserId!);
+  }
+
+  /**
+   * Company-wide snapshot for the weekly HR digest — total requests still
+   * awaiting action, and how many have been pending more than 3 days
+   * (documented threshold, not from the SRS — a reasonable default for
+   * flagging requests that risk going stale).
+   */
+  async getPendingAgingSummary(): Promise<{ totalPending: number; overdueCount: number }> {
+    const OVERDUE_DAYS = 3;
+    const overdueCutoff = new Date(Date.now() - OVERDUE_DAYS * 24 * 60 * 60 * 1000);
+
+    const [totalPending, overdueCount] = await Promise.all([
+      this.prisma.leaveRequest.count({ where: { status: 'pending' } }),
+      this.prisma.leaveRequest.count({ where: { status: 'pending', createdAt: { lte: overdueCutoff } } }),
+    ]);
+    return { totalPending, overdueCount };
+  }
+
+  /** Called by SchedulerService once a week — pushes a Flex summary to every HR admin. `upcomingHolidays` is fetched by the caller (HolidaysService already owns that data). */
+  async sendWeeklyHrDigest(upcomingHolidays: { name: string; date: Date }[]): Promise<number> {
+    const hrAdminLineUserIds = await this.getHrAdminLineUserIds();
+    if (hrAdminLineUserIds.length === 0) return 0;
+
+    const { totalPending, overdueCount } = await this.getPendingAgingSummary();
+    const tenantId = getCurrentTenantId();
+    const { altText, contents } = buildHrDigestFlex({ totalPending, overdueCount, upcomingHolidays });
+    await Promise.all(hrAdminLineUserIds.map((lineUserId) => this.lineMessaging.pushFlex(tenantId, lineUserId, altText, contents, 'hr_weekly_digest')));
+    return hrAdminLineUserIds.length;
   }
 
   /**

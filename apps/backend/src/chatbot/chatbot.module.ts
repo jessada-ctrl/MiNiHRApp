@@ -6,10 +6,11 @@ import { LeaveTypesModule } from '../leave-types/leave-types.module';
 import { LineModule } from '../line/line.module';
 import { ChatbotOrchestratorService } from './chatbot-orchestrator.service';
 import { ChatbotService } from './chatbot.service';
+import { HrChatbotService } from './hr-chatbot.service';
 
 @Module({
   imports: [EmployeesModule, LeaveRequestsModule, LeaveTypesModule, HolidaysModule, LineModule],
-  providers: [ChatbotService, ChatbotOrchestratorService],
+  providers: [ChatbotService, HrChatbotService, ChatbotOrchestratorService],
   exports: [ChatbotOrchestratorService],
 })
 export class ChatbotModule {}

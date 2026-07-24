@@ -1,7 +1,8 @@
 /**
- * Manually triggers SchedulerService's daily job (FR-3.3 reminders + FR-4.3
- * holiday notices) once, immediately — for local testing without waiting
- * for the real 09:00 cron, and useful later for an on-demand ops run too.
+ * Manually triggers SchedulerService's cron jobs (FR-3.3 reminders, FR-4.3
+ * holiday notices, and the weekly HR digest) once, immediately — for local
+ * testing without waiting for the real cron schedule, and useful later for
+ * an on-demand ops run too.
  *
  * Boots the full Nest DI graph without starting the HTTP server
  * (NestFactory.createApplicationContext), the standard pattern for a
@@ -17,7 +18,9 @@ import { SchedulerService } from '../src/scheduler/scheduler.service';
 async function main() {
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['log', 'warn', 'error'] });
   try {
-    await app.get(SchedulerService).runDailyJobs();
+    const scheduler = app.get(SchedulerService);
+    await scheduler.runDailyJobs();
+    await scheduler.runWeeklyHrDigest();
     console.log('Done.');
   } finally {
     await app.close();

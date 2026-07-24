@@ -1,5 +1,7 @@
-import { Body, Controller, HttpCode, Logger, Param, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, ForbiddenException, HttpCode, Logger, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
 import { ChatbotOrchestratorService } from '../chatbot/chatbot-orchestrator.service';
+import { EmployeesService } from '../employees/employees.service';
+import { LeaveRequestsService } from '../leave-requests/leave-requests.service';
 import { LineMessagingService } from '../line/line-messaging.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { LineSignatureGuard } from './line-signature.guard';
@@ -7,6 +9,7 @@ import { LineSignatureGuard } from './line-signature.guard';
 interface LineWebhookEvent {
   type: string;
   message?: { type: string; text?: string };
+  postback?: { data: string };
   source?: { type: string; userId?: string };
 }
 
@@ -25,14 +28,16 @@ const WELCOME_TEXT =
  * and LineSignatureGuard has verified the request actually came from LINE
  * (NFR-3) by the time this handler runs.
  *
- * Routes plain-text `message` events to the HR chatbot, and `follow`
- * events (someone just added the OA as a friend) to a welcome message. The
- * Rich Menu itself isn't set here — the "unregistered" menu is the
- * channel-wide default (set once by scripts/setup-line-rich-menu.ts), so a
- * new follower sees it immediately without needing a per-user API call.
+ * Routes plain-text `message` events to the HR chatbot, `follow` events
+ * (someone just added the OA as a friend) to a welcome message, and
+ * `postback` events (the "✅ อนุมัติ" quick-action button on an approver's
+ * Flex Message) to a one-tap approve. The Rich Menu itself isn't set here —
+ * the "unregistered" menu is the channel-wide default (set once by
+ * scripts/setup-line-rich-menu.ts), so a new follower sees it immediately
+ * without needing a per-user API call.
  *
  * TODO before this can accept the rest of real traffic:
- *  - Route `postback` events (FR-2.3 attendance check-in, etc).
+ *  - Route the remaining `postback` events (FR-2.3 attendance check-in, etc).
  */
 @Controller('v1/webhook/line')
 @UseGuards(LineSignatureGuard)
@@ -42,6 +47,8 @@ export class WebhookController {
   constructor(
     private readonly chatbotOrchestrator: ChatbotOrchestratorService,
     private readonly lineMessaging: LineMessagingService,
+    private readonly employees: EmployeesService,
+    private readonly leaveRequests: LeaveRequestsService,
   ) {}
 
   @Post(':tenantId')
@@ -71,9 +78,54 @@ export class WebhookController {
             `Welcome push failed for tenant ${tenantContextId}: ${err instanceof Error ? err.message : String(err)}`,
           );
         });
+      } else if (event.type === 'postback' && event.postback?.data && event.source?.userId) {
+        this.handlePostback(event.source.userId, event.postback.data).catch((err) => {
+          this.logger.error(
+            `Postback handling failed for tenant ${tenantContextId}: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        });
       }
     }
 
     return { status: 'received' };
+  }
+
+  /**
+   * The only postback action wired up so far is the "✅ อนุมัติ" quick-action
+   * button (see leave-request-flex.ts's buildLeaveRequestFlex). It calls
+   * LeaveRequestsService.approve() directly — that method already enforces
+   * "are you actually the current approver" and fires every downstream
+   * notification (next approver, employee decision, HR over-quota alert),
+   * so this handler is just: resolve who tapped the button, call it, and
+   * report the outcome back to them.
+   */
+  private async handlePostback(lineUserId: string, data: string): Promise<void> {
+    const tenantId = getCurrentTenantId();
+    const params = new URLSearchParams(data);
+    if (params.get('action') !== 'quick_approve') return;
+
+    const requestId = params.get('requestId');
+    if (!requestId) return;
+
+    const approver = await this.employees.findByLineUserId(lineUserId);
+    if (!approver) {
+      await this.lineMessaging.pushText(tenantId, lineUserId, 'ไม่พบข้อมูลพนักงานที่ผูกกับบัญชี LINE นี้');
+      return;
+    }
+
+    try {
+      await this.leaveRequests.approve(requestId, approver.id);
+      await this.lineMessaging.pushText(tenantId, lineUserId, '✅ อนุมัติคำขอลาเรียบร้อยแล้ว');
+    } catch (err) {
+      const message =
+        err instanceof NotFoundException
+          ? 'ไม่พบคำขอลานี้แล้ว'
+          : err instanceof ForbiddenException
+            ? 'คุณไม่ใช่ผู้อนุมัติของคำขอนี้ในขั้นตอนปัจจุบัน'
+            : err instanceof BadRequestException
+              ? 'คำขอนี้ถูกดำเนินการไปแล้ว (อนุมัติ/ปฏิเสธ) โดยอาจเป็นคุณเองหรือคนอื่น'
+              : 'เกิดข้อผิดพลาด กรุณาลองใหม่ผ่านหน้าเว็บแทน';
+      await this.lineMessaging.pushText(tenantId, lineUserId, message);
+    }
   }
 }

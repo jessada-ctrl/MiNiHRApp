@@ -1,11 +1,12 @@
 interface LeaveRequestFlexInput {
+  requestId: string;
   employeeName: string;
   leaveTypeName: string;
   startDatetime: Date;
   endDatetime: Date;
   totalDays: number;
   isOverQuota: boolean;
-  /** Pre-built target for the "🔎 ตรวจสอบ" button — LIFF Review page (FR-3.2) if available, else the web-admin approvals page. */
+  /** Pre-built target for the "🔎 ดูรายละเอียด" button — LIFF Review page (FR-3.2) if available, else the web-admin approvals page. Also the only way to reject, since that requires typing a mandatory comment (FR-3.2) that a LINE postback can't carry. */
   reviewUrl: string;
   /** FR-3.4: employee has an unusually frequent leave pattern — see absence-frequency.ts. */
   highAbsenceRisk?: boolean;
@@ -66,18 +67,71 @@ export function buildLeaveRequestFlex(input: LeaveRequestFlexInput) {
     footer: {
       type: 'box',
       layout: 'vertical',
+      spacing: 'sm',
       contents: [
         {
           type: 'button',
           style: 'primary',
           color: '#0f766e',
-          action: { type: 'uri', label: '🔎 ตรวจสอบ', uri: input.reviewUrl },
+          action: { type: 'postback', label: '✅ อนุมัติ', data: `action=quick_approve&requestId=${input.requestId}`, displayText: 'อนุมัติคำขอลา' },
+        },
+        {
+          type: 'button',
+          style: 'secondary',
+          action: { type: 'uri', label: '🔎 ดูรายละเอียด', uri: input.reviewUrl },
         },
       ],
     },
   };
 
   return { altText: `คำขอลาของ ${input.employeeName} รออนุมัติ`, contents };
+}
+
+interface LeaveDecisionFlexInput {
+  leaveTypeName: string;
+  startDatetime: Date;
+  endDatetime: Date;
+  totalDays: number;
+  approved: boolean;
+  /** Required when `approved` is false (FR-2.4: employee must always see why they were rejected). */
+  rejectionComment?: string;
+}
+
+/** Pushed to the employee themselves once their request reaches a final decision (approved, or rejected at any step) — closes the loop that previously only notified approvers/HR. */
+export function buildLeaveDecisionFlex(input: LeaveDecisionFlexInput) {
+  const dateRange =
+    input.startDatetime.getTime() === input.endDatetime.getTime()
+      ? formatDate(input.startDatetime)
+      : `${formatDate(input.startDatetime)} – ${formatDate(input.endDatetime)}`;
+
+  const bodyContents: Record<string, unknown>[] = [
+    {
+      type: 'text',
+      text: input.approved ? '✅ คำขอลาของคุณได้รับการอนุมัติแล้ว' : '❌ คำขอลาของคุณถูกปฏิเสธ',
+      weight: 'bold',
+      size: 'sm',
+      color: input.approved ? '#0f766e' : '#dc2626',
+      wrap: true,
+    },
+    {
+      type: 'box',
+      layout: 'vertical',
+      margin: 'md',
+      spacing: 'sm',
+      contents: [row('ประเภท', input.leaveTypeName), row('ช่วงเวลา', dateRange), row('จำนวน', `${input.totalDays} วัน`)],
+    },
+  ];
+
+  if (!input.approved && input.rejectionComment) {
+    bodyContents.push(row('เหตุผล', input.rejectionComment));
+  }
+
+  const contents = {
+    type: 'bubble',
+    body: { type: 'box', layout: 'vertical', contents: bodyContents },
+  };
+
+  return { altText: input.approved ? 'คำขอลาของคุณได้รับการอนุมัติแล้ว' : 'คำขอลาของคุณถูกปฏิเสธ', contents };
 }
 
 interface OverQuotaAlertFlexInput {

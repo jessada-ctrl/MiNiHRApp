@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EmployeesService } from '../employees/employees.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { ChatbotService } from './chatbot.service';
+import { HrChatbotService } from './hr-chatbot.service';
 import { LineMessagingService } from '../line/line-messaging.service';
 
 /**
@@ -19,6 +20,7 @@ export class ChatbotOrchestratorService {
   constructor(
     private readonly employees: EmployeesService,
     private readonly chatbot: ChatbotService,
+    private readonly hrChatbot: HrChatbotService,
     private readonly lineMessaging: LineMessagingService,
   ) {}
 
@@ -41,7 +43,8 @@ export class ChatbotOrchestratorService {
     }
 
     this.logger.log(`Chatbot question from employee ${employee.id}: "${text}"`);
-    const answer = await this.chatbot.answer(employee.id, text);
+    const answer =
+      employee.role === 'tenant_admin' ? await this.hrChatbot.answer(text) : await this.chatbot.answer(employee.id, text);
     // Logged at info level (not just sent via push) so the answer is visible
     // in server logs even when a tenant has no LINE access token configured
     // yet (e.g. local dev / demo) — pushText degrades to a warning in that case.

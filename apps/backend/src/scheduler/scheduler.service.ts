@@ -5,6 +5,8 @@ import { tenantContext } from '../tenant/tenant-context';
 import { HolidaysService } from '../holidays/holidays.service';
 import { LeaveRequestsService } from '../leave-requests/leave-requests.service';
 
+const DIGEST_HOLIDAY_WINDOW_DAYS = 14;
+
 /**
  * Cross-tenant background jobs (FR-3.3, FR-4.3's automation). Runs outside
  * any HTTP request, so there's no AsyncLocalStorage tenant context set up
@@ -48,6 +50,33 @@ export class SchedulerService {
           if (holidayNotices > 0) this.logger.log(`Sent ${holidayNotices} holiday notice(s) for tenant ${tenant.companyName}`);
         } catch (err) {
           this.logger.error(`Holiday notice sweep failed for tenant ${tenant.companyName}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      });
+    }
+  }
+
+  /** Weekly summary for HR admins — pending-approval aging + upcoming holidays. Monday 08:30. */
+  @Cron('30 8 * * 1')
+  async runWeeklyHrDigest() {
+    const tenants = await this.prisma.tenant.findMany({
+      where: { lineChannelAccessTokenEnc: { not: null } },
+      select: { id: true, companyName: true },
+    });
+
+    for (const tenant of tenants) {
+      await tenantContext.run({ tenantId: tenant.id }, async () => {
+        try {
+          const today = new Date(new Date().toDateString());
+          const windowEnd = new Date(today.getTime() + DIGEST_HOLIDAY_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+          const holidays = await this.holidays.list();
+          const upcomingHolidays = holidays
+            .filter((h) => h.holidayDate >= today && h.holidayDate <= windowEnd)
+            .map((h) => ({ name: h.name, date: h.holidayDate }));
+
+          const sent = await this.leaveRequests.sendWeeklyHrDigest(upcomingHolidays);
+          if (sent > 0) this.logger.log(`Sent weekly HR digest to ${sent} admin(s) for tenant ${tenant.companyName}`);
+        } catch (err) {
+          this.logger.error(`Weekly HR digest failed for tenant ${tenant.companyName}: ${err instanceof Error ? err.message : String(err)}`);
         }
       });
     }
