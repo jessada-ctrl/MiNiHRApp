@@ -43,6 +43,21 @@ async function bootstrap() {
     }),
   );
 
+  // Production deploy only (see Dockerfile) — web-admin runs as its own
+  // Next.js server on :3000, proxied under /admin the same way apps/liff-app
+  // is proxied under /liff above. Unlike liff-app, this doesn't need the
+  // bare /_next and /static catch-all: that workaround was specifically for
+  // a Turbopack *dev-mode* chunk-loader quirk (confirmed by testing), and
+  // web-admin is only ever served here as a production `next build` output,
+  // where basePath is applied to every asset reference correctly.
+  app.use(
+    createProxyMiddleware({
+      target: 'http://localhost:3000',
+      changeOrigin: true,
+      pathFilter: (path) => path.startsWith('/admin'),
+    }),
+  );
+
   app.enableCors({
     // Local dev origins for the two frontends. Tighten to real domains
     // before production, and note the LIFF app is a different origin again

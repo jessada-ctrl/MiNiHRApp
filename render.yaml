@@ -1,0 +1,32 @@
+# Render Blueprint — deploys the whole app (backend + both Next.js frontends,
+# all in one container, see Dockerfile) plus a free Postgres database.
+# Free-tier Postgres on Render expires after 90 days — a known limitation,
+# not something to work around here; re-provision when that happens.
+#
+# ANTHROPIC_API_KEY (sync: false) must be set manually once in the Render
+# dashboard after the first deploy — never store real API keys in this file.
+services:
+  - type: web
+    name: lala-minihr
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lala-minihr-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: WEB_ADMIN_URL
+        value: https://lala-minihr.onrender.com/admin
+
+databases:
+  - name: lala-minihr-db
+    plan: free
+    databaseName: lala_minihr
+    user: lala_minihr
