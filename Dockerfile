@@ -19,12 +19,13 @@ RUN npx prisma generate --schema apps/backend/prisma/schema.prisma
 RUN npm run build --workspace=apps/backend
 
 # Baked into the client bundles at build time (Next.js requirement) — ARGs
-# default to the Render values (Render's Docker runtime doesn't forward
-# render.yaml envVars into `docker build`, only into the running container,
-# so that deploy path still gets a working build with no --build-arg passed).
-# Other platforms (Easypanel, DO) that do support build-args can override
-# these per environment instead of editing this file.
-ARG NEXT_PUBLIC_API_URL=https://lala-minihr.onrender.com
+# default to the active deploy target's values since Easypanel's Git-source
+# app builder has no UI for passing --build-arg (checked in the 2.32.2
+# dashboard: Advanced tab only exposes Ports/Replicas/Command, nothing for
+# build args), so these defaults are what actually ships. Update here when
+# the target domain changes; platforms that DO support build-args (DO, a
+# custom CI) can still override per environment instead of editing this file.
+ARG NEXT_PUBLIC_API_URL=https://lala-dev.jibsoft.co.th
 ARG NEXT_PUBLIC_LIFF_ID=2010683188-c6CdKvGw
 ARG NEXT_PUBLIC_TENANT_SUBDOMAIN=testco
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
