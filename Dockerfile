@@ -18,14 +18,18 @@ COPY . .
 RUN npx prisma generate --schema apps/backend/prisma/schema.prisma
 RUN npm run build --workspace=apps/backend
 
-# Baked into the client bundles at build time (Next.js requirement) — fixed
-# directly here rather than passed as Docker build-args, since Render's
-# Docker runtime doesn't forward render.yaml envVars into `docker build`,
-# only into the running container. Update these two if the Render service
-# name or the LIFF app ID ever changes.
-ENV NEXT_PUBLIC_API_URL=https://lala-minihr.onrender.com
-ENV NEXT_PUBLIC_LIFF_ID=2010683188-c6CdKvGw
-ENV NEXT_PUBLIC_TENANT_SUBDOMAIN=testco
+# Baked into the client bundles at build time (Next.js requirement) — ARGs
+# default to the Render values (Render's Docker runtime doesn't forward
+# render.yaml envVars into `docker build`, only into the running container,
+# so that deploy path still gets a working build with no --build-arg passed).
+# Other platforms (Easypanel, DO) that do support build-args can override
+# these per environment instead of editing this file.
+ARG NEXT_PUBLIC_API_URL=https://lala-minihr.onrender.com
+ARG NEXT_PUBLIC_LIFF_ID=2010683188-c6CdKvGw
+ARG NEXT_PUBLIC_TENANT_SUBDOMAIN=testco
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_LIFF_ID=$NEXT_PUBLIC_LIFF_ID
+ENV NEXT_PUBLIC_TENANT_SUBDOMAIN=$NEXT_PUBLIC_TENANT_SUBDOMAIN
 
 RUN npm run build --workspace=apps/liff-app
 

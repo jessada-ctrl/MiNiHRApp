@@ -58,11 +58,13 @@ async function bootstrap() {
     }),
   );
 
+  // CORS_ORIGINS: comma-separated allowed origins for production (e.g. the
+  // real domain). Falls back to any localhost port for local dev when unset.
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
   app.enableCors({
-    // Local dev origins for the two frontends. Tighten to real domains
-    // before production, and note the LIFF app is a different origin again
-    // once it has a real LINE-hosted URL.
-    origin: [/^http:\/\/localhost:\d+$/],
+    origin: corsOrigins?.length ? corsOrigins : [/^http:\/\/localhost:\d+$/],
     credentials: true,
   });
 

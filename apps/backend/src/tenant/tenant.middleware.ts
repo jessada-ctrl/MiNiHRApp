@@ -15,7 +15,7 @@ const WEBHOOK_PATH = /^\/v1\/webhook\/line\/([^/]+)/;
  *     straight from the URL.
  *  2. `X-Tenant-Subdomain` header — local development / API testing convenience,
  *     since localhost doesn't do real subdomains without extra host-file setup.
- *  3. Subdomain of the Host header — the production path (`{subdomain}.minihr.io`).
+ *  3. Subdomain of the Host header — the production path (`{subdomain}.lala.io`).
  */
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {

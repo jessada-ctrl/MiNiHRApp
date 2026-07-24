@@ -162,7 +162,7 @@ export default function HomePage() {
       <header className="flex items-center justify-between bg-teal-700 px-4 py-3 text-white">
         <div>
           <p className="text-sm font-semibold">{user.fullName}</p>
-          <p className="text-[11px] opacity-80">testco.minihr.io</p>
+          <p className="text-[11px] opacity-80">testco.lala.io</p>
         </div>
         <button onClick={handleLogout} className="text-xs underline opacity-90">
           ออกจากระบบ

@@ -46,7 +46,7 @@ export async function downloadLeaveReportCsv(filters: ReportFilters): Promise<vo
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "minihr-leave-report.csv";
+  a.download = "lala-leave-report.csv";
   document.body.appendChild(a);
   a.click();
   a.remove();

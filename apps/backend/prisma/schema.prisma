@@ -1,4 +1,4 @@
-// MiniHR database schema — mirrors the ERD in Doc/MiniHR_SRS-V1.md §6.
+// Lala' database schema — mirrors the ERD in Doc/MiniHR_SRS-V1.md §6.
 // Every tenant-scoped model carries tenantId and MUST be filtered by it on every query.
 // See src/tenant/ for the interceptor that enforces this at the application layer (NFR-1).
 

@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: minihr
-      POSTGRES_PASSWORD: minihr_local_dev
-      POSTGRES_DB: minihr
+      POSTGRES_USER: lala
+      POSTGRES_PASSWORD: lala_local_dev
+      POSTGRES_DB: lala
       # Local dev only, container never exposed outside this machine.
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
@@ -19,7 +19,7 @@ services:
       # assuming the container/credentials are wrong.
       - "48321:5432"
     volumes:
-      - minihr_db_data:/var/lib/postgresql/data
+      - lala_db_data:/var/lib/postgresql/data
 
 volumes:
-  minihr_db_data:
+  lala_db_data:

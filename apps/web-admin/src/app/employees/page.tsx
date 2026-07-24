@@ -521,7 +521,7 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "minihr-employee-import-template.csv";
+    a.download = "lala-employee-import-template.csv";
     document.body.appendChild(a);
     a.click();
     a.remove();

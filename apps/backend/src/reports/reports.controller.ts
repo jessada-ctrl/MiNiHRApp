@@ -28,7 +28,7 @@ export class ReportsController {
   ) {
     const csv = await this.reports.exportLeaveRequestsCsv(query, { userId: user.id, ipAddress: req.ip ?? 'unknown' });
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="minihr-leave-report.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="lala-leave-report.csv"');
     res.send(csv);
   }
 }

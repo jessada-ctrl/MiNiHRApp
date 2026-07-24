@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const TENANT_SUBDOMAIN = process.env.NEXT_PUBLIC_TENANT_SUBDOMAIN ?? "testco";
-const TOKEN_KEY = "minihr_token";
+const TOKEN_KEY = "lala_token";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
