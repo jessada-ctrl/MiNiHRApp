@@ -44,7 +44,7 @@ export class LineAuthService {
    * the moment someone calls both endpoints in sequence. See `verifyOtp`
    * for the other half of this fix.
    */
-  async requestOtp(employeeCode: string, email: string): Promise<{ message: string }> {
+  async requestOtp(employeeCode: string, email: string): Promise<{ message: string; devOtpCode?: string }> {
     const tenantId = getCurrentTenantId();
     const message = 'หากข้อมูลถูกต้อง ระบบได้ส่งรหัส OTP ไปยังอีเมลบริษัทของคุณแล้ว (หมดอายุใน 5 นาที)';
 
@@ -62,7 +62,15 @@ export class LineAuthService {
     });
 
     if (employee) await this.mailer.send(email, code);
-    return { message };
+
+    // No real email provider is wired up yet (see OtpMailerService) and
+    // there's no reliable way to read the mock-logged code from outside the
+    // container, so real device/browser testing has no way to learn the
+    // code at all. Gated behind an explicit env flag (never set in
+    // production) so this never ships as a real vulnerability — it's purely
+    // a stand-in for "check your email" until a real provider exists.
+    const devOtpCode = process.env.EXPOSE_OTP_FOR_TESTING === 'true' ? code : undefined;
+    return { message, devOtpCode };
   }
 
   /**

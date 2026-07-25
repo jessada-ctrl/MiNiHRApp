@@ -25,7 +25,7 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       const res = await requestLineOtp(employeeCode.trim(), email.trim());
-      setInfo(res.message);
+      setInfo(res.devOtpCode ? `${res.message} (DEV: ${res.devOtpCode})` : res.message);
       setStep("otp");
     } catch (err) {
       setError(err instanceof Error ? err.message : "ส่งรหัส OTP ไม่สำเร็จ");

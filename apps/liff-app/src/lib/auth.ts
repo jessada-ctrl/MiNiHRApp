@@ -32,7 +32,10 @@ export function logout(): void {
   clearToken();
 }
 
-export async function requestLineOtp(employeeCode: string, email: string): Promise<{ message: string }> {
+export async function requestLineOtp(
+  employeeCode: string,
+  email: string,
+): Promise<{ message: string; devOtpCode?: string }> {
   const res = await apiFetch("/auth/line/request-otp", {
     method: "POST",
     body: JSON.stringify({ employeeCode, email }),
