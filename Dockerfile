@@ -25,7 +25,7 @@ RUN npm run build --workspace=apps/backend
 # build args), so these defaults are what actually ships. Update here when
 # the target domain changes; platforms that DO support build-args (DO, a
 # custom CI) can still override per environment instead of editing this file.
-ARG NEXT_PUBLIC_API_URL=https://lala-dev.jibsoft.co.th
+ARG NEXT_PUBLIC_API_URL=https://testco.lala-dev.jibsoft.co.th
 ARG NEXT_PUBLIC_LIFF_ID=2010683188-c6CdKvGw
 ARG NEXT_PUBLIC_TENANT_SUBDOMAIN=testco
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
