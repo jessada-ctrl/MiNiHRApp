@@ -39,6 +39,11 @@ export default function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
+      // getLineUserId() may call liff.login(), which navigates away and
+      // always lands back on the bare root page (see page.tsx) — this lets
+      // that page send the user back here instead of to /login once the
+      // LINE session is established, rather than a dead-end extra click.
+      sessionStorage.setItem("liff-return-to", "/register");
       const lineUserId = (await getLineUserId()) ?? devLineUserId.trim();
       if (!lineUserId) {
         setError("กรุณากรอก LINE User ID สำหรับทดสอบ");

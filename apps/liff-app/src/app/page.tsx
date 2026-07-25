@@ -79,19 +79,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    // FR-3.2: the Flex Message "🔎 ตรวจสอบ" button is a
-    // https://liff.line.me/{liffId}/review/{id} URL. LINE does NOT
-    // substitute that extra path directly into the final URL the way its
-    // docs imply — confirmed by testing, it always opens this bare root
-    // page — but it does show up as a `liff.state` query param on the
-    // redirect (e.g. ?liff.state=%2Freview%2F{id}), which we read and
-    // redirect from ourselves.
     const params = new URLSearchParams(window.location.search);
-    const liffState = params.get("liff.state");
-    if (liffState && liffState.startsWith("/")) {
-      router.replace(liffState);
-      return;
-    }
 
     // Rich Menu's "ประวัติการลา" button deep-links here via ?tab=history.
     if (params.get("tab") === "history") setTab("history");
@@ -99,21 +87,52 @@ export default function HomePage() {
     let cancelled = false;
     (async () => {
       try {
-        // Must run before getCurrentUser(): this is where a liff.login()
-        // redirect (started from e.g. /register) always lands, and it's the
-        // only chance the SDK gets to persist that login — otherwise
-        // isLoggedIn() reports false forever afterward. See completePendingLiffLogin's
-        // doc comment for why this can't just live on the page that called login().
+        // Must run before anything else on this page, including the
+        // liff.state redirect below: this is where a liff.login() redirect
+        // (started from e.g. /register) always lands, and it's the only
+        // chance the SDK gets to persist that login — otherwise isLoggedIn()
+        // reports false forever afterward, even on later visits. See
+        // completePendingLiffLogin's doc comment for why this can't just
+        // live on the page that called login().
+        //
+        // This used to run *after* the liff.state early-return below, which
+        // meant any callback that happened to carry a liff.state param (in
+        // practice, every liff.login() redirect does) bailed out of this
+        // effect before completePendingLiffLogin() ever ran — silently
+        // dropping the login callback and reproducing the "isLoggedIn()
+        // never becomes true" bug on every single attempt, no matter how
+        // many times the user retried.
         //
         // Bounded with a timeout: liff.init() has been observed to hang
         // indefinitely (never resolving or rejecting) while processing an
         // OAuth callback in some external-browser cases — this must never be
         // allowed to block the rest of the page (and the user) forever.
         await Promise.race([completePendingLiffLogin(), new Promise((resolve) => setTimeout(resolve, 4000))]);
+        if (cancelled) return;
+
+        // FR-3.2: the Flex Message "🔎 ตรวจสอบ" button is a
+        // https://liff.line.me/{liffId}/review/{id} URL. LINE does NOT
+        // substitute that extra path directly into the final URL the way its
+        // docs imply — confirmed by testing, it always opens this bare root
+        // page — but it does show up as a `liff.state` query param on the
+        // redirect (e.g. ?liff.state=%2Freview%2F{id}), which we read and
+        // redirect from ourselves.
+        const liffState = params.get("liff.state");
+        if (liffState && liffState.startsWith("/")) {
+          router.replace(liffState);
+          return;
+        }
+
         const u = await getCurrentUser();
         if (cancelled) return;
         if (!u) {
-          router.replace("/login");
+          // A liff.login() redirect (e.g. from /register's OTP step) always
+          // lands back here with no app session yet — send the user back to
+          // whatever page asked for that login instead of dumping them on
+          // /login, which is for already-registered accounts.
+          const returnTo = sessionStorage.getItem("liff-return-to");
+          sessionStorage.removeItem("liff-return-to");
+          router.replace(returnTo && returnTo.startsWith("/") ? returnTo : "/login");
           return;
         }
         setUser(u);
