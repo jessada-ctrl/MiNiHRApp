@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser, logout, type AuthUser } from "@/lib/auth";
+import logoIcon from "@/assets/logo-icon.png";
 
 type Role = AuthUser["role"];
 
@@ -119,7 +120,7 @@ export default function AppShell({
         } ${collapsed ? "md:w-16" : "md:w-60"}`}
       >
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-5">
-          <Image src="/logo-icon.png" alt="LaLa'" width={32} height={32} className="shrink-0 rounded-md" priority />
+          <Image src={logoIcon} alt="LaLa'" width={32} height={32} className="shrink-0 rounded-md" priority />
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">LaLa&apos;</p>

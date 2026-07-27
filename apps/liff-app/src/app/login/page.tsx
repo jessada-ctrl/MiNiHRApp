@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { login } from "@/lib/auth";
+import logoIcon from "@/assets/logo-icon.png";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function LoginPage() {
     <main className="flex flex-1 flex-col items-center justify-center bg-neutral-100 px-5">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <Image src="/logo-icon.png" alt="LaLa'" width={48} height={48} className="mx-auto rounded-2xl" priority />
+          <Image src={logoIcon} alt="LaLa'" width={48} height={48} className="mx-auto rounded-2xl" priority />
           <h1 className="mt-3 text-lg font-semibold text-neutral-900">LaLa&apos;</h1>
           <p className="text-xs text-neutral-500">
             ต้นแบบสำหรับทดสอบ — ระบบจริงจะเข้าผ่าน LINE (LIFF) ไม่ต้อง Login แบบนี้
