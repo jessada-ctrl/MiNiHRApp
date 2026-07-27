@@ -4,9 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { getCurrentUser } from "@/lib/auth";
 import { type LineConfig, getLineConfig, updateLineConfig } from "@/lib/lineConfig";
+import { type ChatbotLeaveVisibility, getChatbotConfig, updateChatbotConfig } from "@/lib/chatbotConfig";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const SECRET_PLACEHOLDER = "•••• ตั้งค่าไว้แล้ว — เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน";
+
+const VISIBILITY_OPTIONS: { value: ChatbotLeaveVisibility; label: string; hint: string }[] = [
+  { value: "hr_only", label: "ฝ่ายบุคคลเท่านั้น", hint: "หัวหน้างานและพนักงานถามผ่านแชทบอทไม่ได้" },
+  { value: "hr_and_approver", label: "ฝ่ายบุคคล + หัวหน้างาน", hint: "หัวหน้างานถามได้ด้วย (เห็นภาพรวมทั้งบริษัทเหมือน HR) ส่วนพนักงานทั่วไปถามไม่ได้" },
+  { value: "everyone", label: "พนักงานทุกคน", hint: "ทุกคนในบริษัทถามผ่านแชทบอท LINE ได้" },
+];
 
 export default function SettingsPage() {
   const [config, setConfig] = useState<LineConfig | null>(null);
@@ -20,6 +27,34 @@ export default function SettingsPage() {
   const [channelId, setChannelId] = useState("");
   const [channelSecret, setChannelSecret] = useState("");
   const [accessToken, setAccessToken] = useState("");
+
+  const [visibility, setVisibility] = useState<ChatbotLeaveVisibility>("hr_only");
+  const [visibilityLoading, setVisibilityLoading] = useState(true);
+  const [visibilityError, setVisibilityError] = useState<string | null>(null);
+  const [visibilitySuccess, setVisibilitySuccess] = useState<string | null>(null);
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
+
+  useEffect(() => {
+    getChatbotConfig()
+      .then((c) => setVisibility(c.whoIsOnLeaveVisibility))
+      .catch((err) => setVisibilityError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ"))
+      .finally(() => setVisibilityLoading(false));
+  }, []);
+
+  async function handleVisibilitySubmit(next: ChatbotLeaveVisibility) {
+    setVisibilityError(null);
+    setVisibilitySuccess(null);
+    setVisibilitySaving(true);
+    try {
+      const updated = await updateChatbotConfig({ whoIsOnLeaveVisibility: next });
+      setVisibility(updated.whoIsOnLeaveVisibility);
+      setVisibilitySuccess("บันทึกแล้ว");
+    } catch (err) {
+      setVisibilityError(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ");
+    } finally {
+      setVisibilitySaving(false);
+    }
+  }
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -147,6 +182,44 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        <div className="mt-6 rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-neutral-900">แชทบอท: ใครถามได้ว่า &quot;ใครลาวันนี้บ้าง&quot;</h2>
+          <p className="mt-1 text-sm text-neutral-500">
+            ฝ่ายบุคคลถามได้เสมอไม่ว่าจะตั้งค่านี้ไว้อย่างไร — ตัวเลือกนี้แค่กำหนดว่าจะเปิดให้คนอื่นถามผ่านแชทบอท LINE ได้ด้วยหรือไม่
+          </p>
+
+          {visibilityLoading ? (
+            <p className="mt-4 text-sm text-neutral-400">กำลังโหลด...</p>
+          ) : (
+            <div className="mt-4 flex flex-col gap-2">
+              {VISIBILITY_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                    visibility === opt.value ? "border-sky-600 bg-sky-50" : "border-neutral-200 hover:bg-neutral-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="chatbot-visibility"
+                    checked={visibility === opt.value}
+                    onChange={() => handleVisibilitySubmit(opt.value)}
+                    disabled={visibilitySaving}
+                    className="mt-1 accent-sky-700"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-neutral-900">{opt.label}</span>
+                    <span className="block text-xs text-neutral-500">{opt.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {visibilityError && <p className="mt-3 text-sm text-red-600">{visibilityError}</p>}
+          {visibilitySuccess && <p className="mt-3 text-sm text-sky-700">{visibilitySuccess}</p>}
+        </div>
       </div>
     </AppShell>
   );

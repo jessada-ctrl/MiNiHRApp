@@ -7,7 +7,7 @@ import { HolidaysService } from '../holidays/holidays.service';
 const MODEL = 'claude-haiku-4-5';
 const MAX_TOOL_TURNS = 4;
 
-const SYSTEM_PROMPT = `You are the HR assistant for a company's LINE Official Account, part of the LaLa' leave & attendance system.
+const BASE_SYSTEM_PROMPT = `You are the HR assistant for a company's LINE Official Account, part of the LaLa' leave & attendance system.
 
 Scope — only answer questions about the employee's OWN data:
 - their leave quota / remaining leave days
@@ -16,11 +16,14 @@ Scope — only answer questions about the employee's OWN data:
 
 Rules:
 - Never invent numbers. Always call a tool to get real data before answering a question about quota, policy, or holidays.
-- You cannot approve, reject, or modify anything, and you cannot see or discuss any other employee's data. If asked to do any of that, or asked something outside your scope, tell the employee to contact HR directly.
+- You cannot approve, reject, or modify anything, and you cannot see or discuss any other employee's data{{WHO_IS_ON_LEAVE_EXCEPTION}}. If asked to do any of that, or asked something outside your scope, tell the employee to contact HR directly.
 - If a tool call fails or returns nothing useful, say so plainly and suggest contacting HR — do not guess.
 - Respond in Thai, in plain text suitable for a LINE chat bubble: short paragraphs, no markdown headers or tables.`;
 
-const TOOLS: Anthropic.Tool[] = [
+const WHO_IS_ON_LEAVE_EXCEPTION =
+  ', except you MAY answer "who is on leave today" — the company has explicitly opted into sharing that specific summary';
+
+const BASE_TOOLS: Anthropic.Tool[] = [
   {
     name: 'get_leave_quota_summary',
     description:
@@ -45,6 +48,12 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+const WHO_IS_ON_LEAVE_TOOL: Anthropic.Tool = {
+  name: 'get_who_is_on_leave_today',
+  description: "List every employee currently on approved leave today, with their department and leave type. Call this whenever asked who is out/on leave today.",
+  input_schema: { type: 'object', properties: {} },
+};
+
 @Injectable()
 export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
@@ -62,9 +71,20 @@ export class ChatbotService {
    * and none of the tools below accept a tenant/employee id as a parameter,
    * so there is no way for a crafted question to make Claude ask for
    * another employee's data (NFR-1).
+   *
+   * `canAskWhoIsOnLeave` is decided by the caller (ChatbotOrchestratorService)
+   * from the tenant's `chatbotWhoIsOnLeaveVisibility` setting plus this
+   * employee's role — approver only when the setting is 'hr_and_approver' or
+   * 'everyone', a plain employee only when it's 'everyone'. Threaded through
+   * as a plain boolean so this service doesn't need its own Tenant lookup.
    */
-  async answer(employeeId: string, question: string): Promise<string> {
+  async answer(employeeId: string, question: string, canAskWhoIsOnLeave: boolean): Promise<string> {
     const messages: Anthropic.MessageParam[] = [{ role: 'user', content: question }];
+    const tools = canAskWhoIsOnLeave ? [...BASE_TOOLS, WHO_IS_ON_LEAVE_TOOL] : BASE_TOOLS;
+    const systemPrompt = BASE_SYSTEM_PROMPT.replace(
+      '{{WHO_IS_ON_LEAVE_EXCEPTION}}',
+      canAskWhoIsOnLeave ? WHO_IS_ON_LEAVE_EXCEPTION : '',
+    );
 
     for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
       let response: Anthropic.Message;
@@ -72,8 +92,8 @@ export class ChatbotService {
         response = await this.client.messages.create({
           model: MODEL,
           max_tokens: 1024,
-          system: SYSTEM_PROMPT,
-          tools: TOOLS,
+          system: systemPrompt,
+          tools,
           messages,
         });
       } catch (err) {
@@ -134,6 +154,8 @@ export class ChatbotService {
             .filter((h) => h.holidayDate >= today)
             .map((h) => ({ name: h.name, date: h.holidayDate.toISOString().slice(0, 10) }));
         }
+        case 'get_who_is_on_leave_today':
+          return await this.leaveRequests.getEmployeesOnLeaveToday();
         default:
           return { error: `Unknown tool: ${name}` };
       }

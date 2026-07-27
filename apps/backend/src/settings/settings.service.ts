@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { ChatbotLeaveVisibility } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { UpdateLineConfigDto } from './dto/update-line-config.dto';
+import { UpdateChatbotConfigDto } from './dto/update-chatbot-config.dto';
 
 interface ActorContext {
   userId: string;
@@ -88,6 +90,38 @@ export class SettingsService {
         hasChannelSecret: !!updated.lineChannelSecretEnc,
         hasChannelAccessToken: !!updated.lineChannelAccessTokenEnc,
       };
+    });
+  }
+
+  /** Read by both the /settings page and ChatbotOrchestratorService (to decide whether an approver/employee's question is in scope). */
+  async getChatbotConfig(): Promise<{ whoIsOnLeaveVisibility: ChatbotLeaveVisibility }> {
+    const tenantId = getCurrentTenantId();
+    const tenant = await this.prisma.tenant.findUniqueOrThrow({
+      where: { id: tenantId },
+      select: { chatbotWhoIsOnLeaveVisibility: true },
+    });
+    return { whoIsOnLeaveVisibility: tenant.chatbotWhoIsOnLeaveVisibility };
+  }
+
+  async updateChatbotConfig(dto: UpdateChatbotConfigDto, actor: ActorContext) {
+    const tenantId = getCurrentTenantId();
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.tenant.update({
+        where: { id: tenantId },
+        data: { chatbotWhoIsOnLeaveVisibility: dto.whoIsOnLeaveVisibility },
+      });
+
+      await this.audit.record(tx, {
+        userId: actor.userId,
+        action: `tenant.chatbot-config-updated — who_is_on_leave_visibility=${dto.whoIsOnLeaveVisibility}`,
+        targetTable: 'tenants',
+        targetId: tenantId,
+        ipAddress: actor.ipAddress,
+        tenantId,
+      });
+
+      return { whoIsOnLeaveVisibility: updated.chatbotWhoIsOnLeaveVisibility };
     });
   }
 }

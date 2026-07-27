@@ -19,6 +19,15 @@ enum SubscriptionStatus {
   suspended
 }
 
+// Who is allowed to ask the LINE chatbot "who is on leave today" — set by the
+// tenant_admin on the /settings page. HR can always ask regardless of this
+// value; it only widens the audience beyond HR.
+enum ChatbotLeaveVisibility {
+  hr_only
+  hr_and_approver
+  everyone
+}
+
 model Tenant {
   id                       String             @id @default(uuid())
   companyName              String             @map("company_name")
@@ -30,6 +39,7 @@ model Tenant {
   lineRichMenuUnregisteredId String?           @map("line_rich_menu_unregistered_id")
   lineRichMenuRegisteredId   String?           @map("line_rich_menu_registered_id")
   subscriptionStatus       SubscriptionStatus @default(trial) @map("subscription_status")
+  chatbotWhoIsOnLeaveVisibility ChatbotLeaveVisibility @default(hr_only) @map("chatbot_who_is_on_leave_visibility")
   createdAt                DateTime           @default(now()) @map("created_at")
   updatedAt                DateTime           @updatedAt @map("updated_at")
 

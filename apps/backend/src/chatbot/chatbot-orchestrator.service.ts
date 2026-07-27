@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EmployeesService } from '../employees/employees.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
+import { SettingsService } from '../settings/settings.service';
 import { ChatbotService } from './chatbot.service';
 import { HrChatbotService } from './hr-chatbot.service';
 import { LineMessagingService } from '../line/line-messaging.service';
@@ -22,6 +23,7 @@ export class ChatbotOrchestratorService {
     private readonly chatbot: ChatbotService,
     private readonly hrChatbot: HrChatbotService,
     private readonly lineMessaging: LineMessagingService,
+    private readonly settings: SettingsService,
   ) {}
 
   async handleTextMessage(lineUserId: string, text: string): Promise<void> {
@@ -43,8 +45,15 @@ export class ChatbotOrchestratorService {
     }
 
     this.logger.log(`Chatbot question from employee ${employee.id}: "${text}"`);
-    const answer =
-      employee.role === 'tenant_admin' ? await this.hrChatbot.answer(text) : await this.chatbot.answer(employee.id, text);
+    let answer: string;
+    if (employee.role === 'tenant_admin') {
+      answer = await this.hrChatbot.answer(text);
+    } else {
+      const { whoIsOnLeaveVisibility } = await this.settings.getChatbotConfig();
+      const canAskWhoIsOnLeave =
+        employee.role === 'approver' ? whoIsOnLeaveVisibility !== 'hr_only' : whoIsOnLeaveVisibility === 'everyone';
+      answer = await this.chatbot.answer(employee.id, text, canAskWhoIsOnLeave);
+    }
     // Logged at info level (not just sent via push) so the answer is visible
     // in server logs even when a tenant has no LINE access token configured
     // yet (e.g. local dev / demo) — pushText degrades to a warning in that case.

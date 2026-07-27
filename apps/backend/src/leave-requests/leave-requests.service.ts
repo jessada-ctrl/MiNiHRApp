@@ -485,6 +485,31 @@ export class LeaveRequestsService {
     return { totalPending, overdueCount };
   }
 
+  /**
+   * For the chatbot's "who is on leave today" question — every approved
+   * request whose date range overlaps any part of today (UTC day
+   * boundaries, matching the rest of the codebase's day-comparison style,
+   * e.g. HolidaysService.sendDueNotifications). A half-day/hourly leave
+   * that already ended earlier today still counts as "on leave today", so
+   * this compares against the whole day, not the current instant.
+   */
+  async getEmployeesOnLeaveToday(): Promise<{ employeeName: string; department: string | null; leaveType: string }[]> {
+    const now = new Date();
+    const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+
+    const requests = await this.prisma.leaveRequest.findMany({
+      where: { status: 'approved', startDatetime: { lt: endOfDayUTC }, endDatetime: { gte: startOfDayUTC } },
+      include: { employee: { select: { fullName: true, department: { select: { departmentName: true } } } }, leaveType: { select: { name: true } } },
+    });
+
+    return requests.map((r) => ({
+      employeeName: r.employee.fullName,
+      department: r.employee.department?.departmentName ?? null,
+      leaveType: r.leaveType.name,
+    }));
+  }
+
   /** Called by SchedulerService once a week — pushes a Flex summary to every HR admin. `upcomingHolidays` is fetched by the caller (HolidaysService already owns that data). */
   async sendWeeklyHrDigest(upcomingHolidays: { name: string; date: Date }[]): Promise<number> {
     const hrAdminLineUserIds = await this.getHrAdminLineUserIds();

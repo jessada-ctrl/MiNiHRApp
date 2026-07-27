@@ -13,6 +13,7 @@ Scope — company-wide, READ-ONLY summaries only:
 - how many leave requests are currently pending approval, and how many have been stuck for a while
 - the company's leave types and policies
 - upcoming company holidays
+- who is on approved leave today, and which department they're in
 
 Rules:
 - Never invent numbers. Always call a tool to get real data before answering.
@@ -36,6 +37,11 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: 'get_upcoming_holidays',
     description: 'List the company holidays from today onward, nearest first.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_who_is_on_leave_today',
+    description: "List every employee currently on approved leave today, with their department and leave type. Call this whenever asked who is out/on leave today.",
     input_schema: { type: 'object', properties: {} },
   },
 ];
@@ -112,6 +118,8 @@ export class HrChatbotService {
             .filter((h) => h.holidayDate >= today)
             .map((h) => ({ name: h.name, date: h.holidayDate.toISOString().slice(0, 10) }));
         }
+        case 'get_who_is_on_leave_today':
+          return await this.leaveRequests.getEmployeesOnLeaveToday();
         default:
           return { error: `Unknown tool: ${name}` };
       }
