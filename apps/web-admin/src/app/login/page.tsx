@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-neutral-900">LaLa&apos;</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">LaLa&apos;</h1>
         <p className="mt-1 text-sm text-neutral-500">เข้าสู่ระบบสำหรับฝ่ายบุคคล / หัวหน้างาน</p>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
@@ -70,7 +70,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </button>

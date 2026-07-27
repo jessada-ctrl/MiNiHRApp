@@ -74,7 +74,7 @@ export default function SettingsPage() {
   return (
     <AppShell title="ตั้งค่า LINE OA">
       <div className="max-w-2xl">
-        <h1 className="text-xl font-semibold text-neutral-900">ตั้งค่า LINE OA</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ตั้งค่า LINE OA</h1>
         <p className="mt-1 text-sm text-neutral-500">
           นำ Channel ID, Channel Secret และ Channel Access Token จาก LINE Developers Console (ประเภท Messaging API เท่านั้น — ไม่ใช่ LINE Login) มากรอกที่นี่
         </p>
@@ -82,7 +82,7 @@ export default function SettingsPage() {
         {loading && <p className="mt-4 text-sm text-neutral-400">กำลังโหลด...</p>}
 
         {!loading && config && (
-          <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4 rounded-lg border border-neutral-200 bg-white p-5">
+          <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
             <label className="block">
               <span className="block text-sm font-medium text-neutral-700">Channel ID</span>
               <input
@@ -121,7 +121,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+                className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
               >
                 {saving ? "กำลังบันทึก..." : "บันทึก"}
               </button>
@@ -130,7 +130,7 @@ export default function SettingsPage() {
         )}
 
         {!loading && webhookUrl && (
-          <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-5">
+          <div className="mt-6 rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
             <h2 className="text-sm font-semibold text-neutral-900">Webhook URL</h2>
             <p className="mt-1 text-sm text-neutral-500">
               นำ URL นี้ไปวางใน LINE Developers Console → Messaging API → Webhook URL แล้วกด Verify (ต้องเปิด backend ผ่าน ngrok หรือ deploy จริงก่อนถึงจะ verify ผ่าน)

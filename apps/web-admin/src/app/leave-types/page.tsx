@@ -90,14 +90,14 @@ export default function LeaveTypesPage() {
       actions={
         <button
           onClick={() => setShowAdd(true)}
-          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
+          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
         >
           + เพิ่มประเภทการลา
         </button>
       }
     >
       <div>
-        <h1 className="text-xl font-semibold text-neutral-900">ประเภทการลา</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ประเภทการลา</h1>
         <p className="mt-1 text-sm text-neutral-500">
           การแก้ไขโควตามาตรฐานที่นี่มีผลกับพนักงานที่เพิ่มใหม่เท่านั้น ไม่ย้อนเปลี่ยนโควตาของพนักงานปัจจุบัน — ปรับรายบุคคลได้ที่หน้า{" "}
           <Link href="/employees" className="text-sky-700 underline">
@@ -107,7 +107,7 @@ export default function LeaveTypesPage() {
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-neutral-200 text-sm">
             <thead className="bg-neutral-50">
               <tr>
@@ -233,7 +233,7 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -300,7 +300,7 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>

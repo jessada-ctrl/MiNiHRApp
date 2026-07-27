@@ -68,14 +68,14 @@ export default function ReportsPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>
       }
     >
       <div>
-        <h1 className="text-xl font-semibold text-neutral-900">รายงานคำขอลา</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">รายงานคำขอลา</h1>
         <p className="mt-1 text-sm text-neutral-500">การ Export แต่ละครั้งจะถูกบันทึกลง Audit Log</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -120,7 +120,7 @@ export default function ReportsPage() {
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-neutral-200 text-sm">
             <thead className="bg-neutral-50">
               <tr>

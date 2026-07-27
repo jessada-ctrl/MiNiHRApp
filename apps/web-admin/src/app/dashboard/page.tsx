@@ -130,7 +130,7 @@ export default function DashboardPage() {
     <AppShell title="แดชบอร์ด">
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-xl font-semibold text-neutral-900">ภาพรวม</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ภาพรวม</h1>
           <p className="mt-1 text-sm text-neutral-500">
             สวัสดี <span className="font-medium text-neutral-700">{user.fullName}</span> · {ROLE_LABEL[user.role]}
           </p>
@@ -139,7 +139,7 @@ export default function DashboardPage() {
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         {user.role === "employee" && (
-          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center">
+          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center shadow-sm">
             <p className="text-sm text-neutral-600">
               หน้านี้ออกแบบไว้สำหรับฝ่ายบุคคลและหัวหน้างาน — พนักงานทั่วไปกรุณายื่นใบลาและตรวจสอบประวัติผ่านแอป LINE (LIFF)
             </p>
@@ -329,7 +329,7 @@ function StatCard({
 
 function Card({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-neutral-200 bg-white p-5 ${className ?? ""}`}>
+    <div className={`rounded-xl border border-neutral-200 bg-white p-5 shadow-sm ${className ?? ""}`}>
       <h2 className="text-sm font-semibold text-neutral-800">{title}</h2>
       <div className="mt-3">{children}</div>
     </div>

@@ -49,7 +49,7 @@ export default function OrganizationPage() {
   return (
     <AppShell title="สาขา/แผนก">
       <div>
-        <h1 className="text-xl font-semibold text-neutral-900">โครงสร้างองค์กร</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">โครงสร้างองค์กร</h1>
         <p className="mt-1 text-sm text-neutral-500">
           จัดการสาขา (พร้อมพิกัดและรัศมีสำหรับเช็คอินเข้างาน) และแผนก — การปิดใช้งานจะถูกบันทึกลง Audit Log
         </p>
@@ -62,13 +62,13 @@ export default function OrganizationPage() {
             {canManage && (
               <button
                 onClick={() => setShowAddBranch(true)}
-                className="rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800"
+                className="rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
               >
                 + เพิ่มสาขา
               </button>
             )}
           </div>
-          <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-neutral-200 text-sm">
               <thead className="bg-neutral-50">
                 <tr>
@@ -128,13 +128,13 @@ export default function OrganizationPage() {
             {canManage && (
               <button
                 onClick={() => setShowAddDept(true)}
-                className="rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800"
+                className="rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
               >
                 + เพิ่มแผนก
               </button>
             )}
           </div>
-          <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-neutral-200 text-sm">
               <thead className="bg-neutral-50">
                 <tr>
@@ -318,7 +318,7 @@ function BranchModal({ branch, onClose, onSaved }: { branch?: Branch; onClose: (
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -397,7 +397,7 @@ function DepartmentModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -410,7 +410,7 @@ function DepartmentModal({
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

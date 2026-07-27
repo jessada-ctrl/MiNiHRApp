@@ -51,14 +51,14 @@ export default function WorkflowsPage() {
       actions={
         <button
           onClick={() => setShowAdd(true)}
-          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
+          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
         >
           + สร้างสายอนุมัติ
         </button>
       }
     >
       <div>
-        <h1 className="text-xl font-semibold text-neutral-900">สายอนุมัติ (Approval Workflow Builder)</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">สายอนุมัติ (Approval Workflow Builder)</h1>
         <p className="mt-1 text-sm text-neutral-500">ลากบล็อกเพื่อสลับลำดับขั้นตอน แล้วกดบันทึกในแต่ละสาย</p>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -171,7 +171,7 @@ function WorkflowCard({
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-5">
+    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-semibold text-neutral-900">{workflow.name}</h2>
@@ -248,7 +248,7 @@ function WorkflowCard({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
           >
             {saving ? "กำลังบันทึก..." : "บันทึกสายอนุมัตินี้"}
           </button>
@@ -281,7 +281,7 @@ function AddWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -332,7 +332,7 @@ function AddWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังสร้าง..." : "สร้าง"}
             </button>

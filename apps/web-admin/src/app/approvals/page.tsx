@@ -40,7 +40,7 @@ export default function ApprovalsPage() {
   return (
     <AppShell title="รออนุมัติ">
       <div>
-        <h1 className="text-xl font-semibold text-neutral-900">คำขอลาที่รออนุมัติ</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">คำขอลาที่รออนุมัติ</h1>
         <p className="mt-1 text-sm text-neutral-500">แสดงเฉพาะคำขอที่ถึงคิวคุณในขั้นตอนปัจจุบัน</p>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -54,7 +54,7 @@ export default function ApprovalsPage() {
             <button
               key={r.id}
               onClick={() => setReviewing(r)}
-              className="rounded-lg border border-neutral-200 bg-white p-4 text-left shadow-sm hover:border-sky-300"
+              className="rounded-xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition-shadow hover:shadow-md hover:border-sky-300"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -135,7 +135,7 @@ function ReviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -233,7 +233,7 @@ function ReviewModal({
               <button
                 onClick={handleApprove}
                 disabled={busy}
-                className="flex-1 rounded-md bg-sky-700 py-2.5 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+                className="flex-1 rounded-lg bg-sky-700 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
               >
                 {busy ? "กำลังบันทึก..." : "✅ อนุมัติ"}
               </button>

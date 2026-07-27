@@ -75,13 +75,13 @@ export default function EmployeesPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowImport(true)}
-              className="rounded-md border border-sky-700 px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50"
+              className="rounded-lg border border-sky-700 px-4 py-2 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
             >
               ⬆ นำเข้าจากไฟล์
             </button>
             <button
               onClick={() => setShowAdd(true)}
-              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
+              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
             >
               + เพิ่มพนักงาน
             </button>
@@ -90,14 +90,14 @@ export default function EmployeesPage() {
       }
     >
       <div>
-        <h1 className="text-xl font-semibold text-neutral-900">พนักงาน</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">พนักงาน</h1>
         <p className="mt-1 text-sm text-neutral-500">
           จัดการโครงสร้างองค์กรและสิทธิ์การใช้งาน — การเปลี่ยนบทบาท สายบังคับบัญชา หรือสถานะ จะถูกบันทึกลง Audit Log
         </p>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-neutral-200 text-sm">
             <thead className="bg-neutral-50">
               <tr>
@@ -310,7 +310,7 @@ function AddEmployeeModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -394,7 +394,7 @@ function EditEmployeeModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -477,7 +477,7 @@ function EditQuotaModal({
             <button
               type="submit"
               disabled={submitting || quotas.length === 0}
-              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>
@@ -594,7 +594,7 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
             type="button"
             onClick={handleImport}
             disabled={!csvText || submitting}
-            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังนำเข้า..." : "นำเข้า"}
           </button>
@@ -607,7 +607,7 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

@@ -139,8 +139,8 @@ export default function AppShell({
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.label : undefined}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  active ? "bg-sky-600/20 text-sky-300" : "text-slate-300 hover:bg-white/5 hover:text-white"
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  active ? "bg-sky-600/20 font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
                 } ${collapsed ? "justify-center" : ""}`}
               >
                 <ItemIcon className="h-4 w-4 shrink-0" />
@@ -164,7 +164,7 @@ export default function AppShell({
             <button
               onClick={handleLogout}
               title="ออกจากระบบ"
-              className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
+              className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
             >
               <IconLogout className="h-4 w-4" />
             </button>
@@ -173,34 +173,34 @@ export default function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 md:px-6">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 shadow-sm md:px-6">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 md:hidden"
+              className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 md:hidden"
               aria-label="เปิดเมนู"
             >
               <IconMenu className="h-5 w-5" />
             </button>
             <button
               onClick={() => setCollapsed((c) => !c)}
-              className="hidden rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 md:inline-flex"
+              className="hidden rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 md:inline-flex"
               aria-label="ย่อ/ขยายเมนู"
             >
               <IconPanel className="h-5 w-5" />
             </button>
-            <span className="text-sm font-semibold text-neutral-800">{title}</span>
+            <span className="text-base font-semibold text-neutral-800">{title}</span>
           </div>
           <div className="flex items-center gap-3">
             {actions}
-            <span className="hidden items-center gap-1.5 rounded-md border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 sm:flex">
+            <span className="hidden items-center gap-1.5 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 sm:flex">
               <IconCalendar className="h-3.5 w-3.5" />
               {todayLabel}
             </span>
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-x-hidden p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

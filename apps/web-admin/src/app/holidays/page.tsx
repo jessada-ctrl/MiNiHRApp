@@ -51,7 +51,7 @@ export default function HolidaysPage() {
         canManage && (
           <button
             onClick={() => setShowAdd(true)}
-            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
+            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
           >
             + เพิ่มวันหยุด
           </button>
@@ -59,14 +59,14 @@ export default function HolidaysPage() {
       }
     >
       <div>
-        <h1 className="text-xl font-semibold text-neutral-900">ปฏิทินวันหยุดประจำปี</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ปฏิทินวันหยุดประจำปี</h1>
         <p className="mt-1 text-sm text-neutral-500">
           ระบบจะแจ้งเตือนพนักงานผ่าน LINE ล่วงหน้าตามจำนวนวันที่กำหนด — ส่วนการส่งแจ้งเตือนอัตโนมัติจริงยังไม่เปิดใช้งาน (รอเชื่อมต่อ LINE)
         </p>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 max-w-xl rounded-lg border border-neutral-200 bg-white">
+        <div className="mt-4 max-w-xl rounded-xl border border-neutral-200 bg-white shadow-sm">
           {loading && <p className="p-4 text-sm text-neutral-400">กำลังโหลด...</p>}
           {!loading && holidays.length === 0 && <p className="p-4 text-sm text-neutral-400">ยังไม่มีวันหยุด</p>}
           {holidays.map((h) => (
@@ -126,7 +126,7 @@ function AddHolidayModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -183,7 +183,7 @@ function AddHolidayModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
+              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>
