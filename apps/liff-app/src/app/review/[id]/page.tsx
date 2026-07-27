@@ -25,12 +25,15 @@ export default function ReviewPage() {
 
   useEffect(() => {
     let cancelled = false;
-    getCurrentUser().then(async (u) => {
+
+    async function load() {
+      const u = await getCurrentUser();
       if (cancelled) return;
       if (!u) {
         router.replace("/login");
         return;
       }
+      setLoading(true);
       try {
         const pending = await listPendingForMe();
         if (cancelled) return;
@@ -38,9 +41,23 @@ export default function ReviewPage() {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    });
+    }
+
+    load();
+
+    // Mobile browsers (notably LINE's in-app browser) can restore this page
+    // from back-forward cache showing the exact pre-click UI — the approve/
+    // reject already went through, but the cached DOM makes it look like
+    // nothing happened. Re-checking on every pageshow (not just first mount)
+    // forces a fresh read of the real status instead of the stale snapshot.
+    function handlePageShow(e: PageTransitionEvent) {
+      if (e.persisted) load();
+    }
+    window.addEventListener("pageshow", handlePageShow);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("pageshow", handlePageShow);
     };
   }, [params.id, router]);
 
