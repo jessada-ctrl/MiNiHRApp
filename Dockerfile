@@ -7,6 +7,14 @@
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 
+# node:*-bookworm-slim doesn't ship the openssl CLI, only the bare libssl3
+# runtime lib — Prisma's engine-selection script shells out to `openssl
+# version` to pick the right query engine binary, so without it present it
+# silently falls back to guessing "openssl-1.1.x" (wrong for bookworm, which
+# is OpenSSL 3.x) instead of failing loudly. Installing it here makes that
+# detection actually correct rather than a lucky-so-far guess.
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 COPY apps/backend/package.json apps/backend/package.json
 COPY apps/web-admin/package.json apps/web-admin/package.json
@@ -42,6 +50,12 @@ FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001
+
+# Needed again here, not just in the build stage — docker-entrypoint.sh runs
+# `prisma migrate deploy` in THIS container at boot, which does its own
+# OpenSSL detection independent of whatever engine binary `prisma generate`
+# already picked at build time.
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app /app
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
