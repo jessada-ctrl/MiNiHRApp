@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ComponentType, type ReactNode, type SVGProps } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser, logout, type AuthUser } from "@/lib/auth";
@@ -118,7 +119,7 @@ export default function AppShell({
         } ${collapsed ? "md:w-16" : "md:w-60"}`}
       >
         <div className="flex items-center gap-2 border-b border-white/10 px-4 py-5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-teal-600 text-sm font-bold text-white">L</div>
+          <Image src="/logo-icon.png" alt="LaLa'" width={32} height={32} className="shrink-0 rounded-md" priority />
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">LaLa&apos;</p>
