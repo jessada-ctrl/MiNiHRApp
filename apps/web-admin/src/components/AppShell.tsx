@@ -42,31 +42,51 @@ const IconAudit = Icon(
 const IconPie = Icon("M12 3v9l7.79 4.5A9 9 0 1 0 12 3Z");
 const IconClock = Icon("M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z");
 const IconBell = Icon("M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0");
+const IconChevron = Icon("m9 6 6 6-6 6");
 const IconMenu = Icon("M4 6h16M4 12h16M4 18h16");
 const IconPanel = Icon("M4 5h16v14H4zM9 5v14");
 const IconLogout = Icon("M15 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1M10 12h10m0 0-3-3m3 3-3 3");
 
-interface NavItem {
+interface NavLink {
+  kind: "link";
   href: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   roles: Role[];
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "แดชบอร์ด", icon: IconHome, roles: ["tenant_admin", "approver", "employee"] },
-  { href: "/employees", label: "พนักงาน", icon: IconUsers, roles: ["tenant_admin", "approver"] },
-  { href: "/organization", label: "สาขา/แผนก", icon: IconBuilding, roles: ["tenant_admin"] },
-  { href: "/leave-types", label: "ประเภทการลา", icon: IconTag, roles: ["tenant_admin"] },
-  { href: "/workflows", label: "สายอนุมัติ", icon: IconFlow, roles: ["tenant_admin"] },
-  { href: "/approvals", label: "รออนุมัติ", icon: IconCheck, roles: ["tenant_admin", "approver"] },
-  { href: "/holidays", label: "ปฏิทินวันหยุด", icon: IconCalendar, roles: ["tenant_admin", "approver", "employee"] },
-  { href: "/reports", label: "รายงาน", icon: IconChart, roles: ["tenant_admin"] },
-  { href: "/quota-utilization", label: "โควตาการลาแยกแผนก", icon: IconPie, roles: ["tenant_admin"] },
-  { href: "/approval-turnaround", label: "ความล่าช้าสายอนุมัติ", icon: IconClock, roles: ["tenant_admin"] },
-  { href: "/notification-log", label: "บันทึกการแจ้งเตือน LINE", icon: IconBell, roles: ["tenant_admin"] },
-  { href: "/audit-log", label: "บันทึกการตรวจสอบ", icon: IconAudit, roles: ["tenant_admin"] },
-  { href: "/settings", label: "ตั้งค่า LINE OA", icon: IconGear, roles: ["tenant_admin"] },
+interface NavGroup {
+  kind: "group";
+  label: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  roles: Role[];
+  children: { href: string; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> }[];
+}
+
+type NavEntry = NavLink | NavGroup;
+
+const NAV_ITEMS: NavEntry[] = [
+  { kind: "link", href: "/dashboard", label: "แดชบอร์ด", icon: IconHome, roles: ["tenant_admin", "approver", "employee"] },
+  { kind: "link", href: "/employees", label: "พนักงาน", icon: IconUsers, roles: ["tenant_admin", "approver"] },
+  { kind: "link", href: "/organization", label: "สาขา/แผนก", icon: IconBuilding, roles: ["tenant_admin"] },
+  { kind: "link", href: "/leave-types", label: "ประเภทการลา", icon: IconTag, roles: ["tenant_admin"] },
+  { kind: "link", href: "/workflows", label: "สายอนุมัติ", icon: IconFlow, roles: ["tenant_admin"] },
+  { kind: "link", href: "/approvals", label: "รออนุมัติ", icon: IconCheck, roles: ["tenant_admin", "approver"] },
+  { kind: "link", href: "/holidays", label: "ปฏิทินวันหยุด", icon: IconCalendar, roles: ["tenant_admin", "approver", "employee"] },
+  {
+    kind: "group",
+    label: "รายงาน",
+    icon: IconChart,
+    roles: ["tenant_admin"],
+    children: [
+      { href: "/reports", label: "รายงานคำขอลา", icon: IconChart },
+      { href: "/quota-utilization", label: "โควตาการลาแยกแผนก", icon: IconPie },
+      { href: "/approval-turnaround", label: "ความล่าช้าสายอนุมัติ", icon: IconClock },
+      { href: "/notification-log", label: "บันทึกการแจ้งเตือน LINE", icon: IconBell },
+      { href: "/audit-log", label: "บันทึกการตรวจสอบ", icon: IconAudit },
+    ],
+  },
+  { kind: "link", href: "/settings", label: "ตั้งค่า LINE OA", icon: IconGear, roles: ["tenant_admin"] },
 ];
 
 export default function AppShell({
@@ -84,6 +104,7 @@ export default function AppShell({
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -118,6 +139,16 @@ export default function AppShell({
   const todayLabel = new Date().toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
   const initials = user.fullName.trim().slice(0, 1) || "?";
 
+  function isGroupActive(group: NavGroup): boolean {
+    return group.children.some((c) => c.href === pathname);
+  }
+  function isGroupOpen(group: NavGroup): boolean {
+    return openGroups[group.label] ?? isGroupActive(group);
+  }
+  function toggleGroup(group: NavGroup) {
+    setOpenGroups((prev) => ({ ...prev, [group.label]: !isGroupOpen(group) }));
+  }
+
   return (
     <div className="flex min-h-screen bg-neutral-50">
       {mobileOpen && (
@@ -141,21 +172,81 @@ export default function AppShell({
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
           {visibleNav.map((item) => {
-            const active = pathname === item.href;
-            const ItemIcon = item.icon;
+            if (item.kind === "link") {
+              const active = pathname === item.href;
+              const ItemIcon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  title={collapsed ? item.label : undefined}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    active ? "bg-sky-600/20 font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  } ${collapsed ? "justify-center" : ""}`}
+                >
+                  <ItemIcon className="h-4 w-4 shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </Link>
+              );
+            }
+
+            const GroupIcon = item.icon;
+            const groupActive = isGroupActive(item);
+            const open = isGroupOpen(item);
+
+            if (collapsed) {
+              // No room for a submenu when collapsed — link straight to the first report.
+              return (
+                <Link
+                  key={item.label}
+                  href={item.children[0].href}
+                  onClick={() => setMobileOpen(false)}
+                  title={item.label}
+                  className={`flex items-center justify-center rounded-lg px-3 py-2 text-sm transition-colors ${
+                    groupActive ? "bg-sky-600/20 font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <GroupIcon className="h-4 w-4 shrink-0" />
+                </Link>
+              );
+            }
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                title={collapsed ? item.label : undefined}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  active ? "bg-sky-600/20 font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
-                } ${collapsed ? "justify-center" : ""}`}
-              >
-                <ItemIcon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span className="truncate">{item.label}</span>}
-              </Link>
+              <div key={item.label}>
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(item)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    groupActive ? "font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <GroupIcon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 truncate text-left">{item.label}</span>
+                  <IconChevron className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
+                </button>
+                {open && (
+                  <div className="mt-1 space-y-1 border-l border-white/10 pl-3">
+                    {item.children.map((child) => {
+                      const active = pathname === child.href;
+                      const ChildIcon = child.icon;
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                            active ? "bg-sky-600/20 font-semibold text-sky-300" : "text-slate-400 hover:bg-white/5 hover:text-white"
+                          }`}
+                        >
+                          <ChildIcon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{child.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
