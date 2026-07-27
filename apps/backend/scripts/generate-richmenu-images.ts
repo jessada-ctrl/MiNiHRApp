@@ -7,25 +7,46 @@
  * rendering through canvas depends on whatever font the OS falls back to,
  * which isn't reliable across machines.
  *
+ * Colors match the LaLa' brand icon (sky blue -> amber, sampled from
+ * apps/liff-app/src/assets/logo-icon.png) — darker stops than the ones used
+ * in the web UI so white icon/text overlays stay legible at Rich Menu size.
+ *
  * Usage: ts-node --project prisma/tsconfig.seed.json scripts/generate-richmenu-images.ts
  */
-import { createCanvas, SKRSContext2D } from '@napi-rs/canvas';
+import { createCanvas, loadImage, SKRSContext2D } from '@napi-rs/canvas';
 import * as fs from 'fs';
 import * as path from 'path';
 
 const WIDTH = 2500;
 const HEIGHT = 1686;
 
-const TEAL_LIGHT = '#0f766e';
-const TEAL_DARK = '#134e4a';
+const SKY = '#0284c7';
+const AMBER = '#d97706';
 const WHITE = '#ffffff';
+const LOGO_PATH = path.join(__dirname, '../../liff-app/src/assets/logo-icon.png');
 
 function paintBackground(ctx: SKRSContext2D) {
   const gradient = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-  gradient.addColorStop(0, TEAL_LIGHT);
-  gradient.addColorStop(1, TEAL_DARK);
+  gradient.addColorStop(0, SKY);
+  gradient.addColorStop(1, AMBER);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
+}
+
+async function paintLogo(ctx: SKRSContext2D, cx: number, cy: number, size: number) {
+  const logo = await loadImage(LOGO_PATH);
+  ctx.save();
+  ctx.beginPath();
+  const r = size * 0.22;
+  ctx.moveTo(cx - size / 2 + r, cy - size / 2);
+  ctx.arcTo(cx + size / 2, cy - size / 2, cx + size / 2, cy + size / 2, r);
+  ctx.arcTo(cx + size / 2, cy + size / 2, cx - size / 2, cy + size / 2, r);
+  ctx.arcTo(cx - size / 2, cy + size / 2, cx - size / 2, cy - size / 2, r);
+  ctx.arcTo(cx - size / 2, cy - size / 2, cx + size / 2, cy - size / 2, r);
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(logo, cx - size / 2, cy - size / 2, size, size);
+  ctx.restore();
 }
 
 function iconBadge(ctx: SKRSContext2D, cx: number, cy: number, radius: number, draw: (ctx: SKRSContext2D) => void) {
@@ -106,10 +127,11 @@ function centeredText(ctx: SKRSContext2D, text: string, x: number, y: number, si
   ctx.fillText(text, x, y);
 }
 
-function generateUnregistered(): Buffer {
+async function generateUnregistered(): Promise<Buffer> {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
   paintBackground(ctx);
+  await paintLogo(ctx, WIDTH / 2, 145, 150);
 
   iconBadge(ctx, WIDTH / 2, HEIGHT / 2 - 220, 130, (c) => {
     c.beginPath();
@@ -127,10 +149,11 @@ function generateUnregistered(): Buffer {
   return canvas.toBuffer('image/png');
 }
 
-function generateRegistered(): Buffer {
+async function generateRegistered(): Promise<Buffer> {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
   paintBackground(ctx);
+  await paintLogo(ctx, WIDTH / 2, 100, 110);
 
   const columns: { label: string; draw: (ctx: SKRSContext2D) => void }[] = [
     { label: 'ขอลา', draw: drawDocumentIcon },
@@ -160,14 +183,17 @@ function generateRegistered(): Buffer {
   return canvas.toBuffer('image/png');
 }
 
-function main() {
+async function main() {
   const dir = path.join(__dirname, 'assets');
   fs.mkdirSync(dir, { recursive: true });
 
-  fs.writeFileSync(path.join(dir, 'richmenu-unregistered.png'), generateUnregistered());
-  fs.writeFileSync(path.join(dir, 'richmenu-registered.png'), generateRegistered());
+  fs.writeFileSync(path.join(dir, 'richmenu-unregistered.png'), await generateUnregistered());
+  fs.writeFileSync(path.join(dir, 'richmenu-registered.png'), await generateRegistered());
 
   console.log(`Generated richmenu-unregistered.png and richmenu-registered.png in ${dir}`);
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
