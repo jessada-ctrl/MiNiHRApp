@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import type { Request } from 'express';
 import * as crypto from 'crypto';
+import { EncryptionService } from '../crypto/encryption.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 
@@ -13,23 +14,25 @@ interface RequestWithRawBody extends Request {
  * header — HMAC-SHA256 of the raw request body, keyed with the tenant's LINE
  * Channel Secret, base64-encoded (this is LINE's documented signature scheme).
  * Without this, anyone who discovers a tenant's webhook URL (a fairly
- * guessable `/v1/webhook/line/{tenantId}` — see the TODO in
- * tenant.middleware.ts about not yet validating the id exists) could inject
- * arbitrary events as if they came from LINE.
+ * guessable `/v1/webhook/line/{tenantId}`) could inject arbitrary events as
+ * if they came from LINE. A forged/nonexistent tenantId is rejected here too
+ * (see tenant.middleware.ts's comment on why that check lives here and not
+ * there) before any HMAC computation runs.
  *
  * Uses the *unscoped* PrismaService, not TENANT_PRISMA — this runs before
  * we have any other reason to trust the caller, so it deliberately does its
  * own explicit `where: { id: tenantId }` lookup rather than relying on
  * tenant-context plumbing for this one trust-establishing check.
  *
- * NFR-2 note: Tenant.lineChannelSecretEnc is not actually encrypted yet
- * (the "Enc" suffix names the intent, not the current state) — AES-256
- * at-rest encryption for this column is a separate, not-yet-built piece of
- * NFR-2. Flagging rather than silently pretending it's done.
+ * NFR-2: lineChannelSecretEnc is stored AES-256-GCM encrypted (see
+ * EncryptionService) — decrypt it here before using it as the HMAC key.
  */
 @Injectable()
 export class LineSignatureGuard implements CanActivate {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly encryption: EncryptionService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<RequestWithRawBody>();
@@ -44,12 +47,20 @@ export class LineSignatureGuard implements CanActivate {
     }
 
     const tenantId = getCurrentTenantId();
-    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { lineChannelSecretEnc: true } });
-    if (!tenant?.lineChannelSecretEnc) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { lineChannelSecretEnc: true, subscriptionStatus: true },
+    });
+    // §2.2: a suspended tenant is rejected the same way as one with no LINE
+    // channel configured at all — deliberately not distinguishing the two
+    // reasons in the response, same rationale as not distinguishing
+    // "nonexistent tenant" from "no LINE channel" below.
+    if (!tenant?.lineChannelSecretEnc || tenant.subscriptionStatus === 'suspended') {
       throw new UnauthorizedException('This tenant has no LINE channel configured');
     }
 
-    const expected = crypto.createHmac('sha256', tenant.lineChannelSecretEnc).update(req.rawBody).digest('base64');
+    const channelSecret = this.encryption.decrypt(tenant.lineChannelSecretEnc);
+    const expected = crypto.createHmac('sha256', channelSecret).update(req.rawBody).digest('base64');
 
     const expectedBuf = Buffer.from(expected);
     const actualBuf = Buffer.from(signature);

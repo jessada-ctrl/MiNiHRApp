@@ -1,30 +1,55 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { encryptWithKey, ENCRYPTION_KEY_LENGTH } from '../src/crypto/encryption.util';
 
 const prisma = new PrismaClient();
 
 const DEMO_PASSWORD = 'Passw0rd!'; // local dev only — never do this in a real environment
+const DEMO_SAAS_ADMIN_PASSWORD = 'SaasPassw0rd!'; // local dev only — never do this in a real environment
+
+// NFR-2: same key EncryptionService reads at runtime — see .env's
+// TENANT_CRED_ENCRYPTION_KEY comment. Falls back to the same insecure dev
+// key EncryptionService uses when the env var is unset, so a fresh checkout
+// still seeds a tenant LineSignatureGuard/LineMessagingService can decrypt.
+const INSECURE_DEV_KEY_BASE64 = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+const encryptionKey = Buffer.from(process.env.TENANT_CRED_ENCRYPTION_KEY ?? INSECURE_DEV_KEY_BASE64, 'base64');
+if (encryptionKey.length !== ENCRYPTION_KEY_LENGTH) {
+  throw new Error(`TENANT_CRED_ENCRYPTION_KEY must decode to exactly ${ENCRYPTION_KEY_LENGTH} bytes (got ${encryptionKey.length})`);
+}
 
 async function main() {
+  // Fake — not a real LINE channel. Only exists so LineSignatureGuard
+  // (NFR-3) has something to verify against in local dev. Real values
+  // come from FR-1.2 (Dynamic LINE OA Config), not built yet.
+  const fakeChannelSecretEnc = encryptWithKey(encryptionKey, 'fake-local-dev-channel-secret-not-real');
+
   const tenant = await prisma.tenant.upsert({
     where: { subdomain: 'testco' },
     update: {
-      // Fake — not a real LINE channel. Only exists so LineSignatureGuard
-      // (NFR-3) has something to verify against in local dev. Real values
-      // come from FR-1.2 (Dynamic LINE OA Config), not built yet.
       lineChannelId: 'FAKE_CHANNEL_ID_LOCAL_DEV',
-      lineChannelSecretEnc: 'fake-local-dev-channel-secret-not-real',
+      lineChannelSecretEnc: fakeChannelSecretEnc,
     },
     create: {
       companyName: 'บริษัท เทสต์โก จำกัด',
       subdomain: 'testco',
       subscriptionStatus: 'trial',
       lineChannelId: 'FAKE_CHANNEL_ID_LOCAL_DEV',
-      lineChannelSecretEnc: 'fake-local-dev-channel-secret-not-real',
+      lineChannelSecretEnc: fakeChannelSecretEnc,
     },
   });
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const saasAdminPasswordHash = await bcrypt.hash(DEMO_SAAS_ADMIN_PASSWORD, 10);
+
+  const saasAdmin = await prisma.saasAdmin.upsert({
+    where: { email: 'super-admin@lala.local' },
+    update: { passwordHash: saasAdminPasswordHash },
+    create: {
+      name: 'Lala Platform Owner',
+      email: 'super-admin@lala.local',
+      passwordHash: saasAdminPasswordHash,
+    },
+  });
 
   const branch = await prisma.branch.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
@@ -205,6 +230,7 @@ async function main() {
   console.log(`Seeded tenant: ${tenant.companyName} (${tenant.subdomain}) — id ${tenant.id}`);
   console.log(`Login as HR Admin: ${hrAdmin.email} / ${DEMO_PASSWORD}`);
   console.log(`Login as Approver: ${approver.email} / ${DEMO_PASSWORD}`);
+  console.log(`Login as SaaS Super Admin: ${saasAdmin.email} / ${DEMO_SAAS_ADMIN_PASSWORD}`);
   console.log(`Try: curl -X POST http://localhost:3001/v1/webhook/line/${tenant.id} -H "Content-Type: application/json" -d "{}"`);
   console.log('Try: curl http://localhost:3001/health');
   console.log(`Try the LINE chatbot: ./scripts/demo-chatbot.sh ${tenant.id} "ลาป่วยเหลือกี่วัน"`);

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ChatbotLeaveVisibility } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { EncryptionService } from '../crypto/encryption.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { UpdateLineConfigDto } from './dto/update-line-config.dto';
 import { UpdateChatbotConfigDto } from './dto/update-chatbot-config.dto';
@@ -20,15 +21,17 @@ interface ActorContext {
  * from the tenant-scoping extension (it IS the tenant row), same reasoning
  * as line-messaging.service.ts and line-signature.guard.ts.
  *
- * NFR-2 note: lineChannelSecretEnc/lineChannelAccessTokenEnc are still
- * stored as plaintext despite the "Enc" naming — real AES-256 at-rest
- * encryption is a separate, not-yet-built piece of NFR-2.
+ * NFR-2: lineChannelSecretEnc/lineChannelAccessTokenEnc are AES-256-GCM
+ * encrypted on write here and decrypted at the two read sites
+ * (line-signature.guard.ts, line-messaging.service.ts) — this service never
+ * returns the raw value itself, only "has it been set" booleans.
  */
 @Injectable()
 export class SettingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly encryption: EncryptionService,
   ) {}
 
   async getLineConfig() {
@@ -51,15 +54,18 @@ export class SettingsService {
     return this.prisma.$transaction(async (tx) => {
       const before = await tx.tenant.findUniqueOrThrow({ where: { id: tenantId } });
 
+      const beforeSecret = before.lineChannelSecretEnc ? this.encryption.decrypt(before.lineChannelSecretEnc) : null;
+      const beforeAccessToken = before.lineChannelAccessTokenEnc ? this.encryption.decrypt(before.lineChannelAccessTokenEnc) : null;
+
       const data: Record<string, unknown> = {};
       if (dto.lineChannelId !== undefined && dto.lineChannelId !== before.lineChannelId) {
         data.lineChannelId = dto.lineChannelId;
       }
-      if (dto.lineChannelSecret !== undefined && dto.lineChannelSecret !== before.lineChannelSecretEnc) {
-        data.lineChannelSecretEnc = dto.lineChannelSecret;
+      if (dto.lineChannelSecret !== undefined && dto.lineChannelSecret !== beforeSecret) {
+        data.lineChannelSecretEnc = this.encryption.encrypt(dto.lineChannelSecret);
       }
-      if (dto.lineChannelAccessToken !== undefined && dto.lineChannelAccessToken !== before.lineChannelAccessTokenEnc) {
-        data.lineChannelAccessTokenEnc = dto.lineChannelAccessToken;
+      if (dto.lineChannelAccessToken !== undefined && dto.lineChannelAccessToken !== beforeAccessToken) {
+        data.lineChannelAccessTokenEnc = this.encryption.encrypt(dto.lineChannelAccessToken);
       }
 
       if (Object.keys(data).length === 0) {

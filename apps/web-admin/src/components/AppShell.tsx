@@ -36,6 +36,12 @@ const IconChart = Icon("M4 20V10M11 20V4M18 20v-7M3 20h18");
 const IconGear = Icon(
   "M10.3 3.4a1.5 1.5 0 0 1 3.4 0l.2.9a1.5 1.5 0 0 0 2.2.9l.8-.5a1.5 1.5 0 0 1 2 2l-.5.8a1.5 1.5 0 0 0 .9 2.2l.9.2a1.5 1.5 0 0 1 0 3.4l-.9.2a1.5 1.5 0 0 0-.9 2.2l.5.8a1.5 1.5 0 0 1-2 2l-.8-.5a1.5 1.5 0 0 0-2.2.9l-.2.9a1.5 1.5 0 0 1-3.4 0l-.2-.9a1.5 1.5 0 0 0-2.2-.9l-.8.5a1.5 1.5 0 0 1-2-2l.5-.8a1.5 1.5 0 0 0-.9-2.2l-.9-.2a1.5 1.5 0 0 1 0-3.4l.9-.2a1.5 1.5 0 0 0 .9-2.2l-.5-.8a1.5 1.5 0 0 1 2-2l.8.5a1.5 1.5 0 0 0 2.2-.9l.2-.9ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
 );
+const IconAudit = Icon(
+  "M9 3h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1V4a1 1 0 0 1 1-1ZM9 11h6M9 15h4",
+);
+const IconPie = Icon("M12 3v9l7.79 4.5A9 9 0 1 0 12 3Z");
+const IconClock = Icon("M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z");
+const IconBell = Icon("M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0");
 const IconMenu = Icon("M4 6h16M4 12h16M4 18h16");
 const IconPanel = Icon("M4 5h16v14H4zM9 5v14");
 const IconLogout = Icon("M15 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1M10 12h10m0 0-3-3m3 3-3 3");
@@ -56,6 +62,10 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/approvals", label: "รออนุมัติ", icon: IconCheck, roles: ["tenant_admin", "approver"] },
   { href: "/holidays", label: "ปฏิทินวันหยุด", icon: IconCalendar, roles: ["tenant_admin", "approver", "employee"] },
   { href: "/reports", label: "รายงาน", icon: IconChart, roles: ["tenant_admin"] },
+  { href: "/quota-utilization", label: "โควตาการลาแยกแผนก", icon: IconPie, roles: ["tenant_admin"] },
+  { href: "/approval-turnaround", label: "ความล่าช้าสายอนุมัติ", icon: IconClock, roles: ["tenant_admin"] },
+  { href: "/notification-log", label: "บันทึกการแจ้งเตือน LINE", icon: IconBell, roles: ["tenant_admin"] },
+  { href: "/audit-log", label: "บันทึกการตรวจสอบ", icon: IconAudit, roles: ["tenant_admin"] },
   { href: "/settings", label: "ตั้งค่า LINE OA", icon: IconGear, roles: ["tenant_admin"] },
 ];
 

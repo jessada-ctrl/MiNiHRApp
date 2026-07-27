@@ -32,11 +32,11 @@ export class TenantMiddleware implements NestMiddleware {
 
     if (webhookMatch) {
       const tenantId = webhookMatch[1];
-      // TODO: before production, verify this tenantId actually exists (a single
-      // indexed lookup) so a forged webhook path can't be used to probe / spam
-      // processing for nonexistent tenants. Skipped here to keep the local-dev
-      // hot path fast; add once the LINE signature verification (NFR-3) lands,
-      // since both checks belong in the same guard.
+      // Deliberately not verifying tenantId exists here — LineSignatureGuard
+      // (NFR-3) already does a single indexed `findUnique` on it and rejects
+      // (401) before any HMAC computation or controller logic runs, so a
+      // forged webhook path never reaches real processing. Checking twice
+      // would just add a redundant DB round trip to every legitimate call.
       return tenantContext.run({ tenantId }, () => next());
     }
 
@@ -58,6 +58,16 @@ export class TenantMiddleware implements NestMiddleware {
     if (!tenant) {
       this.logger.warn(`Unknown tenant subdomain: "${subdomain}"`);
       res.status(400).json({ message: `Unknown tenant: "${subdomain}"` });
+      return;
+    }
+
+    // §2.2: a SaaS Super Admin can suspend a tenant's account — enforce it
+    // here, at the earliest point every subdomain-routed request passes
+    // through, so a suspended tenant's employees can't do anything at all
+    // (not even log in) rather than suspension being cosmetic.
+    if (tenant.subscriptionStatus === 'suspended') {
+      this.logger.warn(`Rejected request for suspended tenant: "${subdomain}"`);
+      res.status(403).json({ message: 'This account has been suspended. Please contact support.' });
       return;
     }
 

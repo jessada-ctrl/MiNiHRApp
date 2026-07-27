@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EncryptionService } from '../crypto/encryption.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const LINE_PUSH_URL = 'https://api.line.me/v2/bot/message/push';
@@ -23,6 +24,7 @@ export class LineMessagingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly encryption: EncryptionService,
   ) {}
 
   async pushText(tenantId: string, lineUserId: string, text: string): Promise<void> {
@@ -73,21 +75,18 @@ export class LineMessagingService {
   // Uses the *unscoped* PrismaService — Tenant isn't a tenant-scoped model,
   // same reasoning as LineSignatureGuard.
   //
-  // NFR-2 note: lineChannelAccessTokenEnc is not actually encrypted yet
-  // (same gap already flagged on lineChannelSecretEnc in
-  // line-signature.guard.ts) — read directly as plaintext until AES-256
-  // at-rest encryption for these columns is implemented.
+  // NFR-2: lineChannelAccessTokenEnc is stored AES-256-GCM encrypted (see
+  // EncryptionService) — decrypt it before using it as a Bearer token.
   private async getAccessToken(tenantId: string): Promise<string | null> {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
       select: { lineChannelAccessTokenEnc: true },
     });
-    const accessToken = tenant?.lineChannelAccessTokenEnc;
-    if (!accessToken) {
+    if (!tenant?.lineChannelAccessTokenEnc) {
       this.logger.warn(`Tenant ${tenantId} has no LINE channel access token configured`);
       return null;
     }
-    return accessToken;
+    return this.encryption.decrypt(tenant.lineChannelAccessTokenEnc);
   }
 
   private async push(
