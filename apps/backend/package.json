@@ -25,7 +25,8 @@
     "setup:line-rich-menu": "ts-node --project prisma/tsconfig.seed.json scripts/setup-line-rich-menu.ts",
     "generate:richmenu-images": "ts-node --project prisma/tsconfig.seed.json scripts/generate-richmenu-images.ts",
     "run:scheduler-once": "ts-node --project prisma/tsconfig.seed.json scripts/run-scheduler-once.ts",
-    "backfill:encrypt-tenant-line-credentials": "ts-node --project prisma/tsconfig.seed.json scripts/backfill-encrypt-tenant-line-credentials.ts"
+    "backfill:encrypt-tenant-line-credentials": "ts-node --project prisma/tsconfig.seed.json scripts/backfill-encrypt-tenant-line-credentials.ts",
+    "create:saas-admin": "ts-node --project prisma/tsconfig.seed.json scripts/create-saas-admin.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
