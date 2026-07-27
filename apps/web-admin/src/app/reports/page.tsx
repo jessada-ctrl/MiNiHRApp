@@ -68,7 +68,7 @@ export default function ReportsPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>

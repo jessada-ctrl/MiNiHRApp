@@ -115,13 +115,13 @@ export default function SettingsPage() {
             </label>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
-            {success && <p className="text-sm text-teal-700">{success}</p>}
+            {success && <p className="text-sm text-sky-700">{success}</p>}
 
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
               >
                 {saving ? "กำลังบันทึก..." : "บันทึก"}
               </button>

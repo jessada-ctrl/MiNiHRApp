@@ -54,7 +54,7 @@ export default function ApprovalsPage() {
             <button
               key={r.id}
               onClick={() => setReviewing(r)}
-              className="rounded-lg border border-neutral-200 bg-white p-4 text-left shadow-sm hover:border-teal-300"
+              className="rounded-lg border border-neutral-200 bg-white p-4 text-left shadow-sm hover:border-sky-300"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -143,7 +143,7 @@ function ReviewModal({
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-teal-800">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-sky-800">
               {request.employee.fullName.charAt(0)}
             </span>
             <div>
@@ -233,7 +233,7 @@ function ReviewModal({
               <button
                 onClick={handleApprove}
                 disabled={busy}
-                className="flex-1 rounded-md bg-teal-700 py-2.5 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+                className="flex-1 rounded-md bg-sky-700 py-2.5 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
               >
                 {busy ? "กำลังบันทึก..." : "✅ อนุมัติ"}
               </button>

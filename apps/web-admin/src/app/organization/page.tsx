@@ -62,7 +62,7 @@ export default function OrganizationPage() {
             {canManage && (
               <button
                 onClick={() => setShowAddBranch(true)}
-                className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800"
+                className="rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800"
               >
                 + เพิ่มสาขา
               </button>
@@ -108,7 +108,7 @@ export default function OrganizationPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {canManage ? (
-                        <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-teal-700 hover:text-teal-900">
+                        <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-sky-700 hover:text-sky-900">
                           แก้ไข
                         </button>
                       ) : (
@@ -128,7 +128,7 @@ export default function OrganizationPage() {
             {canManage && (
               <button
                 onClick={() => setShowAddDept(true)}
-                className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800"
+                className="rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800"
               >
                 + เพิ่มแผนก
               </button>
@@ -168,7 +168,7 @@ export default function OrganizationPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {canManage ? (
-                        <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-teal-700 hover:text-teal-900">
+                        <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-sky-700 hover:text-sky-900">
                           แก้ไข
                         </button>
                       ) : (
@@ -318,7 +318,7 @@ function BranchModal({ branch, onClose, onSaved }: { branch?: Branch; onClose: (
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -397,7 +397,7 @@ function DepartmentModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -442,4 +442,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputCls =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600";
+  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600";

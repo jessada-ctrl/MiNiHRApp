@@ -99,7 +99,7 @@ export default function ReviewPage() {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-2 bg-neutral-100 px-5 text-center">
         <p className="text-sm text-neutral-500">ไม่พบคำขอนี้ในคิวของคุณ — อาจมีคนดำเนินการไปแล้ว หรือไม่ใช่คำขอที่ถึงคิวคุณ</p>
-        <button onClick={() => router.push("/")} className="mt-2 text-xs text-teal-700 underline">
+        <button onClick={() => router.push("/")} className="mt-2 text-xs text-sky-700 underline">
           กลับหน้าแรก
         </button>
       </main>
@@ -112,7 +112,7 @@ export default function ReviewPage() {
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-teal-800">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-sky-800">
                 {request.employee.fullName.charAt(0)}
               </span>
               <div>
@@ -201,7 +201,7 @@ export default function ReviewPage() {
                 <button
                   onClick={handleApprove}
                   disabled={busy}
-                  className="flex-1 rounded-lg bg-teal-700 py-3 text-sm font-medium text-white disabled:opacity-60"
+                  className="flex-1 rounded-lg bg-sky-700 py-3 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {busy ? "กำลังบันทึก..." : "✅ อนุมัติ"}
                 </button>

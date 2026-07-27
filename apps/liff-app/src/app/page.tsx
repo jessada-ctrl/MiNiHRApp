@@ -160,7 +160,7 @@ export default function HomePage() {
         <p className="text-sm text-neutral-500">{loadError}</p>
         <button
           onClick={() => window.location.reload()}
-          className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white"
+          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white"
         >
           ลองใหม่
         </button>
@@ -178,7 +178,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-100">
-      <header className="flex items-center justify-between bg-teal-700 px-4 py-3 text-white">
+      <header className="flex items-center justify-between bg-gradient-to-r from-sky-500 to-amber-400 px-4 py-3 text-white">
         <div>
           <p className="text-sm font-semibold">{user.fullName}</p>
           <p className="text-[11px] opacity-80">testco.lala.io</p>
@@ -209,7 +209,7 @@ function TabButton({ active, label, icon, onClick }: { active: boolean; label: s
     <button
       onClick={onClick}
       className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
-        active ? "text-teal-700" : "text-neutral-400"
+        active ? "text-sky-700" : "text-neutral-400"
       }`}
     >
       <span className="text-lg leading-none">{icon}</span>
@@ -320,7 +320,7 @@ function LeaveForm({
               type="button"
               onClick={() => setDuration(val)}
               className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                duration === val ? "border-teal-700 bg-teal-700 text-white" : "border-neutral-300 text-neutral-600"
+                duration === val ? "border-sky-700 bg-sky-700 text-white" : "border-neutral-300 text-neutral-600"
               }`}
             >
               {label}
@@ -386,7 +386,7 @@ function LeaveForm({
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-neutral-200">
             <div
-              className={`h-full rounded-full ${willExceed ? "bg-red-500" : "bg-teal-600"}`}
+              className={`h-full rounded-full ${willExceed ? "bg-red-500" : "bg-gradient-to-r from-sky-400 to-amber-300"}`}
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -425,7 +425,7 @@ function LeaveForm({
       <button
         type="submit"
         disabled={!canSubmit || submitting}
-        className="sticky bottom-20 w-full rounded-xl bg-teal-700 py-3.5 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
+        className="sticky bottom-20 w-full rounded-xl bg-gradient-to-r from-sky-500 to-amber-400 py-3.5 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
       >
         {submitting ? "กำลังส่งคำขอ..." : "ส่งคำขอลา"}
       </button>

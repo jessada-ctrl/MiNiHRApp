@@ -199,7 +199,7 @@ export default function DashboardPage() {
                           </div>
                           <div className="mt-1 h-2 w-full rounded-full bg-neutral-100">
                             <div
-                              className="h-2 rounded-full bg-teal-600"
+                              className="h-2 rounded-full bg-sky-600"
                               style={{ width: `${(count / topLeaveTypes[0][1]) * 100}%` }}
                             />
                           </div>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                       ))}
                     </ul>
                   )}
-                  <Link href="/approvals" className="mt-3 inline-block text-sm font-medium text-teal-700 hover:text-teal-900">
+                  <Link href="/approvals" className="mt-3 inline-block text-sm font-medium text-sky-700 hover:text-sky-900">
                     ดูทั้งหมด →
                   </Link>
                 </Card>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                   <p className="py-8 text-center text-sm text-neutral-400">ไม่มีวันหยุดที่กำหนดไว้ล่วงหน้า</p>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
-                    <p className="text-3xl font-semibold text-teal-700">
+                    <p className="text-3xl font-semibold text-sky-700">
                       {new Date(upcomingHoliday.holidayDate).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
                     </p>
                     <p className="text-sm text-neutral-600">{upcomingHoliday.name}</p>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 )}
-                <Link href="/holidays" className="mt-3 inline-block text-sm font-medium text-teal-700 hover:text-teal-900">
+                <Link href="/holidays" className="mt-3 inline-block text-sm font-medium text-sky-700 hover:text-sky-900">
                   ดูปฏิทินทั้งหมด →
                 </Link>
               </Card>
@@ -294,7 +294,7 @@ export default function DashboardPage() {
 }
 
 const ACCENT_CLASSES: Record<string, string> = {
-  teal: "bg-teal-50 text-teal-700",
+  teal: "bg-sky-50 text-sky-700",
   indigo: "bg-indigo-50 text-indigo-700",
   amber: "bg-amber-50 text-amber-700",
   red: "bg-red-50 text-red-700",

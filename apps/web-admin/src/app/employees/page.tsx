@@ -75,13 +75,13 @@ export default function EmployeesPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowImport(true)}
-              className="rounded-md border border-teal-700 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50"
+              className="rounded-md border border-sky-700 px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50"
             >
               ⬆ นำเข้าจากไฟล์
             </button>
             <button
               onClick={() => setShowAdd(true)}
-              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
             >
               + เพิ่มพนักงาน
             </button>
@@ -156,7 +156,7 @@ export default function EmployeesPage() {
                         </button>
                         <button
                           onClick={() => setEditing(e)}
-                          className="text-sm font-medium text-teal-700 hover:text-teal-900"
+                          className="text-sm font-medium text-sky-700 hover:text-sky-900"
                         >
                           แก้ไข
                         </button>
@@ -310,7 +310,7 @@ function AddEmployeeModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -394,7 +394,7 @@ function EditEmployeeModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -477,7 +477,7 @@ function EditQuotaModal({
             <button
               type="submit"
               disabled={submitting || quotas.length === 0}
-              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>
@@ -557,7 +557,7 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
             {leaveTypes.map((t) => `quota:${t.name}`).join(", ")}
           </p>
         )}
-        <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-teal-700 hover:text-teal-900">
+        <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-sky-700 hover:text-sky-900">
           ⬇ ดาวน์โหลดไฟล์ตัวอย่าง
         </button>
 
@@ -594,7 +594,7 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
             type="button"
             onClick={handleImport}
             disabled={!csvText || submitting}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
           >
             {submitting ? "กำลังนำเข้า..." : "นำเข้า"}
           </button>
@@ -639,4 +639,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputCls =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600";
+  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600";

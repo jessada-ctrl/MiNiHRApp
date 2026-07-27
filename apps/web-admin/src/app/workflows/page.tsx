@@ -51,7 +51,7 @@ export default function WorkflowsPage() {
       actions={
         <button
           onClick={() => setShowAdd(true)}
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
         >
           + สร้างสายอนุมัติ
         </button>
@@ -196,7 +196,7 @@ function WorkflowCard({
               }}
               className="flex w-56 cursor-grab flex-col gap-2 rounded-lg border border-neutral-300 bg-neutral-50 p-3 active:cursor-grabbing"
             >
-              <span className="w-fit rounded-full bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-800">
+              <span className="w-fit rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">
                 ขั้นที่ {idx + 1}
               </span>
               <select
@@ -235,7 +235,7 @@ function WorkflowCard({
         ))}
         <button
           onClick={addStep}
-          className="flex w-40 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm font-medium text-neutral-500 hover:border-teal-400 hover:text-teal-700"
+          className="flex w-40 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm font-medium text-neutral-500 hover:border-sky-400 hover:text-sky-700"
         >
           + เพิ่มขั้นตอน
         </button>
@@ -248,7 +248,7 @@ function WorkflowCard({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
           >
             {saving ? "กำลังบันทึก..." : "บันทึกสายอนุมัตินี้"}
           </button>
@@ -332,7 +332,7 @@ function AddWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังสร้าง..." : "สร้าง"}
             </button>

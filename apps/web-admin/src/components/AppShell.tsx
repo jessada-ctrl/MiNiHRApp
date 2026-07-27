@@ -140,7 +140,7 @@ export default function AppShell({
                 onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.label : undefined}
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  active ? "bg-teal-600/20 text-teal-300" : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  active ? "bg-sky-600/20 text-sky-300" : "text-slate-300 hover:bg-white/5 hover:text-white"
                 } ${collapsed ? "justify-center" : ""}`}
               >
                 <ItemIcon className="h-4 w-4 shrink-0" />

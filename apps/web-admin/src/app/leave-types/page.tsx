@@ -90,7 +90,7 @@ export default function LeaveTypesPage() {
       actions={
         <button
           onClick={() => setShowAdd(true)}
-          className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
         >
           + เพิ่มประเภทการลา
         </button>
@@ -100,7 +100,7 @@ export default function LeaveTypesPage() {
         <h1 className="text-xl font-semibold text-neutral-900">ประเภทการลา</h1>
         <p className="mt-1 text-sm text-neutral-500">
           การแก้ไขโควตามาตรฐานที่นี่มีผลกับพนักงานที่เพิ่มใหม่เท่านั้น ไม่ย้อนเปลี่ยนโควตาของพนักงานปัจจุบัน — ปรับรายบุคคลได้ที่หน้า{" "}
-          <Link href="/employees" className="text-teal-700 underline">
+          <Link href="/employees" className="text-sky-700 underline">
             พนักงาน
           </Link>
         </p>
@@ -163,7 +163,7 @@ export default function LeaveTypesPage() {
                         checked={lt.allowHourly}
                         disabled={savingId === lt.id}
                         onChange={(e) => handleToggleHourly(lt.id, e.target.checked)}
-                        className="h-4 w-4 accent-teal-700"
+                        className="h-4 w-4 accent-sky-700"
                       />
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -286,7 +286,7 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
               type="checkbox"
               checked={allowHourly}
               onChange={(e) => setAllowHourly(e.target.checked)}
-              className="h-4 w-4 accent-teal-700"
+              className="h-4 w-4 accent-sky-700"
             />
             <span className="text-sm text-neutral-700">อนุญาตให้ลารายชั่วโมง</span>
           </label>
@@ -300,7 +300,7 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>

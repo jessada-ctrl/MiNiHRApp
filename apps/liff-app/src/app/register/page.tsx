@@ -88,7 +88,7 @@ export default function RegisterPage() {
                 required
                 value={employeeCode}
                 onChange={(e) => setEmployeeCode(e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
               />
             </div>
             <div>
@@ -98,7 +98,7 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
               />
             </div>
 
@@ -107,7 +107,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-2 w-full rounded-lg bg-teal-700 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+              className="mt-2 w-full rounded-lg bg-gradient-to-r from-sky-500 to-amber-400 py-3 text-sm font-semibold text-white hover:from-sky-600 hover:to-amber-500 disabled:opacity-60"
             >
               {submitting ? "กำลังส่งรหัส..." : "ส่งรหัส OTP"}
             </button>
@@ -125,7 +125,7 @@ export default function RegisterPage() {
                 maxLength={6}
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-center text-lg tracking-[0.5em] focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-center text-lg tracking-[0.5em] focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
               />
             </div>
 
@@ -137,7 +137,7 @@ export default function RegisterPage() {
                   value={devLineUserId}
                   onChange={(e) => setDevLineUserId(e.target.value)}
                   placeholder="เช่น Ux_test_dev_001"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
                 />
               </div>
             )}
@@ -147,7 +147,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-2 w-full rounded-lg bg-teal-700 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+              className="mt-2 w-full rounded-lg bg-gradient-to-r from-sky-500 to-amber-400 py-3 text-sm font-semibold text-white hover:from-sky-600 hover:to-amber-500 disabled:opacity-60"
             >
               {submitting ? "กำลังยืนยัน..." : "ยืนยันและผูกบัญชี"}
             </button>
@@ -167,7 +167,7 @@ export default function RegisterPage() {
 
         <p className="mt-4 text-center text-xs text-neutral-400">
           มีบัญชีอยู่แล้ว?{" "}
-          <Link href="/login" className="text-teal-700 underline">
+          <Link href="/login" className="text-sky-700 underline">
             เข้าสู่ระบบด้วยอีเมล (ทดสอบ)
           </Link>
         </p>

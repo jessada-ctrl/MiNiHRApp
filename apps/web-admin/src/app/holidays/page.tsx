@@ -51,7 +51,7 @@ export default function HolidaysPage() {
         canManage && (
           <button
             onClick={() => setShowAdd(true)}
-            className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+            className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
           >
             + เพิ่มวันหยุด
           </button>
@@ -183,7 +183,7 @@ function AddHolidayModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+              className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>

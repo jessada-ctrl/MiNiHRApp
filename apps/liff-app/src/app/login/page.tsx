@@ -47,7 +47,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
             />
           </div>
           <div>
@@ -57,7 +57,7 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
             />
           </div>
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 w-full rounded-lg bg-teal-700 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-60"
+            className="mt-2 w-full rounded-lg bg-gradient-to-r from-sky-500 to-amber-400 py-3 text-sm font-semibold text-white hover:from-sky-600 hover:to-amber-500 disabled:opacity-60"
           >
             {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </button>
@@ -74,7 +74,7 @@ export default function LoginPage() {
 
         <p className="mt-4 text-center text-xs text-neutral-400">
           ยังไม่ได้ผูกบัญชี LINE?{" "}
-          <Link href="/register" className="text-teal-700 underline">
+          <Link href="/register" className="text-sky-700 underline">
             ผูกบัญชีด้วย OTP
           </Link>
         </p>
