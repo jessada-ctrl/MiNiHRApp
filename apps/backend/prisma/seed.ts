@@ -34,12 +34,26 @@ async function main() {
     'fake-local-dev-channel-secret-not-real',
   );
 
+  // Once a tenant admin has configured real LINE credentials via the
+  // /settings page (FR-1.2), lineChannelId no longer equals this fake
+  // placeholder — re-running this seed must never clobber real credentials
+  // back to the fake dev ones, only bootstrap them on a genuinely fresh row.
+  const existingTenant = await prisma.tenant.findUnique({
+    where: { subdomain: 'testco' },
+  });
+  const needsFakeLineCreds =
+    !existingTenant ||
+    existingTenant.lineChannelId === 'FAKE_CHANNEL_ID_LOCAL_DEV' ||
+    !existingTenant.lineChannelId;
+
   const tenant = await prisma.tenant.upsert({
     where: { subdomain: 'testco' },
-    update: {
-      lineChannelId: 'FAKE_CHANNEL_ID_LOCAL_DEV',
-      lineChannelSecretEnc: fakeChannelSecretEnc,
-    },
+    update: needsFakeLineCreds
+      ? {
+          lineChannelId: 'FAKE_CHANNEL_ID_LOCAL_DEV',
+          lineChannelSecretEnc: fakeChannelSecretEnc,
+        }
+      : {},
     create: {
       companyName: 'บริษัท เทสต์โก จำกัด',
       subdomain: 'testco',
