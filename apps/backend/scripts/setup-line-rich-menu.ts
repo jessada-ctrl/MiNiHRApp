@@ -27,11 +27,28 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  decryptWithKey,
+  ENCRYPTION_KEY_LENGTH,
+} from '../src/crypto/encryption.util';
 
 const prisma = new PrismaClient();
 
 const LINE_API = 'https://api.line.me';
 const LINE_API_DATA = 'https://api-data.line.me';
+
+// Same key EncryptionService reads at runtime — see .env's
+// TENANT_CRED_ENCRYPTION_KEY comment (mirrors prisma/seed.ts's resolution).
+const INSECURE_DEV_KEY_BASE64 = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+const encryptionKey = Buffer.from(
+  process.env.TENANT_CRED_ENCRYPTION_KEY ?? INSECURE_DEV_KEY_BASE64,
+  'base64',
+);
+if (encryptionKey.length !== ENCRYPTION_KEY_LENGTH) {
+  throw new Error(
+    `TENANT_CRED_ENCRYPTION_KEY must decode to exactly ${ENCRYPTION_KEY_LENGTH} bytes (got ${encryptionKey.length})`,
+  );
+}
 
 interface RichMenuArea {
   bounds: { x: number; y: number; width: number; height: number };
@@ -164,11 +181,17 @@ async function main() {
   const tenant = await prisma.tenant.findUniqueOrThrow({
     where: { id: tenantId },
   });
-  const accessToken = tenant.lineChannelAccessTokenEnc;
-  if (!accessToken)
+  if (!tenant.lineChannelAccessTokenEnc)
     throw new Error(
       'Tenant has no lineChannelAccessTokenEnc configured — set it via the /settings page first',
     );
+  // NFR-2: the tenant row stores this AES-256-GCM encrypted, same as
+  // LineMessagingService reads it at runtime — must decrypt before sending
+  // it as a Bearer token, or every LINE API call 401s on the ciphertext.
+  const accessToken = decryptWithKey(
+    encryptionKey,
+    tenant.lineChannelAccessTokenEnc,
+  );
 
   const liffUrl = `https://liff.line.me/${liffId}`;
 
