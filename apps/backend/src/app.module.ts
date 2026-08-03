@@ -1,8 +1,12 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { CryptoModule } from './crypto/crypto.module';
@@ -41,7 +45,6 @@ import { WorkflowsModule } from './workflows/workflows.module';
     SaasAdminModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -51,7 +54,10 @@ export class AppModule implements NestModule {
     // any request whose Host header isn't a real tenant subdomain).
     consumer
       .apply(TenantMiddleware)
-      .exclude('/', 'health', { path: 'saas-admin/*path', method: RequestMethod.ALL })
+      .exclude('/', 'health', {
+        path: 'saas-admin/*path',
+        method: RequestMethod.ALL,
+      })
       .forRoutes('*');
   }
 }

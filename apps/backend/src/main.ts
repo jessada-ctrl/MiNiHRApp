@@ -50,11 +50,19 @@ async function bootstrap() {
   // a Turbopack *dev-mode* chunk-loader quirk (confirmed by testing), and
   // web-admin is only ever served here as a production `next build` output,
   // where basePath is applied to every asset reference correctly.
+  //
+  // Bare "/" is included too and rewritten to "/admin" — web-admin's own
+  // root route is the public marketing landing page, but the Next.js server
+  // only answers under its baked-in /admin basePath (NEXT_BASE_PATH, see
+  // next.config.ts), so the domain root has to be forwarded there rather
+  // than left to fall through to AppController (which used to answer "/"
+  // with the unused Nest boilerplate "Hello World!").
   app.use(
     createProxyMiddleware({
       target: 'http://localhost:3000',
       changeOrigin: true,
-      pathFilter: (path) => path.startsWith('/admin'),
+      pathFilter: (path) => path === '/' || path.startsWith('/admin'),
+      pathRewrite: (path) => (path === '/' ? '/admin' : path),
     }),
   );
 
