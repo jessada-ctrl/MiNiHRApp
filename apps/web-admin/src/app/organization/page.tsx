@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import QRCode from "qrcode";
 import AppShell from "@/components/AppShell";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -334,6 +335,7 @@ function BranchModal({ branch, onClose, onSaved }: { branch?: Branch; onClose: (
 /** FR-4.5: dynamic daily QR code for scan-to-check-in — changes every time HR regenerates it, so a photo of a stale code can't be reused. */
 function QrCodeSection({ branchId }: { branchId: string }) {
   const [qrCode, setQrCode] = useState<DailyQrCode | null>(null);
+  const [qrImage, setQrImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -354,6 +356,24 @@ function QrCodeSection({ branchId }: { branchId: string }) {
       cancelled = true;
     };
   }, [branchId]);
+
+  // Rendered client-side from the raw token — the LIFF app's scanner reads
+  // back exactly this string and sends it to POST /attendance/check as-is,
+  // so the QR content must be the bare token, not a wrapping URL.
+  useEffect(() => {
+    if (!qrCode) return; // nothing to render — the qrCode-less branch below never reads qrImage anyway
+    let cancelled = false;
+    QRCode.toDataURL(qrCode.qrToken, { width: 180, margin: 1 })
+      .then((url) => {
+        if (!cancelled) setQrImage(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrImage(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [qrCode]);
 
   async function handleGenerate() {
     setGenerating(true);
@@ -383,7 +403,13 @@ function QrCodeSection({ branchId }: { branchId: string }) {
       {loading ? (
         <p className="mt-2 text-xs text-neutral-400">กำลังโหลด...</p>
       ) : qrCode ? (
-        <p className="mt-2 break-all rounded-md bg-white px-2 py-1.5 font-mono text-[11px] text-neutral-600">{qrCode.qrToken}</p>
+        <div className="mt-2 flex items-center gap-3">
+          {qrImage && (
+            // eslint-disable-next-line @next/next/no-img-element -- short-lived data: URL, not worth Next/Image's remote-loader machinery
+            <img src={qrImage} alt="QR Code เข้างานวันนี้" width={112} height={112} className="rounded-md border border-neutral-200 bg-white p-1" />
+          )}
+          <p className="break-all rounded-md bg-white px-2 py-1.5 font-mono text-[11px] text-neutral-600">{qrCode.qrToken}</p>
+        </div>
       ) : (
         <p className="mt-2 text-xs text-neutral-400">ยังไม่มี QR Code สำหรับวันนี้ — พนักงานจะใช้พิกัด GPS แทนได้เสมอ</p>
       )}

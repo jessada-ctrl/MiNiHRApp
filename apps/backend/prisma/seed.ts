@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { encryptWithKey, ENCRYPTION_KEY_LENGTH } from '../src/crypto/encryption.util';
+import {
+  encryptWithKey,
+  ENCRYPTION_KEY_LENGTH,
+} from '../src/crypto/encryption.util';
 
 const prisma = new PrismaClient();
 
@@ -12,16 +15,24 @@ const DEMO_SAAS_ADMIN_PASSWORD = 'SaasPassw0rd!'; // local dev only — never do
 // key EncryptionService uses when the env var is unset, so a fresh checkout
 // still seeds a tenant LineSignatureGuard/LineMessagingService can decrypt.
 const INSECURE_DEV_KEY_BASE64 = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
-const encryptionKey = Buffer.from(process.env.TENANT_CRED_ENCRYPTION_KEY ?? INSECURE_DEV_KEY_BASE64, 'base64');
+const encryptionKey = Buffer.from(
+  process.env.TENANT_CRED_ENCRYPTION_KEY ?? INSECURE_DEV_KEY_BASE64,
+  'base64',
+);
 if (encryptionKey.length !== ENCRYPTION_KEY_LENGTH) {
-  throw new Error(`TENANT_CRED_ENCRYPTION_KEY must decode to exactly ${ENCRYPTION_KEY_LENGTH} bytes (got ${encryptionKey.length})`);
+  throw new Error(
+    `TENANT_CRED_ENCRYPTION_KEY must decode to exactly ${ENCRYPTION_KEY_LENGTH} bytes (got ${encryptionKey.length})`,
+  );
 }
 
 async function main() {
   // Fake — not a real LINE channel. Only exists so LineSignatureGuard
   // (NFR-3) has something to verify against in local dev. Real values
   // come from FR-1.2 (Dynamic LINE OA Config), not built yet.
-  const fakeChannelSecretEnc = encryptWithKey(encryptionKey, 'fake-local-dev-channel-secret-not-real');
+  const fakeChannelSecretEnc = encryptWithKey(
+    encryptionKey,
+    'fake-local-dev-channel-secret-not-real',
+  );
 
   const tenant = await prisma.tenant.upsert({
     where: { subdomain: 'testco' },
@@ -88,8 +99,16 @@ async function main() {
   });
 
   const hrAdmin = await prisma.employee.upsert({
-    where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP004' } },
-    update: { passwordHash, status: 'active', role: 'tenant_admin' },
+    where: {
+      tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP004' },
+    },
+    update: {
+      passwordHash,
+      status: 'active',
+      role: 'tenant_admin',
+      branchId: branch.id,
+      departmentId: hrDept.id,
+    },
     create: {
       tenantId: tenant.id,
       employeeCode: 'EMP004',
@@ -104,11 +123,15 @@ async function main() {
   });
 
   const approver = await prisma.employee.upsert({
-    where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP003' } },
+    where: {
+      tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP003' },
+    },
     update: {
       passwordHash,
       status: 'active',
       role: 'approver',
+      branchId: branch.id,
+      departmentId: salesDept.id,
       // Fake — not a real LINE user id, so the FR-3.1 leave-request
       // notification demo has an approver to push a Flex Message to without
       // needing the real OTP binding flow (FR-2.1) against a live LINE account.
@@ -129,12 +152,16 @@ async function main() {
   });
 
   const employee1 = await prisma.employee.upsert({
-    where: { tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP001' } },
+    where: {
+      tenantId_employeeCode: { tenantId: tenant.id, employeeCode: 'EMP001' },
+    },
     update: {
       passwordHash,
       status: 'active',
       role: 'employee',
       directManagerId: approver.id,
+      branchId: branch.id,
+      departmentId: salesDept.id,
       // Fake — not a real LINE user id, so the chatbot demo (scripts/demo-chatbot.sh)
       // has an employee to resolve without needing to run the real OTP binding
       // flow (FR-2.1) against a live LINE account first.
@@ -156,9 +183,27 @@ async function main() {
   });
 
   const leaveTypeSeeds = [
-    { id: '00000000-0000-0000-0000-000000000021', name: 'ลาป่วย', defaultQuota: 30, requiresAttachmentAfterDays: 3, allowHourly: true },
-    { id: '00000000-0000-0000-0000-000000000022', name: 'ลากิจ', defaultQuota: 3, requiresAttachmentAfterDays: null, allowHourly: true },
-    { id: '00000000-0000-0000-0000-000000000023', name: 'ลาพักร้อน', defaultQuota: 6, requiresAttachmentAfterDays: null, allowHourly: false },
+    {
+      id: '00000000-0000-0000-0000-000000000021',
+      name: 'ลาป่วย',
+      defaultQuota: 30,
+      requiresAttachmentAfterDays: 3,
+      allowHourly: true,
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000022',
+      name: 'ลากิจ',
+      defaultQuota: 3,
+      requiresAttachmentAfterDays: null,
+      allowHourly: true,
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000023',
+      name: 'ลาพักร้อน',
+      defaultQuota: 6,
+      requiresAttachmentAfterDays: null,
+      allowHourly: false,
+    },
   ];
   const leaveTypes = await Promise.all(
     leaveTypeSeeds.map((lt) =>
@@ -174,9 +219,21 @@ async function main() {
   for (const emp of [hrAdmin, approver, employee1]) {
     for (const lt of leaveTypes) {
       await prisma.leaveQuota.upsert({
-        where: { employeeId_leaveTypeId_year: { employeeId: emp.id, leaveTypeId: lt.id, year } },
+        where: {
+          employeeId_leaveTypeId_year: {
+            employeeId: emp.id,
+            leaveTypeId: lt.id,
+            year,
+          },
+        },
         update: {},
-        create: { tenantId: tenant.id, employeeId: emp.id, leaveTypeId: lt.id, year, totalDays: lt.defaultQuota },
+        create: {
+          tenantId: tenant.id,
+          employeeId: emp.id,
+          leaveTypeId: lt.id,
+          year,
+          totalDays: lt.defaultQuota,
+        },
       });
     }
   }
@@ -216,24 +273,48 @@ async function main() {
   });
 
   const holidaySeeds = [
-    { id: '00000000-0000-0000-0000-000000000041', date: '2026-08-12', name: 'วันแม่แห่งชาติ', notifyDaysBefore: 7 },
-    { id: '00000000-0000-0000-0000-000000000042', date: '2026-10-23', name: 'วันปิยมหาราช', notifyDaysBefore: 3 },
+    {
+      id: '00000000-0000-0000-0000-000000000041',
+      date: '2026-08-12',
+      name: 'วันแม่แห่งชาติ',
+      notifyDaysBefore: 7,
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000042',
+      date: '2026-10-23',
+      name: 'วันปิยมหาราช',
+      notifyDaysBefore: 3,
+    },
   ];
   for (const h of holidaySeeds) {
     await prisma.holiday.upsert({
       where: { id: h.id },
       update: {},
-      create: { id: h.id, tenantId: tenant.id, holidayDate: new Date(`${h.date}T00:00:00.000Z`), name: h.name, notifyDaysBefore: h.notifyDaysBefore },
+      create: {
+        id: h.id,
+        tenantId: tenant.id,
+        holidayDate: new Date(`${h.date}T00:00:00.000Z`),
+        name: h.name,
+        notifyDaysBefore: h.notifyDaysBefore,
+      },
     });
   }
 
-  console.log(`Seeded tenant: ${tenant.companyName} (${tenant.subdomain}) — id ${tenant.id}`);
+  console.log(
+    `Seeded tenant: ${tenant.companyName} (${tenant.subdomain}) — id ${tenant.id}`,
+  );
   console.log(`Login as HR Admin: ${hrAdmin.email} / ${DEMO_PASSWORD}`);
   console.log(`Login as Approver: ${approver.email} / ${DEMO_PASSWORD}`);
-  console.log(`Login as SaaS Super Admin: ${saasAdmin.email} / ${DEMO_SAAS_ADMIN_PASSWORD}`);
-  console.log(`Try: curl -X POST http://localhost:3001/v1/webhook/line/${tenant.id} -H "Content-Type: application/json" -d "{}"`);
+  console.log(
+    `Login as SaaS Super Admin: ${saasAdmin.email} / ${DEMO_SAAS_ADMIN_PASSWORD}`,
+  );
+  console.log(
+    `Try: curl -X POST http://localhost:3001/v1/webhook/line/${tenant.id} -H "Content-Type: application/json" -d "{}"`,
+  );
   console.log('Try: curl http://localhost:3001/health');
-  console.log(`Try the LINE chatbot: ./scripts/demo-chatbot.sh ${tenant.id} "ลาป่วยเหลือกี่วัน"`);
+  console.log(
+    `Try the LINE chatbot: ./scripts/demo-chatbot.sh ${tenant.id} "ลาป่วยเหลือกี่วัน"`,
+  );
 }
 
 main()
