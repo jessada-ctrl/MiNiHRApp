@@ -12,6 +12,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@theme {
+  /* LINE brand green ramp, anchored at the official LINE green (#06C755) at 500 */
+  --color-line-50: #eafbf1;
+  --color-line-100: #cff6de;
+  --color-line-200: #9eebbe;
+  --color-line-300: #66da9b;
+  --color-line-400: #2cc576;
+  --color-line-500: #06c755;
+  --color-line-600: #05a94a;
+  --color-line-700: #048c3d;
+  --color-line-800: #036e30;
+  --color-line-900: #025024;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
