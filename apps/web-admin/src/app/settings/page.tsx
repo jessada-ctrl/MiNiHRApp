@@ -130,7 +130,8 @@ export default function SettingsPage() {
             <label className="block">
               <span className="block text-sm font-medium text-neutral-700">Channel Secret</span>
               <input
-                type="password"
+                type="text"
+                autoComplete="off"
                 value={channelSecret}
                 onChange={(e) => setChannelSecret(e.target.value)}
                 placeholder={config.hasChannelSecret ? SECRET_PLACEHOLDER : ""}
@@ -141,7 +142,8 @@ export default function SettingsPage() {
             <label className="block">
               <span className="block text-sm font-medium text-neutral-700">Channel Access Token</span>
               <input
-                type="password"
+                type="text"
+                autoComplete="off"
                 value={accessToken}
                 onChange={(e) => setAccessToken(e.target.value)}
                 placeholder={config.hasChannelAccessToken ? SECRET_PLACEHOLDER : ""}
