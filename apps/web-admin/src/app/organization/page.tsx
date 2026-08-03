@@ -13,6 +13,7 @@ import {
   updateBranch,
   updateDepartment,
 } from "@/lib/org";
+import { type DailyQrCode, generateQrCode, getTodayQrCode } from "@/lib/attendance";
 
 export default function OrganizationPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -309,6 +310,8 @@ function BranchModal({ branch, onClose, onSaved }: { branch?: Branch; onClose: (
           </Field>
         )}
 
+        {branch && <QrCodeSection branchId={branch.id} />}
+
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
@@ -325,6 +328,68 @@ function BranchModal({ branch, onClose, onSaved }: { branch?: Branch; onClose: (
         </div>
       </form>
     </Modal>
+  );
+}
+
+/** FR-4.5: dynamic daily QR code for scan-to-check-in — changes every time HR regenerates it, so a photo of a stale code can't be reused. */
+function QrCodeSection({ branchId }: { branchId: string }) {
+  const [qrCode, setQrCode] = useState<DailyQrCode | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getTodayQrCode(branchId)
+      .then((qr) => {
+        if (!cancelled) setQrCode(qr);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "โหลด QR Code ไม่สำเร็จ");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId]);
+
+  async function handleGenerate() {
+    setGenerating(true);
+    setError(null);
+    try {
+      setQrCode(await generateQrCode(branchId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "สร้าง QR Code ไม่สำเร็จ");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-neutral-700">QR Code เข้างานประจำวัน</span>
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={generating}
+          className="rounded-md border border-sky-300 bg-white px-2.5 py-1 text-xs font-medium text-sky-700 hover:bg-sky-50 disabled:opacity-60"
+        >
+          {generating ? "กำลังสร้าง..." : qrCode ? "สุ่มรหัสใหม่" : "สร้าง QR Code วันนี้"}
+        </button>
+      </div>
+      {loading ? (
+        <p className="mt-2 text-xs text-neutral-400">กำลังโหลด...</p>
+      ) : qrCode ? (
+        <p className="mt-2 break-all rounded-md bg-white px-2 py-1.5 font-mono text-[11px] text-neutral-600">{qrCode.qrToken}</p>
+      ) : (
+        <p className="mt-2 text-xs text-neutral-400">ยังไม่มี QR Code สำหรับวันนี้ — พนักงานจะใช้พิกัด GPS แทนได้เสมอ</p>
+      )}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      <p className="mt-1 text-[11px] text-neutral-400">รหัสจะหมดอายุอัตโนมัติเมื่อขึ้นวันใหม่ หรือเมื่อสุ่มรหัสใหม่</p>
+    </div>
   );
 }
 

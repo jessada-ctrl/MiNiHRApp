@@ -23,7 +23,10 @@ const HEIGHT = 1686;
 const SKY = '#0284c7';
 const AMBER = '#d97706';
 const WHITE = '#ffffff';
-const LOGO_PATH = path.join(__dirname, '../../liff-app/src/assets/logo-icon.png');
+const LOGO_PATH = path.join(
+  __dirname,
+  '../../liff-app/src/assets/logo-icon.png',
+);
 
 function paintBackground(ctx: SKRSContext2D) {
   const gradient = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
@@ -33,7 +36,12 @@ function paintBackground(ctx: SKRSContext2D) {
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 }
 
-async function paintLogo(ctx: SKRSContext2D, cx: number, cy: number, size: number) {
+async function paintLogo(
+  ctx: SKRSContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+) {
   const logo = await loadImage(LOGO_PATH);
   ctx.save();
   ctx.beginPath();
@@ -49,7 +57,13 @@ async function paintLogo(ctx: SKRSContext2D, cx: number, cy: number, size: numbe
   ctx.restore();
 }
 
-function iconBadge(ctx: SKRSContext2D, cx: number, cy: number, radius: number, draw: (ctx: SKRSContext2D) => void) {
+function iconBadge(
+  ctx: SKRSContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  draw: (ctx: SKRSContext2D) => void,
+) {
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -63,6 +77,21 @@ function iconBadge(ctx: SKRSContext2D, cx: number, cy: number, radius: number, d
   ctx.translate(cx, cy);
   draw(ctx);
   ctx.restore();
+}
+
+function drawCheckinIcon(ctx: SKRSContext2D) {
+  // Map pin with a checkmark inside — "ลงเวลาทำงาน" (attendance check-in/out).
+  ctx.beginPath();
+  ctx.moveTo(0, 85);
+  ctx.bezierCurveTo(-70, 10, -70, -40, 0, -85);
+  ctx.bezierCurveTo(70, -40, 70, 10, 0, 85);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-28, -20);
+  ctx.lineTo(-8, 2);
+  ctx.lineTo(30, -38);
+  ctx.stroke();
 }
 
 function drawDocumentIcon(ctx: SKRSContext2D) {
@@ -119,7 +148,14 @@ function drawChatIcon(ctx: SKRSContext2D) {
   ctx.stroke();
 }
 
-function centeredText(ctx: SKRSContext2D, text: string, x: number, y: number, size: number, weight: 'bold' | 'normal' = 'bold') {
+function centeredText(
+  ctx: SKRSContext2D,
+  text: string,
+  x: number,
+  y: number,
+  size: number,
+  weight: 'bold' | 'normal' = 'bold',
+) {
   ctx.font = `${weight} ${size}px "Leelawadee UI", "Segoe UI", sans-serif`;
   ctx.fillStyle = WHITE;
   ctx.textAlign = 'center';
@@ -144,7 +180,14 @@ async function generateUnregistered(): Promise<Buffer> {
   });
 
   centeredText(ctx, 'ลงทะเบียนเข้าใช้งาน', WIDTH / 2, HEIGHT / 2 + 40, 130);
-  centeredText(ctx, 'แตะเพื่อเริ่มต้นผูกบัญชี LINE กับ HR', WIDTH / 2, HEIGHT / 2 + 155, 60, 'normal');
+  centeredText(
+    ctx,
+    'แตะเพื่อเริ่มต้นผูกบัญชี LINE กับ HR',
+    WIDTH / 2,
+    HEIGHT / 2 + 155,
+    60,
+    'normal',
+  );
 
   return canvas.toBuffer('image/png');
 }
@@ -156,6 +199,7 @@ async function generateRegistered(): Promise<Buffer> {
   await paintLogo(ctx, WIDTH / 2, 100, 110);
 
   const columns: { label: string; draw: (ctx: SKRSContext2D) => void }[] = [
+    { label: 'ลงเวลาทำงาน', draw: drawCheckinIcon },
     { label: 'ขอลา', draw: drawDocumentIcon },
     { label: 'ประวัติการลา', draw: drawClockIcon },
     { label: 'ถาม HR', draw: drawChatIcon },
@@ -187,10 +231,18 @@ async function main() {
   const dir = path.join(__dirname, 'assets');
   fs.mkdirSync(dir, { recursive: true });
 
-  fs.writeFileSync(path.join(dir, 'richmenu-unregistered.png'), await generateUnregistered());
-  fs.writeFileSync(path.join(dir, 'richmenu-registered.png'), await generateRegistered());
+  fs.writeFileSync(
+    path.join(dir, 'richmenu-unregistered.png'),
+    await generateUnregistered(),
+  );
+  fs.writeFileSync(
+    path.join(dir, 'richmenu-registered.png'),
+    await generateRegistered(),
+  );
 
-  console.log(`Generated richmenu-unregistered.png and richmenu-registered.png in ${dir}`);
+  console.log(
+    `Generated richmenu-unregistered.png and richmenu-registered.png in ${dir}`,
+  );
 }
 
 main().catch((err) => {

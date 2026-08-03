@@ -13,7 +13,14 @@ import {
   submitLeaveRequest,
 } from "@/lib/leaveRequests";
 import { apiFetch, unwrap } from "@/lib/api";
-import { completePendingLiffLogin } from "@/lib/liff";
+import { completePendingLiffLogin, scanQrCode } from "@/lib/liff";
+import {
+  type AttendanceStatus,
+  type CheckResult,
+  checkGps,
+  checkQr,
+  getAttendanceStatus,
+} from "@/lib/attendance";
 
 interface QuotaSummary {
   leaveTypeId: string;
@@ -60,7 +67,7 @@ function computeDays(duration: DurationType, startDate: string, endDate: string,
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [tab, setTab] = useState<"form" | "history">("form");
+  const [tab, setTab] = useState<"checkin" | "form" | "history">("checkin");
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [quotas, setQuotas] = useState<QuotaSummary[]>([]);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
@@ -81,8 +88,11 @@ export default function HomePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    // Rich Menu's "ประวัติการลา" button deep-links here via ?tab=history.
+    // Rich Menu's "ขอลา" and "ประวัติการลา" buttons deep-link here via
+    // ?tab=form / ?tab=history; the bare URL (its "ลงเวลาทำงาน" button, and
+    // the LIFF app's own root) defaults to the check-in tab per FR-2.3.
     if (params.get("tab") === "history") setTab("history");
+    else if (params.get("tab") === "form") setTab("form");
 
     let cancelled = false;
     (async () => {
@@ -189,7 +199,9 @@ export default function HomePage() {
       </header>
 
       <main className="flex-1 overflow-y-auto pb-20">
-        {tab === "form" ? (
+        {tab === "checkin" ? (
+          <AttendanceTab />
+        ) : tab === "form" ? (
           <LeaveForm leaveTypes={leaveTypes} quotas={quotas} onSubmitted={refresh} onGoHistory={() => setTab("history")} />
         ) : (
           <HistoryList requests={requests} onChanged={refresh} />
@@ -197,6 +209,7 @@ export default function HomePage() {
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 flex border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)]">
+        <TabButton active={tab === "checkin"} label="เข้างาน" icon="⏱️" onClick={() => setTab("checkin")} />
         <TabButton active={tab === "form"} label="ขอลา" icon="📝" onClick={() => setTab("form")} />
         <TabButton active={tab === "history"} label="ประวัติ" icon="📜" onClick={() => setTab("history")} />
       </nav>
@@ -215,6 +228,181 @@ function TabButton({ active, label, icon, onClick }: { active: boolean; label: s
       <span className="text-lg leading-none">{icon}</span>
       {label}
     </button>
+  );
+}
+
+function AttendanceTab() {
+  const [status, setStatus] = useState<AttendanceStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<CheckResult | null>(null);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      setStatus(await getAttendanceStatus());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  async function handleScanQr() {
+    setError(null);
+    setBusy(true);
+    try {
+      let token: string | null;
+      try {
+        token = await scanQrCode();
+      } catch (err) {
+        // LIFF camera isn't available outside the real LINE app (e.g. this
+        // local checkout before FR-2.1's LINE integration is wired up) —
+        // fall back to typing the code, same "mock://" pattern the leave
+        // request attachment upload already uses for the same reason.
+        if (err instanceof Error && err.message === "LIFF_NOT_CONFIGURED") {
+          token = window.prompt("จำลองการสแกน QR — วางรหัส QR Code ที่ได้จาก HR");
+        } else {
+          throw err;
+        }
+      }
+      if (!token) return;
+      const result = await checkQr(token);
+      setLastResult(result);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "สแกน QR ไม่สำเร็จ");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleUseGps() {
+    setError(null);
+    setBusy(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 }),
+      );
+      const result = await checkGps(position.coords.latitude, position.coords.longitude);
+      setLastResult(result);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "อ่านพิกัด GPS ไม่สำเร็จ — กรุณาเปิดสิทธิ์การเข้าถึงตำแหน่ง");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-6">
+        <p className="text-sm text-neutral-500">กำลังโหลด...</p>
+      </div>
+    );
+  }
+
+  const branch = status?.branch ?? null;
+  const nextAction = status?.nextAction ?? "in";
+  const timeStr = now.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = now.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+
+  return (
+    <div className="flex flex-col gap-4 p-4">
+      <div className="text-center">
+        <p className="text-4xl font-semibold tabular-nums text-neutral-900">{timeStr}</p>
+        <p className="mt-1 text-sm text-neutral-500">{dateStr}</p>
+      </div>
+
+      {lastResult ? (
+        <SuccessCard result={lastResult} onDismiss={() => setLastResult(null)} />
+      ) : (
+        <>
+          <button
+            onClick={handleScanQr}
+            disabled={busy}
+            className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-neutral-600 bg-neutral-900 text-white disabled:opacity-60"
+          >
+            <span className="text-3xl">▢</span>
+            <span className="text-sm text-neutral-300">แตะเพื่อเริ่มสแกน QR</span>
+          </button>
+
+          <button
+            onClick={handleScanQr}
+            disabled={busy}
+            className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 py-3.5 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
+          >
+            {busy ? "กำลังดำเนินการ..." : `📷 สแกน QR ${nextAction === "in" ? "เข้างาน" : "ออกงาน"}`}
+          </button>
+
+          <button
+            onClick={handleUseGps}
+            disabled={busy}
+            className="text-center text-sm font-medium text-sky-700 underline disabled:opacity-60"
+          >
+            ใช้พิกัด GPS แทน
+          </button>
+        </>
+      )}
+
+      {error && <p className="text-center text-sm text-red-600">{error}</p>}
+
+      {branch && (
+        <div className="flex items-center gap-2 rounded-xl bg-white p-3 text-xs text-neutral-500 shadow-sm">
+          <span>📍</span>
+          <span>
+            {branch.branchName} · รัศมีที่อนุญาต {branch.radiusMeters} ม.
+          </span>
+        </div>
+      )}
+
+      {status && status.todayLogs.length > 0 && (
+        <div className="rounded-xl bg-white p-3 shadow-sm">
+          <p className="mb-2 text-xs font-medium text-neutral-500">การลงเวลาวันนี้</p>
+          <ul className="flex flex-col gap-1.5">
+            {status.todayLogs.map((log) => (
+              <li key={log.id} className="flex justify-between text-xs text-neutral-600">
+                <span>{log.checkType === "in" ? "เข้างาน" : "ออกงาน"}</span>
+                <span className="tabular-nums">
+                  {new Date(log.timestamp).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SuccessCard({ result, onDismiss }: { result: CheckResult; onDismiss: () => void }) {
+  const timeStr = new Date(result.timestamp).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-6 text-center shadow-sm">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-2xl text-white">✓</span>
+      <p className="text-base font-semibold text-neutral-900">{result.checkType === "in" ? "เช็คอินสำเร็จ" : "เช็คเอาท์สำเร็จ"}</p>
+      <p className="text-xs text-neutral-500">
+        {timeStr} น. · {result.branch.branchName}
+      </p>
+      {result.distanceMeters !== undefined && (
+        <div className="mt-1 w-full rounded-lg bg-green-50 p-2 text-xs text-green-700">
+          ✓ ยืนยันพิกัดสำเร็จ — อยู่ห่างจากสาขา {result.distanceMeters} ม. (ในรัศมีที่กำหนด {result.branch.radiusMeters} ม.)
+        </div>
+      )}
+      <button onClick={onDismiss} className="mt-2 text-xs font-medium text-sky-700 underline">
+        กลับไปหน้าเช็คอิน
+      </button>
+    </div>
   );
 }
 

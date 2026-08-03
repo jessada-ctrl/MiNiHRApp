@@ -42,7 +42,10 @@ function authHeaders(accessToken: string, extra: Record<string, string> = {}) {
   return { Authorization: `Bearer ${accessToken}`, ...extra };
 }
 
-async function deleteRichMenuIfExists(accessToken: string, richMenuId: string | null) {
+async function deleteRichMenuIfExists(
+  accessToken: string,
+  richMenuId: string | null,
+) {
   if (!richMenuId) return;
   const res = await fetch(`${LINE_API}/v2/bot/richmenu/${richMenuId}`, {
     method: 'DELETE',
@@ -50,37 +53,69 @@ async function deleteRichMenuIfExists(accessToken: string, richMenuId: string | 
   });
   // 404 is fine — already gone (e.g. manually deleted in LINE console).
   if (!res.ok && res.status !== 404) {
-    console.warn(`Could not delete previous rich menu ${richMenuId}: ${res.status} ${await res.text()}`);
+    console.warn(
+      `Could not delete previous rich menu ${richMenuId}: ${res.status} ${await res.text()}`,
+    );
   }
 }
 
-async function createRichMenu(accessToken: string, name: string, chatBarText: string, areas: RichMenuArea[]): Promise<string> {
+async function createRichMenu(
+  accessToken: string,
+  name: string,
+  chatBarText: string,
+  areas: RichMenuArea[],
+): Promise<string> {
   const res = await fetch(`${LINE_API}/v2/bot/richmenu`, {
     method: 'POST',
     headers: authHeaders(accessToken, { 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ size: { width: 2500, height: 1686 }, selected: false, name, chatBarText, areas }),
+    body: JSON.stringify({
+      size: { width: 2500, height: 1686 },
+      selected: false,
+      name,
+      chatBarText,
+      areas,
+    }),
   });
-  if (!res.ok) throw new Error(`Create rich menu "${name}" failed: ${res.status} ${await res.text()}`);
+  if (!res.ok)
+    throw new Error(
+      `Create rich menu "${name}" failed: ${res.status} ${await res.text()}`,
+    );
   const { richMenuId } = (await res.json()) as { richMenuId: string };
   return richMenuId;
 }
 
-async function uploadRichMenuImage(accessToken: string, richMenuId: string, imagePath: string) {
+async function uploadRichMenuImage(
+  accessToken: string,
+  richMenuId: string,
+  imagePath: string,
+) {
   const image = fs.readFileSync(imagePath);
-  const res = await fetch(`${LINE_API_DATA}/v2/bot/richmenu/${richMenuId}/content`, {
-    method: 'POST',
-    headers: authHeaders(accessToken, { 'Content-Type': 'image/png' }),
-    body: image,
-  });
-  if (!res.ok) throw new Error(`Upload image for rich menu ${richMenuId} failed: ${res.status} ${await res.text()}`);
+  const res = await fetch(
+    `${LINE_API_DATA}/v2/bot/richmenu/${richMenuId}/content`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken, { 'Content-Type': 'image/png' }),
+      body: image,
+    },
+  );
+  if (!res.ok)
+    throw new Error(
+      `Upload image for rich menu ${richMenuId} failed: ${res.status} ${await res.text()}`,
+    );
 }
 
 async function setDefaultRichMenu(accessToken: string, richMenuId: string) {
-  const res = await fetch(`${LINE_API}/v2/bot/user/all/richmenu/${richMenuId}`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-  });
-  if (!res.ok) throw new Error(`Set default rich menu failed: ${res.status} ${await res.text()}`);
+  const res = await fetch(
+    `${LINE_API}/v2/bot/user/all/richmenu/${richMenuId}`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  );
+  if (!res.ok)
+    throw new Error(
+      `Set default rich menu failed: ${res.status} ${await res.text()}`,
+    );
 }
 
 /**
@@ -91,18 +126,27 @@ async function setDefaultRichMenu(accessToken: string, richMenuId: string) {
  * push updated menu images) doesn't regress everyone who'd already bound
  * their LINE account back to the "please register" menu.
  */
-async function relinkAlreadyRegisteredEmployees(accessToken: string, tenantId: string, richMenuId: string) {
+async function relinkAlreadyRegisteredEmployees(
+  accessToken: string,
+  tenantId: string,
+  richMenuId: string,
+) {
   const employees = await prisma.employee.findMany({
     where: { tenantId, lineUserId: { not: null } },
     select: { lineUserId: true },
   });
   for (const { lineUserId } of employees) {
-    const res = await fetch(`${LINE_API}/v2/bot/user/${lineUserId}/richmenu/${richMenuId}`, {
-      method: 'POST',
-      headers: authHeaders(accessToken),
-    });
+    const res = await fetch(
+      `${LINE_API}/v2/bot/user/${lineUserId}/richmenu/${richMenuId}`,
+      {
+        method: 'POST',
+        headers: authHeaders(accessToken),
+      },
+    );
     if (!res.ok) {
-      console.warn(`Could not relink user ${lineUserId} to the new registered rich menu: ${res.status} ${await res.text()}`);
+      console.warn(
+        `Could not relink user ${lineUserId} to the new registered rich menu: ${res.status} ${await res.text()}`,
+      );
     }
   }
   return employees.length;
@@ -111,13 +155,20 @@ async function relinkAlreadyRegisteredEmployees(accessToken: string, tenantId: s
 async function main() {
   const [, , tenantId, liffId] = process.argv;
   if (!tenantId || !liffId) {
-    console.error('Usage: setup-line-rich-menu.ts <tenantId> <liffId e.g. 1234567890-abcdEFGh>');
+    console.error(
+      'Usage: setup-line-rich-menu.ts <tenantId> <liffId e.g. 1234567890-abcdEFGh>',
+    );
     process.exit(1);
   }
 
-  const tenant = await prisma.tenant.findUniqueOrThrow({ where: { id: tenantId } });
+  const tenant = await prisma.tenant.findUniqueOrThrow({
+    where: { id: tenantId },
+  });
   const accessToken = tenant.lineChannelAccessTokenEnc;
-  if (!accessToken) throw new Error('Tenant has no lineChannelAccessTokenEnc configured — set it via the /settings page first');
+  if (!accessToken)
+    throw new Error(
+      'Tenant has no lineChannelAccessTokenEnc configured — set it via the /settings page first',
+    );
 
   const liffUrl = `https://liff.line.me/${liffId}`;
 
@@ -127,36 +178,81 @@ async function main() {
   const assetsDir = path.join(__dirname, 'assets');
 
   console.log('Creating "unregistered" rich menu...');
-  const unregisteredId = await createRichMenu(accessToken, 'unregistered', 'เมนู', [
-    { bounds: { x: 0, y: 0, width: 2500, height: 1686 }, action: { type: 'uri', label: 'ลงทะเบียน', uri: `${liffUrl}/register` } },
-  ]);
-  await uploadRichMenuImage(accessToken, unregisteredId, path.join(assetsDir, 'richmenu-unregistered.png'));
+  const unregisteredId = await createRichMenu(
+    accessToken,
+    'unregistered',
+    'เมนู',
+    [
+      {
+        bounds: { x: 0, y: 0, width: 2500, height: 1686 },
+        action: { type: 'uri', label: 'ลงทะเบียน', uri: `${liffUrl}/register` },
+      },
+    ],
+  );
+  await uploadRichMenuImage(
+    accessToken,
+    unregisteredId,
+    path.join(assetsDir, 'richmenu-unregistered.png'),
+  );
 
   console.log('Creating "registered" rich menu...');
-  const colWidth = Math.floor(2500 / 3);
+  // Bare liffUrl opens the check-in tab by default (FR-2.3) — "ขอลา" and
+  // "ประวัติการลา" deep-link via ?tab=form / ?tab=history, matching the tab
+  // query-param handling in apps/liff-app/src/app/page.tsx.
+  const colWidth = Math.floor(2500 / 4);
   const registeredId = await createRichMenu(accessToken, 'registered', 'เมนู', [
-    { bounds: { x: 0, y: 0, width: colWidth, height: 1686 }, action: { type: 'uri', label: 'ขอลา', uri: liffUrl } },
     {
-      bounds: { x: colWidth, y: 0, width: colWidth, height: 1686 },
-      action: { type: 'uri', label: 'ประวัติการลา', uri: `${liffUrl}?tab=history` },
+      bounds: { x: 0, y: 0, width: colWidth, height: 1686 },
+      action: { type: 'uri', label: 'ลงเวลาทำงาน', uri: liffUrl },
     },
     {
-      bounds: { x: colWidth * 2, y: 0, width: 2500 - colWidth * 2, height: 1686 },
+      bounds: { x: colWidth, y: 0, width: colWidth, height: 1686 },
+      action: { type: 'uri', label: 'ขอลา', uri: `${liffUrl}?tab=form` },
+    },
+    {
+      bounds: { x: colWidth * 2, y: 0, width: colWidth, height: 1686 },
+      action: {
+        type: 'uri',
+        label: 'ประวัติการลา',
+        uri: `${liffUrl}?tab=history`,
+      },
+    },
+    {
+      bounds: {
+        x: colWidth * 3,
+        y: 0,
+        width: 2500 - colWidth * 3,
+        height: 1686,
+      },
       action: { type: 'message', label: 'ถาม HR', text: 'สวัสดี' },
     },
   ]);
-  await uploadRichMenuImage(accessToken, registeredId, path.join(assetsDir, 'richmenu-registered.png'));
+  await uploadRichMenuImage(
+    accessToken,
+    registeredId,
+    path.join(assetsDir, 'richmenu-registered.png'),
+  );
 
   console.log('Setting "unregistered" menu as the channel-wide default...');
   await setDefaultRichMenu(accessToken, unregisteredId);
 
   await prisma.tenant.update({
     where: { id: tenantId },
-    data: { lineLiffId: liffId, lineRichMenuUnregisteredId: unregisteredId, lineRichMenuRegisteredId: registeredId },
+    data: {
+      lineLiffId: liffId,
+      lineRichMenuUnregisteredId: unregisteredId,
+      lineRichMenuRegisteredId: registeredId,
+    },
   });
 
-  console.log('Relinking already-registered employees to the new "registered" rich menu...');
-  const relinked = await relinkAlreadyRegisteredEmployees(accessToken, tenantId, registeredId);
+  console.log(
+    'Relinking already-registered employees to the new "registered" rich menu...',
+  );
+  const relinked = await relinkAlreadyRegisteredEmployees(
+    accessToken,
+    tenantId,
+    registeredId,
+  );
   console.log(`Relinked ${relinked} employee(s).`);
 
   console.log('Done.');
