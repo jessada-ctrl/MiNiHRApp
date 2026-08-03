@@ -62,8 +62,12 @@ export async function completePendingLiffLogin(): Promise<void> {
  * FR-2.3's "สแกน QR เข้างาน" button — opens LINE's native QR reader
  * (liff.scanCodeV2) and resolves to whatever string it read. Only works
  * inside the real LINE app; outside it (e.g. LIFF not configured yet in
- * this local checkout), the caller should fall back to manual entry instead
- * of surfacing this as a hard error.
+ * this local checkout, or a real LIFF id opened in a plain desktop browser
+ * during testing), the caller should fall back to manual entry instead of
+ * surfacing this as a hard error — scanCodeV2() itself doesn't fail
+ * cleanly for that case, it throws the LIFF SDK's own internal
+ * "Need access_token..." error, which isLoggedIn()-then-login() upstream
+ * (getLineUserId) never even reaches here to prevent.
  */
 export async function scanQrCode(): Promise<string | null> {
   const liffId = configuredLiffId();
@@ -71,6 +75,8 @@ export async function scanQrCode(): Promise<string | null> {
 
   const liff = (await import('@line/liff')).default;
   await liff.init({ liffId });
+  if (!liff.isInClient()) throw new Error('LIFF_NOT_CONFIGURED');
+
   const result = await liff.scanCodeV2();
   return result.value ?? null;
 }
