@@ -500,7 +500,7 @@ function LeaveForm({
 
       <div className="rounded-lg bg-surface p-4 shadow-e1">
         <label className="mb-2 block text-sm font-medium text-ink-2">ช่วงเวลา</label>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {(
             [
               ["full_day", "เต็มวัน"],
@@ -513,9 +513,9 @@ function LeaveForm({
               key={val}
               type="button"
               onClick={() => setDuration(val)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                duration === val ? "border-brand-500 bg-brand-500 text-white" : "border-hairline-strong text-ink-2"
-              }`}
+              className={`rounded-full border px-3 py-1.5 text-center text-xs font-medium ${
+                val === "hourly" ? "col-span-3" : ""
+              } ${duration === val ? "border-brand-500 bg-brand-500 text-white" : "border-hairline-strong text-ink-2"}`}
             >
               {label}
             </button>
