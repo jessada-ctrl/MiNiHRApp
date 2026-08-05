@@ -478,7 +478,7 @@ function LeaveForm({
   const canSubmit = leaveTypeId && days > 0 && (!willExceed || ackChecked);
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 pb-24">
       <div className="rounded-lg bg-surface p-4 shadow-e1">
         <label htmlFor="leave-type" className="mb-1 block text-sm font-medium text-ink-2">
           ประเภทการลา
@@ -631,7 +631,7 @@ function LeaveForm({
       <button
         type="submit"
         disabled={!canSubmit || submitting}
-        className="sticky bottom-20 w-full rounded-lg bg-gradient-to-r from-brand-500 to-gold-500 py-3.5 text-sm font-semibold text-white shadow-e3 disabled:opacity-50"
+        className="fixed inset-x-4 bottom-20 z-10 rounded-lg bg-gradient-to-r from-brand-500 to-gold-500 py-3.5 text-sm font-semibold text-white shadow-e3 disabled:opacity-50"
       >
         {submitting ? "กำลังส่งคำขอ..." : "ส่งคำขอลา"}
       </button>
