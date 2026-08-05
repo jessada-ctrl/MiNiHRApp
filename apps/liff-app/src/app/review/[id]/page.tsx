@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { resolveCurrentUser } from "@/lib/auth";
 import { type PendingApproval, approveLeaveRequest, listPendingForMe, rejectLeaveRequest } from "@/lib/approvals";
 
 const DURATION_LABEL: Record<string, string> = {
@@ -27,7 +27,7 @@ export default function ReviewPage() {
     let cancelled = false;
 
     async function load() {
-      const u = await getCurrentUser();
+      const u = await resolveCurrentUser();
       if (cancelled) return;
       if (!u) {
         router.replace("/login");

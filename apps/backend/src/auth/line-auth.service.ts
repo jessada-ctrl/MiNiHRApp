@@ -1,9 +1,10 @@
-import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { TENANT_PRISMA } from '../prisma/prisma.module';
+import { PrismaService } from '../prisma/prisma.service';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { AuditService } from '../audit/audit.service';
 import { LineMessagingService } from '../line/line-messaging.service';
@@ -12,6 +13,7 @@ import { OtpMailerService } from './otp-mailer.service';
 
 const OTP_TTL_MINUTES = 5;
 const MAX_OTP_ATTEMPTS = 5;
+const LINE_VERIFY_URL = 'https://api.line.me/oauth2/v2.1/verify';
 
 interface ActorContext {
   ipAddress: string;
@@ -23,6 +25,9 @@ export class LineAuthService {
 
   constructor(
     @Inject(TENANT_PRISMA) private readonly prisma: PrismaClient,
+    // Unscoped — Tenant isn't a tenant-scoped model, same reasoning as
+    // LineMessagingService.getAccessToken / LineSignatureGuard.
+    private readonly platformPrisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly audit: AuditService,
     private readonly mailer: OtpMailerService,
@@ -175,5 +180,92 @@ export class LineAuthService {
         fullName: employee.fullName,
       },
     };
+  }
+
+  /**
+   * Silent re-auth for an employee who already completed the OTP bind
+   * (`verifyOtp`, above): a fresh LIFF ID token proves the caller currently
+   * holds a live LINE session, so it can be exchanged directly for a new
+   * app JWT — no OTP round-trip needed. This is what lets the LIFF app
+   * recover from an expired 8h JWT (auth.module.ts's `expiresIn`) without
+   * bouncing the employee to the email/password `/login` screen every time,
+   * even though `employee.lineUserId` was bound the whole time.
+   *
+   * Unlike `verifyOtp` (which currently trusts a frontend-supplied
+   * `lineUserId` at face value — see its doc comment), this endpoint
+   * verifies the id_token's signature via LINE's own `/oauth2/v2.1/verify`
+   * endpoint before trusting the `sub` claim as the caller's real LINE user
+   * id — required here because there's no OTP step to anchor trust in.
+   */
+  async loginWithIdToken(idToken: string): Promise<{ accessToken: string; user: AuthenticatedUser }> {
+    const tenantId = getCurrentTenantId();
+    const lineUserId = await this.verifyLineIdToken(idToken, tenantId);
+
+    const employee = await this.prisma.employee.findFirst({
+      where: { tenantId, lineUserId, status: 'active' },
+    });
+    if (!employee) {
+      throw new UnauthorizedException('This LINE account is not linked to an active employee — please register again');
+    }
+
+    const payload: JwtPayload = {
+      sub: employee.id,
+      tenantId: employee.tenantId,
+      role: employee.role as JwtPayload['role'],
+      email: employee.email,
+    };
+
+    return {
+      accessToken: await this.jwt.signAsync(payload),
+      user: {
+        id: employee.id,
+        tenantId: employee.tenantId,
+        role: employee.role as JwtPayload['role'],
+        email: employee.email,
+        fullName: employee.fullName,
+      },
+    };
+  }
+
+  /**
+   * Verifies an id_token against LINE's servers and returns its `sub`
+   * (LINE user id) claim. `client_id` must be the LIFF app's LINE Login
+   * channel id — the numeric prefix of the tenant's stored LIFF id
+   * ("1234567890-abcdEFGh" -> "1234567890") — LINE itself rejects the
+   * token (non-2xx) if its `aud` doesn't match, so a 2xx response here is
+   * sufficient proof the token was genuinely issued for this tenant's LIFF
+   * app and hasn't expired; no separate aud/exp check is needed.
+   */
+  private async verifyLineIdToken(idToken: string, tenantId: string): Promise<string> {
+    const tenant = await this.platformPrisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { lineLiffId: true },
+    });
+    const liffChannelId = tenant?.lineLiffId?.split('-')[0];
+    if (!liffChannelId) {
+      throw new UnauthorizedException('This tenant has no LIFF app configured');
+    }
+
+    let res: globalThis.Response;
+    try {
+      res = await fetch(LINE_VERIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ id_token: idToken, client_id: liffChannelId }).toString(),
+      });
+    } catch (err) {
+      this.logger.error(`LINE id_token verify call threw: ${err instanceof Error ? err.message : String(err)}`);
+      throw new UnauthorizedException('Could not verify LINE session — please try again');
+    }
+
+    if (!res.ok) {
+      throw new UnauthorizedException('Invalid or expired LINE session — please sign in again');
+    }
+
+    const claims = (await res.json()) as { sub?: string };
+    if (!claims.sub) {
+      throw new UnauthorizedException('Invalid LINE session — please sign in again');
+    }
+    return claims.sub;
   }
 }

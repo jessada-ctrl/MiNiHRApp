@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, logout, type AuthUser } from "@/lib/auth";
+import { logout, resolveCurrentUser, type AuthUser } from "@/lib/auth";
 import {
   type DurationType,
   type LeaveRequest,
@@ -133,7 +133,7 @@ export default function HomePage() {
           return;
         }
 
-        const u = await getCurrentUser();
+        const u = await resolveCurrentUser();
         if (cancelled) return;
         if (!u) {
           // A liff.login() redirect (e.g. from /register's OTP step) always

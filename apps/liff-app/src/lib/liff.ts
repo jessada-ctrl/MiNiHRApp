@@ -37,6 +37,26 @@ export function isLiffConfigured(): boolean {
 }
 
 /**
+ * Best-effort silent re-auth: returns the current LIFF ID token if the LINE
+ * session inside this LIFF app is already live (e.g. opened via a Rich Menu
+ * button), without ever calling `liff.login()` — unlike `getLineUserId`,
+ * this must never redirect the browser away, since it runs automatically on
+ * every page load to recover from an expired app JWT. Returns null if LIFF
+ * isn't configured or the LINE session itself isn't live, so the caller can
+ * fall back to the manual `/login` screen.
+ */
+export async function getLineIdToken(): Promise<string | null> {
+  const liffId = configuredLiffId();
+  if (!liffId) return null;
+
+  const liff = (await import('@line/liff')).default;
+  await liff.init({ liffId });
+
+  if (!liff.isLoggedIn()) return null;
+  return liff.getIDToken();
+}
+
+/**
  * `liff.login()` (called from getLineUserId, above) redirects out to LINE and
  * back — but the callback always lands on this app's bare LIFF Endpoint URL
  * (root `/`), never on whichever page called login() in the first place.

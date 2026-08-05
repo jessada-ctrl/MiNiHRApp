@@ -3,6 +3,7 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LineAuthService } from './line-auth.service';
 import { LoginDto } from './dto/login.dto';
+import { LineLoginDto } from './dto/line-login.dto';
 import { RequestLineOtpDto } from './dto/request-line-otp.dto';
 import { VerifyLineOtpDto } from './dto/verify-line-otp.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -40,5 +41,12 @@ export class AuthController {
     return this.lineAuthService.verifyOtp(dto.employeeCode, dto.email, dto.otpCode, dto.lineUserId, {
       ipAddress: req.ip ?? 'unknown',
     });
+  }
+
+  /** Silent re-auth for an already-registered LINE account — see LineAuthService.loginWithIdToken. */
+  @Post('line/login')
+  @HttpCode(200)
+  lineLogin(@Body() dto: LineLoginDto) {
+    return this.lineAuthService.loginWithIdToken(dto.idToken);
   }
 }

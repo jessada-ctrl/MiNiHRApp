@@ -1,4 +1,5 @@
 import { apiFetch, clearToken, setToken, unwrap } from "./api";
+import { getLineIdToken } from "./liff";
 
 export interface AuthUser {
   id: string;
@@ -26,6 +27,39 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     return null;
   }
   return unwrap(res);
+}
+
+async function loginWithLineIdToken(idToken: string): Promise<AuthUser> {
+  const res = await apiFetch("/auth/line/login", {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
+  });
+  const data: { accessToken: string; user: AuthUser } = await unwrap(res);
+  setToken(data.accessToken);
+  return data.user;
+}
+
+/**
+ * `getCurrentUser()`, but recovers from an expired/missing app JWT by
+ * silently exchanging a live LIFF ID token for a new one — the fix for the
+ * "ต้องล็อกอินใหม่ทุกครั้ง" complaint: an employee who already bound their
+ * LINE account (via /register's OTP step) has a live LINE session every
+ * time they open the app from a Rich Menu button, so there's no reason to
+ * fall back to the manual email/password /login screen just because the
+ * 8h JWT lapsed. Only returns null (letting the caller redirect to /login)
+ * when neither the app session nor a live LINE session is available.
+ */
+export async function resolveCurrentUser(): Promise<AuthUser | null> {
+  const direct = await getCurrentUser();
+  if (direct) return direct;
+
+  try {
+    const idToken = await getLineIdToken();
+    if (!idToken) return null;
+    return await loginWithLineIdToken(idToken);
+  } catch {
+    return null;
+  }
 }
 
 export function logout(): void {
