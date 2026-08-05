@@ -121,24 +121,24 @@ export default function SuperAdminPage() {
 
   if (checkingAuth || !admin) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950">
-        <p className="text-sm text-slate-400">กำลังตรวจสอบสิทธิ์...</p>
+      <main className="dark flex min-h-screen items-center justify-center bg-bg">
+        <p className="text-sm text-ink-2">กำลังตรวจสอบสิทธิ์...</p>
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="dark min-h-screen bg-bg text-ink">
       <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
         <div>
-          <p className="text-sm font-semibold text-white">LaLa&apos; Platform — SaaS Super Admin</p>
-          <p className="text-xs text-slate-400">จัดการ Tenant ทั้งหมดในระบบ</p>
+          <p className="text-sm font-semibold text-ink">LaLa&apos; Platform — SaaS Super Admin</p>
+          <p className="text-xs text-ink-2">จัดการ Tenant ทั้งหมดในระบบ</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-300">{admin.name}</span>
+          <span className="text-sm text-ink-2">{admin.name}</span>
           <button
             onClick={handleLogout}
-            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5"
+            className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-ink-2 transition-colors duration-150 hover:bg-white/5"
           >
             ออกจากระบบ
           </button>
@@ -157,10 +157,10 @@ export default function SuperAdminPage() {
         </div>
 
         <div className="mt-8 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">รายชื่อ Tenant</h2>
+          <h2 className="text-lg font-semibold text-ink">รายชื่อ Tenant</h2>
           <button
             onClick={() => setShowCreate((s) => !s)}
-            className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
+            className="rounded-md bg-brand-500 px-3 py-1.5 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-600"
           >
             {showCreate ? "ยกเลิก" : "+ สร้าง Tenant ใหม่"}
           </button>
@@ -169,32 +169,32 @@ export default function SuperAdminPage() {
         {showCreate && (
           <form
             onSubmit={handleCreate}
-            className="mt-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-slate-900 p-5 sm:flex-row sm:items-end"
+            className="mt-4 flex flex-col gap-3 rounded-lg border border-white/10 bg-surface p-5 sm:flex-row sm:items-end"
           >
             <label className="flex-1">
-              <span className="block text-xs font-medium text-slate-400">ชื่อบริษัท</span>
+              <span className="block text-xs font-medium text-ink-2">ชื่อบริษัท</span>
               <input
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-1 w-full rounded-md border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="mt-1 w-full rounded-md border border-white/10 bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
               />
             </label>
             <label className="flex-1">
-              <span className="block text-xs font-medium text-slate-400">Subdomain (เช่น acme → acme.lala.io)</span>
+              <span className="block text-xs font-medium text-ink-2">Subdomain (เช่น acme → acme.lala.io)</span>
               <input
                 required
                 pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?"
                 title="ตัวพิมพ์เล็ก ตัวเลข และขีดกลางเท่านั้น"
                 value={subdomain}
                 onChange={(e) => setSubdomain(e.target.value.toLowerCase())}
-                className="mt-1 w-full rounded-md border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="mt-1 w-full rounded-md border border-white/10 bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
               />
             </label>
             <button
               type="submit"
               disabled={creating}
-              className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {creating ? "กำลังสร้าง..." : "สร้าง"}
             </button>
@@ -202,10 +202,10 @@ export default function SuperAdminPage() {
           </form>
         )}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-white/10">
           <table className="min-w-full divide-y divide-white/10 text-sm">
             <thead>
-              <tr className="text-left text-xs font-medium uppercase tracking-wide text-slate-400">
+              <tr className="text-left text-xs font-medium uppercase tracking-wide text-ink-2">
                 <th className="px-4 py-3">บริษัท</th>
                 <th className="px-4 py-3">Subdomain</th>
                 <th className="px-4 py-3">พนักงาน</th>
@@ -217,22 +217,22 @@ export default function SuperAdminPage() {
             <tbody className="divide-y divide-white/10">
               {!loading && tenants.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-ink-3">
                     ยังไม่มี tenant ในระบบ
                   </td>
                 </tr>
               )}
               {tenants.map((t) => (
                 <tr key={t.id}>
-                  <td className="px-4 py-3 font-medium text-white">{t.companyName}</td>
-                  <td className="px-4 py-3 text-slate-400">{t.subdomain}</td>
-                  <td className="px-4 py-3 tabular-nums text-slate-300">{t.employeeCount}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{t.companyName}</td>
+                  <td className="px-4 py-3 text-ink-2">{t.subdomain}</td>
+                  <td className="px-4 py-3 tabular-nums text-ink-2">{t.employeeCount}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[t.subscriptionStatus]}`}>
                       {STATUS_LABEL[t.subscriptionStatus]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-400">
+                  <td className="px-4 py-3 text-ink-2">
                     {new Date(t.createdAt).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
                   </td>
                   <td className="px-4 py-3">
@@ -244,7 +244,7 @@ export default function SuperAdminPage() {
                             key={s}
                             onClick={() => handleStatusChange(t.id, s)}
                             disabled={updatingId === t.id}
-                            className="rounded-md border border-white/10 px-2 py-1 text-xs text-slate-300 transition-colors hover:bg-white/5 disabled:opacity-50"
+                            className="rounded-md border border-white/10 px-2 py-1 text-xs text-ink-2 transition-colors duration-150 hover:bg-white/5 disabled:opacity-50"
                           >
                             {STATUS_LABEL[s]}
                           </button>
@@ -263,9 +263,9 @@ export default function SuperAdminPage() {
 
 function StatTile({ label, value, accentClass }: { label: string; value: string | number; accentClass?: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`mt-2 text-2xl font-semibold tabular-nums ${accentClass ?? "text-white"}`}>{value}</p>
+    <div className="rounded-lg border border-white/10 bg-surface p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-2">{label}</p>
+      <p className={`mt-2 text-2xl font-semibold tabular-nums ${accentClass ?? "text-ink"}`}>{value}</p>
     </div>
   );
 }

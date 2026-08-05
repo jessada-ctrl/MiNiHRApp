@@ -29,35 +29,35 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-neutral-100 px-5">
+    <main className="flex flex-1 flex-col items-center justify-center bg-bg px-5">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <Image src={logoIcon} alt="LaLa'" width={48} height={48} className="mx-auto rounded-2xl" priority />
-          <h1 className="mt-3 text-lg font-semibold text-neutral-900">LaLa&apos;</h1>
-          <p className="text-xs text-neutral-500">
+          <Image src={logoIcon} alt="LaLa'" width={48} height={48} className="mx-auto rounded-lg" priority />
+          <h1 className="mt-3 text-lg font-semibold text-ink">LaLa&apos;</h1>
+          <p className="text-xs text-ink-3">
             ต้นแบบสำหรับทดสอบ — ระบบจริงจะเข้าผ่าน LINE (LIFF) ไม่ต้อง Login แบบนี้
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-lg bg-surface p-5 shadow-e1">
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">อีเมล</label>
+            <label className="mb-1 block text-sm font-medium text-ink-2">อีเมล</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
+              className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">รหัสผ่าน</label>
+            <label className="mb-1 block text-sm font-medium text-ink-2">รหัสผ่าน</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
+              className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
@@ -66,15 +66,15 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 w-full rounded-lg bg-gradient-to-r from-sky-500 to-amber-400 py-3 text-sm font-semibold text-white hover:from-sky-600 hover:to-amber-500 disabled:opacity-60"
+            className="mt-2 w-full rounded-md bg-brand-500 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
           >
             {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-neutral-400">
+        <p className="mt-4 text-center text-xs text-ink-3">
           ยังไม่ได้ผูกบัญชี LINE?{" "}
-          <Link href="/register" className="text-sky-700 underline">
+          <Link href="/register" className="text-brand-600 underline">
             ผูกบัญชีด้วย OTP
           </Link>
         </p>

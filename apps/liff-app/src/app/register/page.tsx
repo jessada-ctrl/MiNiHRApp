@@ -62,12 +62,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-neutral-100 px-5">
+    <main className="flex flex-1 flex-col items-center justify-center bg-bg px-5">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <Image src={logoIcon} alt="LaLa'" width={48} height={48} className="mx-auto rounded-2xl" priority />
-          <h1 className="mt-3 text-lg font-semibold text-neutral-900">ผูกบัญชี LINE</h1>
-          <p className="text-xs text-neutral-500">
+          <Image src={logoIcon} alt="LaLa'" width={48} height={48} className="mx-auto rounded-lg" priority />
+          <h1 className="mt-3 text-lg font-semibold text-ink">ผูกบัญชี LINE</h1>
+          <p className="text-xs text-ink-3">
             {step === "identify"
               ? "กรอกรหัสพนักงานและอีเมลบริษัท เพื่อรับรหัส OTP ยืนยันตัวตน"
               : "กรอกรหัส OTP 6 หลักที่ส่งไปยังอีเมลของคุณ"}
@@ -81,24 +81,24 @@ export default function RegisterPage() {
         )}
 
         {step === "identify" && (
-          <form onSubmit={handleRequestOtp} className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm">
+          <form onSubmit={handleRequestOtp} className="flex flex-col gap-3 rounded-lg bg-surface p-5 shadow-e1">
             <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700">รหัสพนักงาน</label>
+              <label className="mb-1 block text-sm font-medium text-ink-2">รหัสพนักงาน</label>
               <input
                 required
                 value={employeeCode}
                 onChange={(e) => setEmployeeCode(e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
+                className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700">อีเมลบริษัท</label>
+              <label className="mb-1 block text-sm font-medium text-ink-2">อีเมลบริษัท</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
+                className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
 
@@ -107,7 +107,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-2 w-full rounded-lg bg-gradient-to-r from-sky-500 to-amber-400 py-3 text-sm font-semibold text-white hover:from-sky-600 hover:to-amber-500 disabled:opacity-60"
+              className="mt-2 w-full rounded-md bg-brand-500 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
             >
               {submitting ? "กำลังส่งรหัส..." : "ส่งรหัส OTP"}
             </button>
@@ -115,29 +115,29 @@ export default function RegisterPage() {
         )}
 
         {step === "otp" && (
-          <form onSubmit={handleVerify} className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm">
-            {info && <p className="text-xs text-neutral-500">{info}</p>}
+          <form onSubmit={handleVerify} className="flex flex-col gap-3 rounded-lg bg-surface p-5 shadow-e1">
+            {info && <p className="text-xs text-ink-3">{info}</p>}
             <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700">รหัส OTP (6 หลัก)</label>
+              <label className="mb-1 block text-sm font-medium text-ink-2">รหัส OTP (6 หลัก)</label>
               <input
                 required
                 inputMode="numeric"
                 maxLength={6}
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-center text-lg tracking-[0.5em] focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
+                className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-center text-lg tracking-[0.5em] focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
 
             {!isLiffConfigured() && (
               <div>
-                <label className="mb-1 block text-sm font-medium text-neutral-700">LINE User ID (สำหรับทดสอบ)</label>
+                <label className="mb-1 block text-sm font-medium text-ink-2">LINE User ID (สำหรับทดสอบ)</label>
                 <input
                   required
                   value={devLineUserId}
                   onChange={(e) => setDevLineUserId(e.target.value)}
                   placeholder="เช่น Ux_test_dev_001"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600"
+                  className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
             )}
@@ -147,7 +147,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-2 w-full rounded-lg bg-gradient-to-r from-sky-500 to-amber-400 py-3 text-sm font-semibold text-white hover:from-sky-600 hover:to-amber-500 disabled:opacity-60"
+              className="mt-2 w-full rounded-md bg-brand-500 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
             >
               {submitting ? "กำลังยืนยัน..." : "ยืนยันและผูกบัญชี"}
             </button>
@@ -158,16 +158,16 @@ export default function RegisterPage() {
                 setOtpCode("");
                 setError(null);
               }}
-              className="text-center text-xs text-neutral-500 underline"
+              className="text-center text-xs text-ink-3 underline"
             >
               กรอกรหัส/อีเมลใหม่
             </button>
           </form>
         )}
 
-        <p className="mt-4 text-center text-xs text-neutral-400">
+        <p className="mt-4 text-center text-xs text-ink-3">
           มีบัญชีอยู่แล้ว?{" "}
-          <Link href="/login" className="text-sky-700 underline">
+          <Link href="/login" className="text-brand-600 underline">
             เข้าสู่ระบบด้วยอีเมล (ทดสอบ)
           </Link>
         </p>

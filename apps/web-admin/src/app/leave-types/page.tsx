@@ -93,26 +93,26 @@ export default function LeaveTypesPage() {
       actions={
         <button
           onClick={() => setShowAdd(true)}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600"
         >
           + เพิ่มประเภทการลา
         </button>
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ประเภทการลา</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">ประเภทการลา</h1>
+        <p className="mt-1 text-sm text-ink-3">
           การแก้ไขโควตามาตรฐานที่นี่มีผลกับพนักงานที่เพิ่มใหม่เท่านั้น ไม่ย้อนเปลี่ยนโควตาของพนักงานปัจจุบัน — ปรับรายบุคคลได้ที่หน้า{" "}
-          <Link href="/employees" className="text-sky-700 underline">
+          <Link href="/employees" className="text-brand-600 underline">
             พนักงาน
           </Link>
         </p>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
+          <table className="min-w-full divide-y divide-hairline text-sm">
+            <thead className="bg-surface-2">
               <tr>
                 <Th>ประเภทการลา</Th>
                 <Th>โควตามาตรฐาน/ปี (วัน)</Th>
@@ -121,10 +121,10 @@ export default function LeaveTypesPage() {
                 <Th></Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-hairline">
               {loading && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={5} className="px-4 py-6 text-center text-ink-3">
                     กำลังโหลด...
                   </td>
                 </tr>
@@ -132,7 +132,7 @@ export default function LeaveTypesPage() {
               {!loading &&
                 leaveTypes.map((lt) => (
                   <tr key={lt.id}>
-                    <td className="px-4 py-3 font-medium text-neutral-900">{lt.name}</td>
+                    <td className="px-4 py-3 font-medium text-ink">{lt.name}</td>
                     <td className="px-4 py-3">
                       <input
                         type="number"
@@ -143,7 +143,7 @@ export default function LeaveTypesPage() {
                         onBlur={(e) => {
                           if (e.target.value !== lt.defaultQuota) handleFieldSave(lt.id, "defaultQuota", e.target.value);
                         }}
-                        className="w-24 rounded-md border border-neutral-300 px-2 py-1 text-sm"
+                        className="w-24 rounded-md border border-hairline-strong px-2 py-1 text-sm"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -157,7 +157,7 @@ export default function LeaveTypesPage() {
                           const current = lt.requiresAttachmentAfterDays == null ? "" : String(lt.requiresAttachmentAfterDays);
                           if (e.target.value !== current) handleFieldSave(lt.id, "requiresAttachmentAfterDays", e.target.value);
                         }}
-                        className="w-28 rounded-md border border-neutral-300 px-2 py-1 text-sm"
+                        className="w-28 rounded-md border border-hairline-strong px-2 py-1 text-sm"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -166,7 +166,7 @@ export default function LeaveTypesPage() {
                         checked={lt.allowHourly}
                         disabled={savingId === lt.id}
                         onChange={(e) => handleToggleHourly(lt.id, e.target.checked)}
-                        className="h-4 w-4 accent-sky-700"
+                        className="h-4 w-4 accent-brand-500"
                       />
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -212,7 +212,7 @@ export default function LeaveTypesPage() {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-3">
       {children}
     </th>
   );
@@ -252,29 +252,29 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-lg bg-surface p-6 shadow-e3">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold text-neutral-900">เพิ่มประเภทการลา</h2>
+          <h2 className="text-lg font-semibold text-ink">เพิ่มประเภทการลา</h2>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="shrink-0 rounded-md p-1 text-ink-3 hover:bg-quiet-bg hover:text-ink-2"
           >
             ✕
           </button>
         </div>
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
           <label className="block">
-            <span className="block text-sm font-medium text-neutral-700">ชื่อประเภทการลา</span>
+            <span className="block text-sm font-medium text-ink-2">ชื่อประเภทการลา</span>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-neutral-700">โควตามาตรฐาน/ปี (วัน)</span>
+            <span className="block text-sm font-medium text-ink-2">โควตามาตรฐาน/ปี (วัน)</span>
             <input
               required
               type="number"
@@ -282,17 +282,17 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
               step={0.5}
               value={defaultQuota}
               onChange={(e) => setDefaultQuota(e.target.value)}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-neutral-700">บังคับแนบเอกสารเมื่อสะสม ≥ (วัน, เว้นว่าง = ไม่บังคับ)</span>
+            <span className="block text-sm font-medium text-ink-2">บังคับแนบเอกสารเมื่อสะสม ≥ (วัน, เว้นว่าง = ไม่บังคับ)</span>
             <input
               type="number"
               min={0}
               value={requiresAttachmentAfterDays}
               onChange={(e) => setRequiresAttachmentAfterDays(e.target.value)}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
             />
           </label>
           <label className="flex items-center gap-2">
@@ -300,21 +300,21 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
               type="checkbox"
               checked={allowHourly}
               onChange={(e) => setAllowHourly(e.target.checked)}
-              className="h-4 w-4 accent-sky-700"
+              className="h-4 w-4 accent-brand-500"
             />
-            <span className="text-sm text-neutral-700">อนุญาตให้ลารายชั่วโมง</span>
+            <span className="text-sm text-ink-2">อนุญาตให้ลารายชั่วโมง</span>
           </label>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+            <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm text-ink">
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>

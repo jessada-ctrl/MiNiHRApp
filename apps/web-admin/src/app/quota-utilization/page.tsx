@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { LinearProgress } from "@/components/ui/Charts";
 import { type Branch, type Department, listBranches, listDepartments } from "@/lib/org";
 import { type LeaveType, listLeaveTypes } from "@/lib/leaveTypes";
 import {
@@ -12,12 +13,6 @@ import {
 } from "@/lib/quotaUtilization";
 
 const CURRENT_YEAR = new Date().getFullYear();
-
-function utilizationBarClass(pct: number): string {
-  if (pct >= 90) return "bg-red-500";
-  if (pct >= 70) return "bg-amber-500";
-  return "bg-sky-600";
-}
 
 export default function QuotaUtilizationPage() {
   const [rows, setRows] = useState<QuotaUtilizationRow[]>([]);
@@ -74,15 +69,15 @@ export default function QuotaUtilizationPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">โควตาการลาแยกแผนก</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">โควตาการลาแยกแผนก</h1>
+        <p className="mt-1 text-sm text-ink-3">
           ภาพรวมการใช้โควตาการลาของพนักงานที่ยังทำงานอยู่ แยกตามแผนกและประเภทการลา ต่อปี
         </p>
 
@@ -91,12 +86,12 @@ export default function QuotaUtilizationPage() {
             type="number"
             value={filters.year ?? ""}
             onChange={(e) => updateFilter({ year: e.target.value || undefined })}
-            className="w-24 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="w-24 rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
           <select
             value={filters.departmentId ?? ""}
             onChange={(e) => updateFilter({ departmentId: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกแผนก</option>
             {departments.map((d) => (
@@ -108,7 +103,7 @@ export default function QuotaUtilizationPage() {
           <select
             value={filters.branchId ?? ""}
             onChange={(e) => updateFilter({ branchId: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกสาขา</option>
             {branches.map((b) => (
@@ -120,7 +115,7 @@ export default function QuotaUtilizationPage() {
           <select
             value={filters.leaveTypeId ?? ""}
             onChange={(e) => updateFilter({ leaveTypeId: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกประเภทการลา</option>
             {leaveTypes.map((t) => (
@@ -129,14 +124,14 @@ export default function QuotaUtilizationPage() {
               </option>
             ))}
           </select>
-          <span className="ml-auto self-center text-xs text-neutral-400">{rows.length} รายการ</span>
+          <span className="ml-auto self-center text-xs text-ink-3">{rows.length} รายการ</span>
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
+          <table className="min-w-full divide-y divide-hairline text-sm">
+            <thead className="bg-surface-2">
               <tr>
                 <Th>แผนก</Th>
                 <Th>ประเภทการลา</Th>
@@ -148,39 +143,33 @@ export default function QuotaUtilizationPage() {
                 <Th>% ใช้ไป</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-hairline">
               {loading && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={8} className="px-4 py-6 text-center text-ink-3">
                     กำลังโหลด...
                   </td>
                 </tr>
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={8} className="px-4 py-6 text-center text-ink-3">
                     ไม่พบข้อมูลตามเงื่อนไข
                   </td>
                 </tr>
               )}
               {rows.map((r) => (
                 <tr key={`${r.departmentId ?? "none"}:${r.leaveTypeId}`}>
-                  <td className="px-4 py-3 font-medium text-neutral-800">{r.departmentName}</td>
-                  <td className="px-4 py-3 text-neutral-600">{r.leaveTypeName}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{r.departmentName}</td>
+                  <td className="px-4 py-3 text-ink-2">{r.leaveTypeName}</td>
                   <td className="px-4 py-3 tabular-nums">{r.employeeCount}</td>
                   <td className="px-4 py-3 tabular-nums">{r.totalQuota}</td>
                   <td className="px-4 py-3 tabular-nums">{r.used}</td>
                   <td className="px-4 py-3 tabular-nums text-amber-700">{r.pending}</td>
                   <td className="px-4 py-3 tabular-nums">{r.remaining}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-24 overflow-hidden rounded-full bg-neutral-100">
-                        <div
-                          className={`h-2 rounded-full ${utilizationBarClass(r.utilizationPct)}`}
-                          style={{ width: `${Math.min(r.utilizationPct, 100)}%` }}
-                        />
-                      </div>
-                      <span className="tabular-nums text-xs text-neutral-600">{r.utilizationPct}%</span>
+                    <div className="w-24">
+                      <LinearProgress value={r.used} max={r.totalQuota} label={`${r.utilizationPct}%`} warnAt={0.7} riskAt={0.9} />
                     </div>
                   </td>
                 </tr>
@@ -195,7 +184,7 @@ export default function QuotaUtilizationPage() {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-3">
       {children}
     </th>
   );

@@ -21,6 +21,7 @@ import {
   updateEmployeeQuotas,
 } from "@/lib/employees";
 import { type LeaveType, listLeaveTypes } from "@/lib/leaveTypes";
+import { StatusBadge } from "@/components/ui/Badge";
 
 const ROLE_LABEL: Record<Role, string> = {
   tenant_admin: "ฝ่ายบุคคล",
@@ -75,13 +76,13 @@ export default function EmployeesPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowImport(true)}
-              className="rounded-lg border border-sky-700 px-4 py-2 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-50"
+              className="rounded-md border border-brand-500 px-4 py-2 text-sm font-medium text-brand-600 transition-colors duration-150 hover:bg-brand-50"
             >
               ⬆ นำเข้าจากไฟล์
             </button>
             <button
               onClick={() => setShowAdd(true)}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
+              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600"
             >
               + เพิ่มพนักงาน
             </button>
@@ -90,16 +91,16 @@ export default function EmployeesPage() {
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">พนักงาน</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">พนักงาน</h1>
+        <p className="mt-1 text-sm text-ink-3">
           จัดการโครงสร้างองค์กรและสิทธิ์การใช้งาน — การเปลี่ยนบทบาท สายบังคับบัญชา หรือสถานะ จะถูกบันทึกลง Audit Log
         </p>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
+          <table className="min-w-full divide-y divide-hairline text-sm">
+            <thead className="bg-surface-2">
               <tr>
                 <Th>พนักงาน</Th>
                 <Th>รหัส</Th>
@@ -110,59 +111,55 @@ export default function EmployeesPage() {
                 <Th></Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-hairline">
               {loading && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={7} className="px-4 py-6 text-center text-ink-3">
                     กำลังโหลด...
                   </td>
                 </tr>
               )}
               {!loading && employees.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={7} className="px-4 py-6 text-center text-ink-3">
                     ยังไม่มีพนักงาน
                   </td>
                 </tr>
               )}
               {employees.map((e) => (
                 <tr key={e.id} className={e.status === "inactive" ? "opacity-50" : undefined}>
-                  <td className="px-4 py-3 font-medium text-neutral-900">{e.fullName}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-500">{e.employeeCode}</td>
-                  <td className="px-4 py-3 text-neutral-600">{e.department?.departmentName ?? "-"}</td>
-                  <td className="px-4 py-3 text-neutral-600">{e.directManager?.fullName ?? "-"}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{e.fullName}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-ink-3">{e.employeeCode}</td>
+                  <td className="px-4 py-3 text-ink-2">{e.department?.departmentName ?? "-"}</td>
+                  <td className="px-4 py-3 text-ink-2">{e.directManager?.fullName ?? "-"}</td>
                   <td className="px-4 py-3">
-                    <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+                    <span className="rounded bg-quiet-bg px-2 py-0.5 text-xs font-medium text-ink-2">
                       {ROLE_LABEL[e.role]}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs font-medium ${
-                        e.status === "active" ? "bg-green-100 text-green-700" : "bg-neutral-200 text-neutral-600"
-                      }`}
-                    >
+                    <StatusBadge status={e.status === "active" ? "approved" : "quiet"}>
                       {STATUS_LABEL[e.status]}
-                    </span>
+                    </StatusBadge>
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     {canManage ? (
                       <>
                         <button
                           onClick={() => setEditingQuota(e)}
-                          className="mr-3 text-sm font-medium text-neutral-600 hover:text-neutral-900"
+                          className="mr-3 text-sm font-medium text-ink-2 hover:text-ink"
                         >
                           ⚙ โควตา
                         </button>
                         <button
                           onClick={() => setEditing(e)}
-                          className="text-sm font-medium text-sky-700 hover:text-sky-900"
+                          className="text-sm font-medium text-brand-600 hover:text-brand-700"
                         >
                           แก้ไข
                         </button>
                       </>
                     ) : (
-                      <span className="text-xs text-neutral-300">—</span>
+                      <span className="text-xs text-ink-3">—</span>
                     )}
                   </td>
                 </tr>
@@ -214,7 +211,7 @@ export default function EmployeesPage() {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-3">
       {children}
     </th>
   );
@@ -304,13 +301,13 @@ function AddEmployeeModal({
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
             ยกเลิก
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -358,7 +355,7 @@ function EditEmployeeModal({
   return (
     <Modal onClose={onClose} title={`แก้ไข — ${employee.fullName}`}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-ink-3">
           การเปลี่ยนบทบาท สายบังคับบัญชา หรือสถานะ จะถูกบันทึกลง Audit Log โดยอัตโนมัติ
         </p>
         <Field label="บทบาท">
@@ -388,13 +385,13 @@ function EditEmployeeModal({
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
             ยกเลิก
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -448,10 +445,10 @@ function EditQuotaModal({
 
   return (
     <Modal onClose={onClose} title={`แก้ไขโควตา — ${employee.fullName}`}>
-      <p className="mb-3 text-xs text-neutral-500">
+      <p className="mb-3 text-xs text-ink-3">
         ปรับเฉพาะพนักงานคนนี้ ไม่กระทบค่ามาตรฐานบริษัท การเปลี่ยนแปลงจะถูกบันทึกลง Audit Log
       </p>
-      {loading && <p className="text-sm text-neutral-400">กำลังโหลด...</p>}
+      {loading && <p className="text-sm text-ink-3">กำลังโหลด...</p>}
       {!loading && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {quotas.map((q) => (
@@ -466,18 +463,18 @@ function EditQuotaModal({
               />
             </Field>
           ))}
-          {quotas.length === 0 && <p className="text-sm text-neutral-400">ยังไม่มีประเภทการลาในระบบ</p>}
+          {quotas.length === 0 && <p className="text-sm text-ink-3">ยังไม่มีประเภทการลาในระบบ</p>}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+            <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={submitting || quotas.length === 0}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
             >
               {submitting ? "กำลังบันทึก..." : "บันทึก"}
             </button>
@@ -546,31 +543,31 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
   return (
     <Modal onClose={onClose} title="นำเข้าพนักงานจากไฟล์ CSV">
       <div className="flex flex-col gap-3">
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-ink-3">
           คอลัมน์ที่ต้องมี: employeeCode, fullName, email — คอลัมน์อื่น (phone, department, branch, position, role,
           status, directManagerEmployeeCode) ไม่บังคับ พนักงานที่มีรหัสตรงกับข้อมูลเดิมจะถูกอัปเดต ไม่สร้างซ้ำ
           และการเปลี่ยนบทบาท/สายบังคับบัญชา/สถานะ/โควตา จะถูกบันทึกลง Audit Log เป็นรายบุคคล
         </p>
         {leaveTypes.length > 0 && (
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-ink-3">
             กำหนดโควตาเฉพาะรายคนได้ด้วยคอลัมน์ (ไม่บังคับ, ค่าว่าง = ใช้ค่ามาตรฐาน):{" "}
             {leaveTypes.map((t) => `quota:${t.name}`).join(", ")}
           </p>
         )}
-        <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-sky-700 hover:text-sky-900">
+        <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-brand-600 hover:text-brand-700">
           ⬇ ดาวน์โหลดไฟล์ตัวอย่าง
         </button>
 
         <Field label="ไฟล์ CSV">
           <input type="file" accept=".csv,text/csv" onChange={handleFile} className={inputCls} />
         </Field>
-        {fileName && <p className="text-xs text-neutral-500">เลือกไฟล์: {fileName}</p>}
+        {fileName && <p className="text-xs text-ink-3">เลือกไฟล์: {fileName}</p>}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         {result && (
-          <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm">
-            <p className="font-medium text-neutral-800">
+          <div className="rounded-md border border-hairline bg-surface-2 p-3 text-sm">
+            <p className="font-medium text-ink">
               ทั้งหมด {result.totalRows} แถว — สร้างใหม่ {result.created} · อัปเดต {result.updated} · ไม่มีการเปลี่ยนแปลง{" "}
               {result.unchanged} · ผิดพลาด {result.errors.length}
             </p>
@@ -587,14 +584,14 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
         )}
 
         <div className="mt-2 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
             ปิด
           </button>
           <button
             type="button"
             onClick={handleImport}
             disabled={!csvText || submitting}
-            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
           >
             {submitting ? "กำลังนำเข้า..." : "นำเข้า"}
           </button>
@@ -612,13 +609,13 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-lg bg-surface p-6 shadow-e3">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-ink">{title}</h2>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="shrink-0 rounded-md p-1 text-ink-3 hover:bg-quiet-bg hover:text-ink-2"
           >
             ✕
           </button>
@@ -632,11 +629,11 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-sm font-medium text-neutral-700">{label}</span>
+      <span className="block text-sm font-medium text-ink-2">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   );
 }
 
 const inputCls =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600";
+  "w-full rounded-md border border-hairline-strong px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";

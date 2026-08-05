@@ -26,14 +26,14 @@ export default function SuperAdminLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-sm rounded-xl border border-white/10 bg-slate-900 p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">LaLa&apos; Platform</h1>
-        <p className="mt-1 text-sm text-slate-400">เข้าสู่ระบบสำหรับ SaaS Super Admin เท่านั้น</p>
+    <main className="dark flex min-h-screen flex-1 items-center justify-center bg-bg px-4">
+      <div className="w-full max-w-sm rounded-lg border border-hairline bg-surface p-8 shadow-e1">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">LaLa&apos; Platform</h1>
+        <p className="mt-1 text-sm text-ink-3">เข้าสู่ระบบสำหรับ SaaS Super Admin เท่านั้น</p>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-300">
+            <label htmlFor="email" className="block text-sm font-medium text-ink-2">
               อีเมล
             </label>
             <input
@@ -43,11 +43,11 @@ export default function SuperAdminLoginPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="mt-1 w-full rounded-md border border-hairline bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-300">
+            <label htmlFor="password" className="block text-sm font-medium text-ink-2">
               รหัสผ่าน
             </label>
             <input
@@ -57,7 +57,7 @@ export default function SuperAdminLoginPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-white/10 bg-slate-800 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="mt-1 w-full rounded-md border border-hairline bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
@@ -70,7 +70,7 @@ export default function SuperAdminLoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </button>

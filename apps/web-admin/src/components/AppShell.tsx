@@ -4,6 +4,25 @@ import { useEffect, useState, type ComponentType, type ReactNode, type SVGProps 
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  Home,
+  Users,
+  Building2,
+  Tag,
+  Workflow,
+  CheckCheck,
+  Calendar,
+  BarChart3,
+  PieChart,
+  Clock,
+  Bell,
+  ScrollText,
+  Settings,
+  ChevronRight,
+  Menu,
+  PanelLeft,
+  LogOut,
+} from "lucide-react";
 import { getCurrentUser, logout, type AuthUser } from "@/lib/auth";
 import logoIcon from "@/assets/logo-icon.png";
 
@@ -15,37 +34,23 @@ const ROLE_LABEL: Record<Role, string> = {
   employee: "พนักงาน",
 };
 
-function Icon(path: string) {
-  return function IconComponent(props: SVGProps<SVGSVGElement>) {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d={path} />
-      </svg>
-    );
-  };
-}
-
-const IconHome = Icon("M4 11.5 12 4l8 7.5M6 9.5V20h12V9.5");
-const IconUsers = Icon("M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M17 20c0-2.2-.9-4.2-2.3-5.6M15 5.2a3 3 0 1 1 2 5.6");
-const IconBuilding = Icon("M4 21V6l8-3 8 3v15M4 21h16M9 9h1M9 13h1M14 9h1M14 13h1M9 21v-4h6v4");
-const IconTag = Icon("M11 3h5.5L21 7.5V13l-8.5 8.5a1.5 1.5 0 0 1-2.1 0L3 14.1a1.5 1.5 0 0 1 0-2.1L11 3Z M16.2 8.2h.01");
-const IconFlow = Icon("M6 4h4v4H6zM14 16h4v4h-4zM8 8v4a2 2 0 0 0 2 2h4M14 8v-.5");
-const IconCheck = Icon("M9 12.5 11.2 15 15.5 9M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z");
-const IconCalendar = Icon("M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z");
-const IconChart = Icon("M4 20V10M11 20V4M18 20v-7M3 20h18");
-const IconGear = Icon(
-  "M10.3 3.4a1.5 1.5 0 0 1 3.4 0l.2.9a1.5 1.5 0 0 0 2.2.9l.8-.5a1.5 1.5 0 0 1 2 2l-.5.8a1.5 1.5 0 0 0 .9 2.2l.9.2a1.5 1.5 0 0 1 0 3.4l-.9.2a1.5 1.5 0 0 0-.9 2.2l.5.8a1.5 1.5 0 0 1-2 2l-.8-.5a1.5 1.5 0 0 0-2.2.9l-.2.9a1.5 1.5 0 0 1-3.4 0l-.2-.9a1.5 1.5 0 0 0-2.2-.9l-.8.5a1.5 1.5 0 0 1-2-2l.5-.8a1.5 1.5 0 0 0-.9-2.2l-.9-.2a1.5 1.5 0 0 1 0-3.4l.9-.2a1.5 1.5 0 0 0 .9-2.2l-.5-.8a1.5 1.5 0 0 1 2-2l.8.5a1.5 1.5 0 0 0 2.2-.9l.2-.9ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
-);
-const IconAudit = Icon(
-  "M9 3h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1V4a1 1 0 0 1 1-1ZM9 11h6M9 15h4",
-);
-const IconPie = Icon("M12 3v9l7.79 4.5A9 9 0 1 0 12 3Z");
-const IconClock = Icon("M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z");
-const IconBell = Icon("M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0");
-const IconChevron = Icon("m9 6 6 6-6 6");
-const IconMenu = Icon("M4 6h16M4 12h16M4 18h16");
-const IconPanel = Icon("M4 5h16v14H4zM9 5v14");
-const IconLogout = Icon("M15 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1M10 12h10m0 0-3-3m3 3-3 3");
+const IconHome = Home;
+const IconUsers = Users;
+const IconBuilding = Building2;
+const IconTag = Tag;
+const IconFlow = Workflow;
+const IconCheck = CheckCheck;
+const IconCalendar = Calendar;
+const IconChart = BarChart3;
+const IconGear = Settings;
+const IconAudit = ScrollText;
+const IconPie = PieChart;
+const IconClock = Clock;
+const IconBell = Bell;
+const IconChevron = ChevronRight;
+const IconMenu = Menu;
+const IconPanel = PanelLeft;
+const IconLogout = LogOut;
 
 interface NavLink {
   kind: "link";
@@ -124,8 +129,8 @@ export default function AppShell({
 
   if (loading || !user) {
     return (
-      <main className="flex min-h-screen flex-1 items-center justify-center bg-neutral-50">
-        <p className="text-sm text-neutral-500">กำลังตรวจสอบสิทธิ์...</p>
+      <main className="flex min-h-screen flex-1 items-center justify-center bg-bg">
+        <p className="text-sm text-ink-3">กำลังตรวจสอบสิทธิ์...</p>
       </main>
     );
   }
@@ -150,22 +155,24 @@ export default function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex min-h-screen bg-bg">
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} aria-hidden="true" />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-slate-900 transition-transform duration-200 md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-sidebar shadow-e3 transition-transform duration-200 md:sticky md:top-0 md:h-screen md:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } ${collapsed ? "md:w-16" : "md:w-60"}`}
       >
-        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-5">
-          <Image src={logoIcon} alt="LaLa'" width={32} height={32} className="shrink-0 rounded-md" priority />
+        <div className="flex items-center gap-2.5 border-b border-white/10 px-4 py-5">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] shadow-e2" style={{ background: "var(--color-brand-500)", backgroundImage: "linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-400) 42%, var(--color-gold-500) 100%)" }}>
+            <Image src={logoIcon} alt="" width={22} height={22} className="shrink-0" priority />
+          </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">LaLa&apos;</p>
-              <p className="truncate text-[11px] text-slate-400">Leave &amp; Attendance</p>
+              <p className="truncate font-brand text-base text-[rgba(250,245,237,0.94)]">LaLa&apos;</p>
+              <p className="truncate text-[11px] text-[rgba(250,245,237,0.5)]">Leave &amp; Attendance</p>
             </div>
           )}
         </div>
@@ -181,11 +188,13 @@ export default function AppShell({
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   title={collapsed ? item.label : undefined}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                    active ? "bg-sky-600/20 font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
+                    active
+                      ? "bg-brand-500/15 font-semibold text-brand-300"
+                      : "font-medium text-[rgba(250,245,237,0.68)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
                   } ${collapsed ? "justify-center" : ""}`}
                 >
-                  <ItemIcon className="h-4 w-4 shrink-0" />
+                  <ItemIcon className="h-4 w-4 shrink-0" strokeWidth={2} />
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               );
@@ -203,11 +212,13 @@ export default function AppShell({
                   href={item.children[0].href}
                   onClick={() => setMobileOpen(false)}
                   title={item.label}
-                  className={`flex items-center justify-center rounded-lg px-3 py-2 text-sm transition-colors ${
-                    groupActive ? "bg-sky-600/20 font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  className={`flex items-center justify-center rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
+                    groupActive
+                      ? "bg-brand-500/15 font-semibold text-brand-300"
+                      : "font-medium text-[rgba(250,245,237,0.68)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
                   }`}
                 >
-                  <GroupIcon className="h-4 w-4 shrink-0" />
+                  <GroupIcon className="h-4 w-4 shrink-0" strokeWidth={2} />
                 </Link>
               );
             }
@@ -217,13 +228,15 @@ export default function AppShell({
                 <button
                   type="button"
                   onClick={() => toggleGroup(item)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                    groupActive ? "font-semibold text-sky-300" : "font-medium text-slate-300 hover:bg-white/5 hover:text-white"
+                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
+                    groupActive
+                      ? "font-semibold text-brand-300"
+                      : "font-medium text-[rgba(250,245,237,0.68)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
                   }`}
                 >
-                  <GroupIcon className="h-4 w-4 shrink-0" />
+                  <GroupIcon className="h-4 w-4 shrink-0" strokeWidth={2} />
                   <span className="flex-1 truncate text-left">{item.label}</span>
-                  <IconChevron className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
+                  <IconChevron className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 ${open ? "rotate-90" : ""}`} />
                 </button>
                 {open && (
                   <div className="mt-1 space-y-1 border-l border-white/10 pl-3">
@@ -235,11 +248,13 @@ export default function AppShell({
                           key={child.href}
                           href={child.href}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                            active ? "bg-sky-600/20 font-semibold text-sky-300" : "text-slate-400 hover:bg-white/5 hover:text-white"
+                          className={`flex items-center gap-3 rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
+                            active
+                              ? "bg-brand-500/15 font-semibold text-brand-300"
+                              : "text-[rgba(250,245,237,0.5)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
                           }`}
                         >
-                          <ChildIcon className="h-3.5 w-3.5 shrink-0" />
+                          <ChildIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
                           <span className="truncate">{child.label}</span>
                         </Link>
                       );
@@ -253,55 +268,58 @@ export default function AppShell({
 
         <div className="border-t border-white/10 p-3">
           <div className={`flex items-center gap-2 rounded-md px-1 py-1 ${collapsed ? "justify-center" : ""}`}>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-semibold text-white">
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ background: "linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-400) 42%, var(--color-gold-500) 100%)" }}
+            >
               {initials}
             </div>
             {!collapsed && (
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">{user.fullName}</p>
-                <p className="truncate text-[11px] text-slate-400">{ROLE_LABEL[user.role]}</p>
+                <p className="truncate text-sm font-medium text-[rgba(250,245,237,0.94)]">{user.fullName}</p>
+                <p className="truncate text-[11px] text-[rgba(250,245,237,0.5)]">{ROLE_LABEL[user.role]}</p>
               </div>
             )}
             <button
               onClick={handleLogout}
               title="ออกจากระบบ"
-              className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+              className="shrink-0 rounded-md p-1.5 text-[rgba(250,245,237,0.5)] transition-colors hover:bg-white/10 hover:text-[rgba(250,245,237,0.94)]"
             >
-              <IconLogout className="h-4 w-4" />
+              <IconLogout className="h-4 w-4" strokeWidth={2} />
             </button>
           </div>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 shadow-sm md:px-6">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-hairline bg-surface/90 px-4 py-3 shadow-e1 backdrop-blur-md md:px-6">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 md:hidden"
+              className="rounded-md p-1.5 text-ink-3 transition-colors hover:bg-quiet-bg md:hidden"
               aria-label="เปิดเมนู"
             >
-              <IconMenu className="h-5 w-5" />
+              <IconMenu className="h-5 w-5" strokeWidth={2} />
             </button>
             <button
               onClick={() => setCollapsed((c) => !c)}
-              className="hidden rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 md:inline-flex"
+              className="hidden rounded-md p-1.5 text-ink-3 transition-colors hover:bg-quiet-bg md:inline-flex"
               aria-label="ย่อ/ขยายเมนู"
             >
-              <IconPanel className="h-5 w-5" />
+              <IconPanel className="h-5 w-5" strokeWidth={2} />
             </button>
-            <span className="text-base font-semibold text-neutral-800">{title}</span>
+            <span className="text-base font-semibold text-ink">{title}</span>
           </div>
           <div className="flex items-center gap-3">
             {actions}
-            <span className="hidden items-center gap-1.5 rounded-lg border border-neutral-200 px-2.5 py-1 text-xs text-neutral-500 sm:flex">
-              <IconCalendar className="h-3.5 w-3.5" />
+            <span className="hidden items-center gap-1.5 rounded-full border border-hairline px-2.5 py-1 text-xs text-ink-3 sm:flex">
+              <IconCalendar className="h-3.5 w-3.5" strokeWidth={2} />
               {todayLabel}
             </span>
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-x-hidden bg-bg-elev p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

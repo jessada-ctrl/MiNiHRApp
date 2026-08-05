@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { resolveCurrentUser } from "@/lib/auth";
 import { type PendingApproval, approveLeaveRequest, listPendingForMe, rejectLeaveRequest } from "@/lib/approvals";
+import { StatusBadge } from "@/components/ui/Badge";
+import { ApprovalTimeline, type TimelineStep } from "@/components/ui/Timeline";
 
 const DURATION_LABEL: Record<string, string> = {
   full_day: "เต็มวัน",
@@ -95,17 +97,17 @@ export default function ReviewPage() {
 
   if (loading) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-neutral-100">
-        <p className="text-sm text-neutral-500">กำลังโหลด...</p>
+      <main className="flex flex-1 items-center justify-center bg-bg">
+        <p className="text-sm text-ink-3">กำลังโหลด...</p>
       </main>
     );
   }
 
   if (done) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-3 bg-neutral-100 px-5 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-3 bg-bg px-5 text-center">
         <div className="text-4xl">{done === "approved" ? "✅" : "❌"}</div>
-        <p className="text-sm font-medium text-neutral-800">
+        <p className="text-sm font-medium text-ink">
           {done === "approved" ? "อนุมัติคำขอลาเรียบร้อยแล้ว" : "ปฏิเสธคำขอลาเรียบร้อยแล้ว"}
         </p>
       </main>
@@ -114,76 +116,78 @@ export default function ReviewPage() {
 
   if (!request) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 bg-neutral-100 px-5 text-center">
-        <p className="text-sm text-neutral-500">ไม่พบคำขอนี้ในคิวของคุณ — อาจมีคนดำเนินการไปแล้ว หรือไม่ใช่คำขอที่ถึงคิวคุณ</p>
-        <button onClick={() => router.push("/")} className="mt-2 text-xs text-sky-700 underline">
+      <main className="flex flex-1 flex-col items-center justify-center gap-2 bg-bg px-5 text-center">
+        <p className="text-sm text-ink-3">ไม่พบคำขอนี้ในคิวของคุณ — อาจมีคนดำเนินการไปแล้ว หรือไม่ใช่คำขอที่ถึงคิวคุณ</p>
+        <button onClick={() => router.push("/")} className="mt-2 text-xs text-brand-600 underline">
           กลับหน้าแรก
         </button>
       </main>
     );
   }
 
+  const timelineSteps: TimelineStep[] = request.approvalActions.map((a, i) => ({
+    id: i,
+    label: a.approver.fullName,
+    state: a.action === "approve" ? "approved" : "rejected",
+    timestamp: new Date(a.actedAt).toLocaleString("th-TH"),
+    comment: a.comment || undefined,
+  }));
+
   return (
-    <main className="flex-1 bg-neutral-100 px-4 py-5">
+    <main className="flex-1 bg-bg px-4 py-5">
       <div className="mx-auto flex w-full max-w-sm flex-col gap-3">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <div className="rounded-lg bg-surface p-5 shadow-e1">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-sky-800">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
                 {request.employee.fullName.charAt(0)}
               </span>
               <div>
-                <h1 className="font-semibold text-neutral-900">{request.employee.fullName}</h1>
-                <p className="text-xs text-neutral-500">ตรวจสอบคำขอลา</p>
+                <h1 className="font-semibold text-ink">{request.employee.fullName}</h1>
+                <p className="text-xs text-ink-3">ตรวจสอบคำขอลา</p>
               </div>
             </div>
             {request.isOverQuota && (
-              <span className="shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">เกินโควตา</span>
+              <StatusBadge status="risk" className="shrink-0">
+                เกินโควตา
+              </StatusBadge>
             )}
           </div>
 
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
-            <dt className="text-neutral-400">ประเภท</dt>
+            <dt className="text-ink-3">ประเภท</dt>
             <dd>{request.leaveType.name}</dd>
-            <dt className="text-neutral-400">ช่วงเวลา</dt>
+            <dt className="text-ink-3">ช่วงเวลา</dt>
             <dd>
               {new Date(request.startDatetime).toLocaleDateString("th-TH")} – {new Date(request.endDatetime).toLocaleDateString("th-TH")}
             </dd>
-            <dt className="text-neutral-400">รูปแบบ</dt>
+            <dt className="text-ink-3">รูปแบบ</dt>
             <dd>{DURATION_LABEL[request.durationType] ?? request.durationType}</dd>
-            <dt className="text-neutral-400">จำนวน</dt>
+            <dt className="text-ink-3">จำนวน</dt>
             <dd className="tabular-nums">{request.totalDays} วัน</dd>
-            <dt className="text-neutral-400">เหตุผล</dt>
+            <dt className="text-ink-3">เหตุผล</dt>
             <dd>{request.reason || "-"}</dd>
           </dl>
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">ไทม์ไลน์การพิจารณา</h2>
-          {request.approvalActions.length === 0 ? (
-            <p className="text-xs text-neutral-400">ยังไม่มีผู้อนุมัติดำเนินการ — คุณคือขั้นแรก</p>
+        <div className="rounded-lg bg-surface p-5 shadow-e1">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-3">ไทม์ไลน์การพิจารณา</h2>
+          {timelineSteps.length === 0 ? (
+            <p className="text-xs text-ink-3">ยังไม่มีผู้อนุมัติดำเนินการ — คุณคือขั้นแรก</p>
           ) : (
-            <ul className="flex flex-col gap-2">
-              {request.approvalActions.map((a, i) => (
-                <li key={i} className="text-xs">
-                  <span className="font-medium">{a.approver.fullName}</span> — {a.action === "approve" ? "✅ อนุมัติ" : "❌ ปฏิเสธ"}{" "}
-                  <span className="text-neutral-400">· {new Date(a.actedAt).toLocaleString("th-TH")}</span>
-                  {a.comment && <div className="mt-0.5 rounded bg-neutral-50 px-2 py-1 text-neutral-600">{a.comment}</div>}
-                </li>
-              ))}
-            </ul>
+            <ApprovalTimeline steps={timelineSteps} />
           )}
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <div className="rounded-lg bg-surface p-5 shadow-e1">
           {rejecting ? (
             <>
-              <label className="mb-1 block text-sm font-medium text-neutral-700">เหตุผลการปฏิเสธ (จำเป็นต้องกรอก)</label>
+              <label className="mb-1 block text-sm font-medium text-ink-2">เหตุผลการปฏิเสธ (จำเป็นต้องกรอก)</label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
               />
               {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
               <div className="mt-3 flex gap-2">
@@ -192,14 +196,14 @@ export default function ReviewPage() {
                     setRejecting(false);
                     setError(null);
                   }}
-                  className="flex-1 rounded-lg border border-neutral-300 py-2.5 text-sm"
+                  className="flex-1 rounded-md border border-hairline-strong py-2.5 text-sm"
                 >
                   ยกเลิก
                 </button>
                 <button
                   onClick={handleReject}
                   disabled={busy}
-                  className="flex-1 rounded-lg bg-red-600 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+                  className="flex-1 rounded-md bg-red-600 py-2.5 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {busy ? "กำลังบันทึก..." : "ยืนยันปฏิเสธ"}
                 </button>
@@ -211,14 +215,14 @@ export default function ReviewPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setRejecting(true)}
-                  className="flex-1 rounded-lg bg-red-600 py-3 text-sm font-medium text-white"
+                  className="flex-1 rounded-md bg-red-600 py-3 text-sm font-medium text-white"
                 >
                   ❌ ปฏิเสธ
                 </button>
                 <button
                   onClick={handleApprove}
                   disabled={busy}
-                  className="flex-1 rounded-lg bg-sky-700 py-3 text-sm font-medium text-white disabled:opacity-60"
+                  className="flex-1 rounded-md bg-brand-500 py-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
                 >
                   {busy ? "กำลังบันทึก..." : "✅ อนุมัติ"}
                 </button>

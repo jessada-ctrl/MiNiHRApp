@@ -109,56 +109,56 @@ export default function SettingsPage() {
   return (
     <AppShell title="ตั้งค่า LINE OA">
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ตั้งค่า LINE OA</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">ตั้งค่า LINE OA</h1>
+        <p className="mt-1 text-sm text-ink-3">
           นำ Channel ID, Channel Secret และ Channel Access Token จาก LINE Developers Console (ประเภท Messaging API เท่านั้น — ไม่ใช่ LINE Login) มากรอกที่นี่
         </p>
 
-        {loading && <p className="mt-4 text-sm text-neutral-400">กำลังโหลด...</p>}
+        {loading && <p className="mt-4 text-sm text-ink-3">กำลังโหลด...</p>}
 
         {!loading && config && (
-          <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
+          <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4 rounded-lg border border-hairline bg-surface shadow-e1 p-5">
             <label className="block">
-              <span className="block text-sm font-medium text-neutral-700">Channel ID</span>
+              <span className="block text-sm font-medium text-ink-2">Channel ID</span>
               <input
                 value={channelId}
                 onChange={(e) => setChannelId(e.target.value)}
-                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
               />
             </label>
 
             <label className="block">
-              <span className="block text-sm font-medium text-neutral-700">Channel Secret</span>
+              <span className="block text-sm font-medium text-ink-2">Channel Secret</span>
               <input
                 type="text"
                 autoComplete="off"
                 value={channelSecret}
                 onChange={(e) => setChannelSecret(e.target.value)}
                 placeholder={config.hasChannelSecret ? SECRET_PLACEHOLDER : ""}
-                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
               />
             </label>
 
             <label className="block">
-              <span className="block text-sm font-medium text-neutral-700">Channel Access Token</span>
+              <span className="block text-sm font-medium text-ink-2">Channel Access Token</span>
               <input
                 type="text"
                 autoComplete="off"
                 value={accessToken}
                 onChange={(e) => setAccessToken(e.target.value)}
                 placeholder={config.hasChannelAccessToken ? SECRET_PLACEHOLDER : ""}
-                className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
               />
             </label>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
-            {success && <p className="text-sm text-sky-700">{success}</p>}
+            {success && <p className="text-sm text-brand-600">{success}</p>}
 
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+                className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
               >
                 {saving ? "กำลังบันทึก..." : "บันทึก"}
               </button>
@@ -167,17 +167,17 @@ export default function SettingsPage() {
         )}
 
         {!loading && webhookUrl && (
-          <div className="mt-6 rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
-            <h2 className="text-sm font-semibold text-neutral-900">Webhook URL</h2>
-            <p className="mt-1 text-sm text-neutral-500">
+          <div className="mt-6 rounded-lg border border-hairline bg-surface shadow-e1 p-5">
+            <h2 className="text-sm font-semibold text-ink">Webhook URL</h2>
+            <p className="mt-1 text-sm text-ink-3">
               นำ URL นี้ไปวางใน LINE Developers Console → Messaging API → Webhook URL แล้วกด Verify (ต้องเปิด backend ผ่าน ngrok หรือ deploy จริงก่อนถึงจะ verify ผ่าน)
             </p>
             <div className="mt-3 flex items-center gap-2">
-              <code className="flex-1 truncate rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-700">{webhookUrl}</code>
+              <code className="flex-1 truncate rounded-md bg-quiet-bg px-3 py-2 text-xs text-ink-2">{webhookUrl}</code>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="shrink-0 rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+                className="shrink-0 rounded-md border border-hairline-strong px-3 py-2 text-xs font-medium text-ink-2 hover:bg-quiet-bg"
               >
                 {copied ? "คัดลอกแล้ว ✓" : "คัดลอก"}
               </button>
@@ -185,21 +185,21 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="mt-6 rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
-          <h2 className="text-sm font-semibold text-neutral-900">แชทบอท: ใครถามได้ว่า &quot;ใครลาวันนี้บ้าง&quot;</h2>
-          <p className="mt-1 text-sm text-neutral-500">
+        <div className="mt-6 rounded-lg border border-hairline bg-surface shadow-e1 p-5">
+          <h2 className="text-sm font-semibold text-ink">แชทบอท: ใครถามได้ว่า &quot;ใครลาวันนี้บ้าง&quot;</h2>
+          <p className="mt-1 text-sm text-ink-3">
             ฝ่ายบุคคลถามได้เสมอไม่ว่าจะตั้งค่านี้ไว้อย่างไร — ตัวเลือกนี้แค่กำหนดว่าจะเปิดให้คนอื่นถามผ่านแชทบอท LINE ได้ด้วยหรือไม่
           </p>
 
           {visibilityLoading ? (
-            <p className="mt-4 text-sm text-neutral-400">กำลังโหลด...</p>
+            <p className="mt-4 text-sm text-ink-3">กำลังโหลด...</p>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
               {VISIBILITY_OPTIONS.map((opt) => (
                 <label
                   key={opt.value}
-                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                    visibility === opt.value ? "border-sky-600 bg-sky-50" : "border-neutral-200 hover:bg-neutral-50"
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors duration-150 ${
+                    visibility === opt.value ? "border-brand-500 bg-brand-500/10" : "border-hairline-strong hover:bg-quiet-bg"
                   }`}
                 >
                   <input
@@ -208,11 +208,11 @@ export default function SettingsPage() {
                     checked={visibility === opt.value}
                     onChange={() => handleVisibilitySubmit(opt.value)}
                     disabled={visibilitySaving}
-                    className="mt-1 accent-sky-700"
+                    className="mt-1 accent-brand-500"
                   />
                   <span>
-                    <span className="block text-sm font-medium text-neutral-900">{opt.label}</span>
-                    <span className="block text-xs text-neutral-500">{opt.hint}</span>
+                    <span className="block text-sm font-medium text-ink">{opt.label}</span>
+                    <span className="block text-xs text-ink-3">{opt.hint}</span>
                   </span>
                 </label>
               ))}
@@ -220,7 +220,7 @@ export default function SettingsPage() {
           )}
 
           {visibilityError && <p className="mt-3 text-sm text-red-600">{visibilityError}</p>}
-          {visibilitySuccess && <p className="mt-3 text-sm text-sky-700">{visibilitySuccess}</p>}
+          {visibilitySuccess && <p className="mt-3 text-sm text-brand-600">{visibilitySuccess}</p>}
         </div>
       </div>
     </AppShell>

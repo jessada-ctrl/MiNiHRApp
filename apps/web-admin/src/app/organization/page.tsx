@@ -51,8 +51,8 @@ export default function OrganizationPage() {
   return (
     <AppShell title="สาขา/แผนก">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">โครงสร้างองค์กร</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">โครงสร้างองค์กร</h1>
+        <p className="mt-1 text-sm text-ink-3">
           จัดการสาขา (พร้อมพิกัดและรัศมีสำหรับเช็คอินเข้างาน) และแผนก — การปิดใช้งานจะถูกบันทึกลง Audit Log
         </p>
 
@@ -60,19 +60,19 @@ export default function OrganizationPage() {
 
         <section className="mt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-neutral-800">สาขา</h2>
+            <h2 className="text-base font-semibold text-ink-2">สาขา</h2>
             {canManage && (
               <button
                 onClick={() => setShowAddBranch(true)}
-                className="rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
+                className="rounded-md bg-brand-500 px-3 py-1.5 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600"
               >
                 + เพิ่มสาขา
               </button>
             )}
           </div>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-            <table className="min-w-full divide-y divide-neutral-200 text-sm">
-              <thead className="bg-neutral-50">
+          <div className="mt-3 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
+            <table className="min-w-full divide-y divide-hairline text-sm">
+              <thead className="bg-surface-2">
                 <tr>
                   <Th>ชื่อสาขา</Th>
                   <Th>ที่อยู่</Th>
@@ -82,39 +82,39 @@ export default function OrganizationPage() {
                   <Th></Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-hairline">
                 {loading && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={6} className="px-4 py-6 text-center text-ink-3">
                       กำลังโหลด...
                     </td>
                   </tr>
                 )}
                 {!loading && branches.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={6} className="px-4 py-6 text-center text-ink-3">
                       ยังไม่มีสาขา
                     </td>
                   </tr>
                 )}
                 {branches.map((b) => (
                   <tr key={b.id} className={!b.isActive ? "opacity-50" : undefined}>
-                    <td className="px-4 py-3 font-medium text-neutral-900">{b.branchName}</td>
-                    <td className="px-4 py-3 text-neutral-600">{b.address ?? "-"}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-500">
+                    <td className="px-4 py-3 font-medium text-ink">{b.branchName}</td>
+                    <td className="px-4 py-3 text-ink-2">{b.address ?? "-"}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-ink-3">
                       {b.latitude}, {b.longitude}
                     </td>
-                    <td className="px-4 py-3 tabular-nums text-neutral-600">{b.radiusMeters}</td>
+                    <td className="px-4 py-3 tabular-nums text-ink-2">{b.radiusMeters}</td>
                     <td className="px-4 py-3">
                       <StatusBadge active={b.isActive} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       {canManage ? (
-                        <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-sky-700 hover:text-sky-900">
+                        <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-brand-600 hover:text-brand-700">
                           แก้ไข
                         </button>
                       ) : (
-                        <span className="text-xs text-neutral-300">—</span>
+                        <span className="text-xs text-ink-3">—</span>
                       )}
                     </td>
                   </tr>
@@ -126,19 +126,19 @@ export default function OrganizationPage() {
 
         <section className="mt-8">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-neutral-800">แผนก</h2>
+            <h2 className="text-base font-semibold text-ink-2">แผนก</h2>
             {canManage && (
               <button
                 onClick={() => setShowAddDept(true)}
-                className="rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
+                className="rounded-md bg-brand-500 px-3 py-1.5 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600"
               >
                 + เพิ่มแผนก
               </button>
             )}
           </div>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-            <table className="min-w-full divide-y divide-neutral-200 text-sm">
-              <thead className="bg-neutral-50">
+          <div className="mt-3 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
+            <table className="min-w-full divide-y divide-hairline text-sm">
+              <thead className="bg-surface-2">
                 <tr>
                   <Th>ชื่อแผนก</Th>
                   <Th>สาขา</Th>
@@ -146,35 +146,35 @@ export default function OrganizationPage() {
                   <Th></Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-hairline">
                 {loading && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={4} className="px-4 py-6 text-center text-ink-3">
                       กำลังโหลด...
                     </td>
                   </tr>
                 )}
                 {!loading && departments.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-neutral-400">
+                    <td colSpan={4} className="px-4 py-6 text-center text-ink-3">
                       ยังไม่มีแผนก
                     </td>
                   </tr>
                 )}
                 {departments.map((d) => (
                   <tr key={d.id} className={!d.isActive ? "opacity-50" : undefined}>
-                    <td className="px-4 py-3 font-medium text-neutral-900">{d.departmentName}</td>
-                    <td className="px-4 py-3 text-neutral-600">{d.branch?.branchName ?? "-"}</td>
+                    <td className="px-4 py-3 font-medium text-ink">{d.departmentName}</td>
+                    <td className="px-4 py-3 text-ink-2">{d.branch?.branchName ?? "-"}</td>
                     <td className="px-4 py-3">
                       <StatusBadge active={d.isActive} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       {canManage ? (
-                        <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-sky-700 hover:text-sky-900">
+                        <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-brand-600 hover:text-brand-700">
                           แก้ไข
                         </button>
                       ) : (
-                        <span className="text-xs text-neutral-300">—</span>
+                        <span className="text-xs text-ink-3">—</span>
                       )}
                     </td>
                   </tr>
@@ -232,7 +232,7 @@ export default function OrganizationPage() {
 function StatusBadge({ active }: { active: boolean }) {
   return (
     <span
-      className={`rounded px-2 py-0.5 text-xs font-medium ${active ? "bg-green-100 text-green-700" : "bg-neutral-200 text-neutral-600"}`}
+      className={`rounded px-2 py-0.5 text-xs font-medium ${active ? "bg-approved-bg text-approved-fg" : "bg-quiet-bg text-quiet-fg"}`}
     >
       {active ? "ใช้งานอยู่" : "ปิดใช้งาน"}
     </span>
@@ -241,7 +241,7 @@ function StatusBadge({ active }: { active: boolean }) {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-3">
       {children}
     </th>
   );
@@ -316,13 +316,13 @@ function BranchModal({ branch, onClose, onSaved }: { branch?: Branch; onClose: (
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
             ยกเลิก
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -388,33 +388,33 @@ function QrCodeSection({ branchId }: { branchId: string }) {
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+    <div className="rounded-lg border border-hairline bg-bg p-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-neutral-700">QR Code เข้างานประจำวัน</span>
+        <span className="text-sm font-medium text-ink-2">QR Code เข้างานประจำวัน</span>
         <button
           type="button"
           onClick={handleGenerate}
           disabled={generating}
-          className="rounded-md border border-sky-300 bg-white px-2.5 py-1 text-xs font-medium text-sky-700 hover:bg-sky-50 disabled:opacity-60"
+          className="rounded-md border border-brand-200 bg-surface px-2.5 py-1 text-xs font-medium text-brand-600 hover:bg-brand-50 disabled:opacity-60"
         >
           {generating ? "กำลังสร้าง..." : qrCode ? "สุ่มรหัสใหม่" : "สร้าง QR Code วันนี้"}
         </button>
       </div>
       {loading ? (
-        <p className="mt-2 text-xs text-neutral-400">กำลังโหลด...</p>
+        <p className="mt-2 text-xs text-ink-3">กำลังโหลด...</p>
       ) : qrCode ? (
         <div className="mt-2 flex items-center gap-3">
           {qrImage && (
             // eslint-disable-next-line @next/next/no-img-element -- short-lived data: URL, not worth Next/Image's remote-loader machinery
-            <img src={qrImage} alt="QR Code เข้างานวันนี้" width={112} height={112} className="rounded-md border border-neutral-200 bg-white p-1" />
+            <img src={qrImage} alt="QR Code เข้างานวันนี้" width={112} height={112} className="rounded-md border border-hairline bg-surface p-1" />
           )}
-          <p className="break-all rounded-md bg-white px-2 py-1.5 font-mono text-[11px] text-neutral-600">{qrCode.qrToken}</p>
+          <p className="break-all rounded-md bg-surface px-2 py-1.5 font-mono text-[11px] text-ink-2">{qrCode.qrToken}</p>
         </div>
       ) : (
-        <p className="mt-2 text-xs text-neutral-400">ยังไม่มี QR Code สำหรับวันนี้ — พนักงานจะใช้พิกัด GPS แทนได้เสมอ</p>
+        <p className="mt-2 text-xs text-ink-3">ยังไม่มี QR Code สำหรับวันนี้ — พนักงานจะใช้พิกัด GPS แทนได้เสมอ</p>
       )}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-      <p className="mt-1 text-[11px] text-neutral-400">รหัสจะหมดอายุอัตโนมัติเมื่อขึ้นวันใหม่ หรือเมื่อสุ่มรหัสใหม่</p>
+      <p className="mt-1 text-[11px] text-ink-3">รหัสจะหมดอายุอัตโนมัติเมื่อขึ้นวันใหม่ หรือเมื่อสุ่มรหัสใหม่</p>
     </div>
   );
 }
@@ -482,13 +482,13 @@ function DepartmentModal({
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
             ยกเลิก
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
           >
             {submitting ? "กำลังบันทึก..." : "บันทึก"}
           </button>
@@ -506,13 +506,13 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-lg bg-surface p-6 shadow-e3">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-ink">{title}</h2>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="shrink-0 rounded-md p-1 text-ink-3 hover:bg-quiet-bg hover:text-ink-2"
           >
             ✕
           </button>
@@ -526,11 +526,11 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-sm font-medium text-neutral-700">{label}</span>
+      <span className="block text-sm font-medium text-ink-2">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   );
 }
 
 const inputCls =
-  "w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-sky-600 focus:outline-none focus:ring-1 focus:ring-sky-600";
+  "w-full rounded-md border border-hairline-strong px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600";

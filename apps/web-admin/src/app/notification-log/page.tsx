@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { StatusBadge } from "@/components/ui/Badge";
+import { ResponsiveTable, type TableColumn } from "@/components/ui/Table";
 import {
   type NotificationLogFilters,
   type NotificationLogRow,
@@ -20,7 +22,32 @@ const MESSAGE_TYPE_LABEL: Record<string, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = { sent: "ส่งสำเร็จ", failed: "ส่งไม่สำเร็จ" };
-const STATUS_CLASS: Record<string, string> = { sent: "bg-green-100 text-green-800", failed: "bg-red-100 text-red-800" };
+const STATUS_BADGE: Record<string, "approved" | "rejected"> = { sent: "approved", failed: "rejected" };
+
+const COLUMNS: TableColumn<NotificationLogRow>[] = [
+  {
+    key: "sentAt",
+    header: "เวลาส่ง",
+    render: (r) => new Date(r.sentAt).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }),
+  },
+  {
+    key: "recipient",
+    header: "ผู้รับ",
+    render: (r) => r.recipientFullName ?? <span className="text-xs text-ink-3">{r.recipientLineUserId}</span>,
+  },
+  {
+    key: "messageType",
+    header: "ประเภทข้อความ",
+    render: (r) => MESSAGE_TYPE_LABEL[r.messageType] ?? r.messageType,
+  },
+  {
+    key: "status",
+    header: "สถานะ",
+    render: (r) => (
+      <StatusBadge status={STATUS_BADGE[r.status] ?? "quiet"}>{STATUS_LABEL[r.status] ?? r.status}</StatusBadge>
+    ),
+  },
+];
 
 export default function NotificationLogPage() {
   const [rows, setRows] = useState<NotificationLogRow[]>([]);
@@ -73,15 +100,15 @@ export default function NotificationLogPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">บันทึกการแจ้งเตือน LINE</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">บันทึกการแจ้งเตือน LINE</h1>
+        <p className="mt-1 text-sm text-ink-3">
           ประวัติการส่งข้อความ LINE ทั้งหมด (แชทบอท, แจ้งเตือนอนุมัติ, วันหยุด ฯลฯ) ใช้ตรวจสอบว่าทำไมพนักงานไม่ได้รับแจ้งเตือน
         </p>
 
@@ -89,7 +116,7 @@ export default function NotificationLogPage() {
           <select
             value={filters.messageType ?? ""}
             onChange={(e) => updateFilter({ messageType: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกประเภทข้อความ</option>
             {Object.entries(MESSAGE_TYPE_LABEL).map(([k, v]) => (
@@ -101,7 +128,7 @@ export default function NotificationLogPage() {
           <select
             value={filters.status ?? ""}
             onChange={(e) => updateFilter({ status: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกสถานะ</option>
             {Object.entries(STATUS_LABEL).map(([k, v]) => (
@@ -114,15 +141,15 @@ export default function NotificationLogPage() {
             type="date"
             value={filters.startDate ?? ""}
             onChange={(e) => updateFilter({ startDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
           <input
             type="date"
             value={filters.endDate ?? ""}
             onChange={(e) => updateFilter({ endDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
-          <span className="ml-auto self-center text-xs text-neutral-400">{rows.length} รายการ</span>
+          <span className="ml-auto self-center text-xs text-ink-3">{rows.length} รายการ</span>
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -132,57 +159,26 @@ export default function NotificationLogPage() {
           </p>
         )}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50">
-              <tr>
-                <Th>เวลาส่ง</Th>
-                <Th>ผู้รับ</Th>
-                <Th>ประเภทข้อความ</Th>
-                <Th>สถานะ</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {loading && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-neutral-400">
-                    กำลังโหลด...
-                  </td>
-                </tr>
-              )}
-              {!loading && rows.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-neutral-400">
-                    ไม่พบรายการตามเงื่อนไข
-                  </td>
-                </tr>
-              )}
-              {rows.map((r) => (
-                <tr key={r.id} className={r.status === "failed" ? "bg-red-50" : undefined}>
-                  <td className="whitespace-nowrap px-4 py-3 text-neutral-600">
-                    {new Date(r.sentAt).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })}
-                  </td>
-                  <td className="px-4 py-3">{r.recipientFullName ?? <span className="text-xs text-neutral-400">{r.recipientLineUserId}</span>}</td>
-                  <td className="px-4 py-3 text-neutral-600">{MESSAGE_TYPE_LABEL[r.messageType] ?? r.messageType}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[r.status] ?? ""}`}>
-                      {STATUS_LABEL[r.status] ?? r.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-4">
+          {loading ? (
+            <div className="rounded-lg border border-hairline bg-surface p-6 text-center text-sm text-ink-3 shadow-e1">
+              กำลังโหลด...
+            </div>
+          ) : (
+            <ResponsiveTable
+              columns={COLUMNS}
+              rows={rows}
+              rowKey={(r) => r.id}
+              rowTone={(r) => (r.status === "failed" ? "risk" : undefined)}
+              emptyState={
+                <div className="rounded-lg border border-hairline bg-surface p-6 text-center text-sm text-ink-3 shadow-e1">
+                  ไม่พบรายการตามเงื่อนไข
+                </div>
+              }
+            />
+          )}
         </div>
       </div>
     </AppShell>
-  );
-}
-
-function Th({ children }: { children?: React.ReactNode }) {
-  return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
-      {children}
-    </th>
   );
 }

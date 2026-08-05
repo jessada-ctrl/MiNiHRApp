@@ -52,18 +52,18 @@ export default function WorkflowsPage() {
       actions={
         <button
           onClick={() => setShowAdd(true)}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600"
         >
           + สร้างสายอนุมัติ
         </button>
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">สายอนุมัติ (Approval Workflow Builder)</h1>
-        <p className="mt-1 text-sm text-neutral-500">ลากบล็อกเพื่อสลับลำดับขั้นตอน แล้วกดบันทึกในแต่ละสาย</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">สายอนุมัติ (Approval Workflow Builder)</h1>
+        <p className="mt-1 text-sm text-ink-3">ลากบล็อกเพื่อสลับลำดับขั้นตอน แล้วกดบันทึกในแต่ละสาย</p>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        {loading && <p className="mt-4 text-sm text-neutral-400">กำลังโหลด...</p>}
+        {loading && <p className="mt-4 text-sm text-ink-3">กำลังโหลด...</p>}
 
         <div className="mt-4 flex flex-col gap-6">
           {!loading &&
@@ -71,7 +71,7 @@ export default function WorkflowsPage() {
               <WorkflowCard key={wf.id} workflow={wf} employees={employees} onChanged={refresh} />
             ))}
           {!loading && workflows.length === 0 && (
-            <p className="text-sm text-neutral-400">ยังไม่มีสายอนุมัติ — กด &quot;สร้างสายอนุมัติ&quot; เพื่อเริ่มต้น</p>
+            <p className="text-sm text-ink-3">ยังไม่มีสายอนุมัติ — กด &quot;สร้างสายอนุมัติ&quot; เพื่อเริ่มต้น</p>
           )}
         </div>
       </div>
@@ -178,11 +178,11 @@ function WorkflowCard({
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm p-5">
+    <div className="rounded-lg border border-hairline bg-surface shadow-e1 p-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-semibold text-neutral-900">{workflow.name}</h2>
-          <p className="text-xs text-neutral-500">{SCOPE_LABEL[workflow.scopeType]}</p>
+          <h2 className="font-semibold text-ink">{workflow.name}</h2>
+          <p className="text-xs text-ink-3">{SCOPE_LABEL[workflow.scopeType]}</p>
         </div>
         <button onClick={() => setConfirmingDelete(true)} className="text-sm font-medium text-red-600 hover:text-red-800">
           ลบสายอนุมัติ
@@ -212,15 +212,15 @@ function WorkflowCard({
                 if (dragIdx !== null) move(dragIdx, idx);
                 setDragIdx(null);
               }}
-              className="flex w-56 cursor-grab flex-col gap-2 rounded-lg border border-neutral-300 bg-neutral-50 p-3 active:cursor-grabbing"
+              className="flex w-56 cursor-grab flex-col gap-2 rounded-md border border-hairline-strong bg-bg-elev p-3 active:cursor-grabbing"
             >
-              <span className="w-fit rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">
+              <span className="w-fit rounded-full bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-800">
                 ขั้นที่ {idx + 1}
               </span>
               <select
                 value={step.approverType}
                 onChange={(e) => updateStep(idx, { approverType: e.target.value as ApproverType, approverEmployeeId: undefined })}
-                className="w-full rounded-md border border-neutral-300 px-2 py-1 text-sm"
+                className="w-full rounded-md border border-hairline-strong px-2 py-1 text-sm"
               >
                 <option value="direct_manager">{APPROVER_TYPE_LABEL.direct_manager}</option>
                 <option value="specific_employee">{APPROVER_TYPE_LABEL.specific_employee}</option>
@@ -229,7 +229,7 @@ function WorkflowCard({
                 <select
                   value={step.approverEmployeeId ?? ""}
                   onChange={(e) => updateStep(idx, { approverEmployeeId: e.target.value })}
-                  className="w-full rounded-md border border-neutral-300 px-2 py-1 text-sm"
+                  className="w-full rounded-md border border-hairline-strong px-2 py-1 text-sm"
                 >
                   <option value="">- เลือกพนักงาน -</option>
                   {employees.map((e) => (
@@ -248,12 +248,12 @@ function WorkflowCard({
                 </button>
               )}
             </div>
-            {idx < steps.length - 1 && <span className="self-center text-xl text-neutral-300">→</span>}
+            {idx < steps.length - 1 && <span className="self-center text-xl text-ink-3">→</span>}
           </div>
         ))}
         <button
           onClick={addStep}
-          className="flex w-40 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm font-medium text-neutral-500 hover:border-sky-400 hover:text-sky-700"
+          className="flex w-40 items-center justify-center rounded-md border border-dashed border-hairline-strong text-sm font-medium text-ink-3 hover:border-brand-400 hover:text-brand-600"
         >
           + เพิ่มขั้นตอน
         </button>
@@ -266,11 +266,11 @@ function WorkflowCard({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
           >
             {saving ? "กำลังบันทึก..." : "บันทึกสายอนุมัตินี้"}
           </button>
-          <span className="text-xs text-neutral-400">มีการเปลี่ยนแปลงยังไม่ได้บันทึก</span>
+          <span className="text-xs text-ink-3">มีการเปลี่ยนแปลงยังไม่ได้บันทึก</span>
         </div>
       )}
     </div>
@@ -304,33 +304,33 @@ function AddWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+      <div className="w-full max-w-md rounded-lg bg-surface p-6 shadow-e3">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold text-neutral-900">สร้างสายอนุมัติ</h2>
+          <h2 className="text-lg font-semibold text-ink">สร้างสายอนุมัติ</h2>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="shrink-0 rounded-md p-1 text-ink-3 hover:bg-quiet-bg hover:text-ink-2"
           >
             ✕
           </button>
         </div>
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
           <label className="block">
-            <span className="block text-sm font-medium text-neutral-700">ชื่อสายอนุมัติ</span>
+            <span className="block text-sm font-medium text-ink-2">ชื่อสายอนุมัติ</span>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
             />
           </label>
           <label className="block">
-            <span className="block text-sm font-medium text-neutral-700">ขอบเขต</span>
+            <span className="block text-sm font-medium text-ink-2">ขอบเขต</span>
             <select
               value={scopeType}
               onChange={(e) => setScopeType(e.target.value as ScopeType)}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
             >
               {Object.entries(SCOPE_LABEL).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -339,18 +339,18 @@ function AddWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
               ))}
             </select>
           </label>
-          <p className="text-xs text-neutral-500">เริ่มต้นด้วย 1 ขั้นตอน (หัวหน้างานตรง) — เพิ่ม/แก้ไขขั้นตอนได้หลังสร้างแล้ว</p>
+          <p className="text-xs text-ink-3">เริ่มต้นด้วย 1 ขั้นตอน (หัวหน้างานตรง) — เพิ่ม/แก้ไขขั้นตอนได้หลังสร้างแล้ว</p>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm">
+            <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm text-ink">
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
             >
               {submitting ? "กำลังสร้าง..." : "สร้าง"}
             </button>

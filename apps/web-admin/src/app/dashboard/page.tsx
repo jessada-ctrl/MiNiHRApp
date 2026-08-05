@@ -24,10 +24,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "#d97706",
-  approved: "#0f766e",
-  rejected: "#dc2626",
-  cancelled: "#94a3b8",
+  pending: "var(--color-pending)",
+  approved: "var(--color-approved)",
+  rejected: "var(--color-rejected)",
+  cancelled: "var(--color-quiet)",
 };
 
 export default function DashboardPage() {
@@ -99,7 +99,7 @@ export default function DashboardPage() {
   if (!user) {
     return (
       <AppShell title="แดชบอร์ด">
-        <p className="text-sm text-neutral-400">กำลังโหลด...</p>
+        <p className="text-sm text-ink-3">กำลังโหลด...</p>
       </AppShell>
     );
   }
@@ -130,17 +130,17 @@ export default function DashboardPage() {
     <AppShell title="แดชบอร์ด">
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ภาพรวม</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            สวัสดี <span className="font-medium text-neutral-700">{user.fullName}</span> · {ROLE_LABEL[user.role]}
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">ภาพรวม</h1>
+          <p className="mt-1 text-sm text-ink-3">
+            สวัสดี <span className="font-medium text-ink-2">{user.fullName}</span> · {ROLE_LABEL[user.role]}
           </p>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         {user.role === "employee" && (
-          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center shadow-sm">
-            <p className="text-sm text-neutral-600">
+          <div className="rounded-lg border border-hairline bg-surface p-6 text-center shadow-e1">
+            <p className="text-sm text-ink-2">
               หน้านี้ออกแบบไว้สำหรับฝ่ายบุคคลและหัวหน้างาน — พนักงานทั่วไปกรุณายื่นใบลาและตรวจสอบประวัติผ่านแอป LINE (LIFF)
             </p>
           </div>
@@ -167,18 +167,18 @@ export default function DashboardPage() {
               <div className="grid gap-6 lg:grid-cols-2">
                 <Card title="สถานะคำขอลา (ทั้งหมด)">
                   {totalRequests === 0 ? (
-                    <p className="py-8 text-center text-sm text-neutral-400">ยังไม่มีข้อมูลคำขอลา</p>
+                    <p className="py-8 text-center text-sm text-ink-3">ยังไม่มีข้อมูลคำขอลา</p>
                   ) : (
                     <div className="flex items-center gap-6">
                       <Donut counts={statusCounts} total={totalRequests} />
                       <ul className="flex-1 space-y-2">
                         {Object.entries(statusCounts).map(([status, count]) => (
                           <li key={status} className="flex items-center justify-between text-sm">
-                            <span className="flex items-center gap-2 text-neutral-600">
+                            <span className="flex items-center gap-2 text-ink-2">
                               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: STATUS_COLOR[status] }} />
                               {STATUS_LABEL[status]}
                             </span>
-                            <span className="tabular-nums font-medium text-neutral-800">{count}</span>
+                            <span className="tabular-nums font-medium text-ink">{count}</span>
                           </li>
                         ))}
                       </ul>
@@ -188,18 +188,18 @@ export default function DashboardPage() {
 
                 <Card title="ประเภทการลาที่ใช้มากที่สุด">
                   {topLeaveTypes.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-neutral-400">ยังไม่มีข้อมูลคำขอลา</p>
+                    <p className="py-8 text-center text-sm text-ink-3">ยังไม่มีข้อมูลคำขอลา</p>
                   ) : (
                     <ul className="space-y-3">
                       {topLeaveTypes.map(([name, count]) => (
                         <li key={name}>
-                          <div className="flex justify-between text-sm text-neutral-600">
+                          <div className="flex justify-between text-sm text-ink-2">
                             <span>{name}</span>
-                            <span className="tabular-nums font-medium text-neutral-800">{count}</span>
+                            <span className="tabular-nums font-medium text-ink">{count}</span>
                           </div>
-                          <div className="mt-1 h-2 w-full rounded-full bg-neutral-100">
+                          <div className="mt-1 h-2 w-full rounded-full bg-quiet-bg">
                             <div
-                              className="h-2 rounded-full bg-sky-600"
+                              className="h-2 rounded-full bg-brand-500"
                               style={{ width: `${(count / topLeaveTypes[0][1]) * 100}%` }}
                             />
                           </div>
@@ -215,22 +215,25 @@ export default function DashboardPage() {
               {user.role === "tenant_admin" && (
                 <Card title="คำขอล่าสุด" className="lg:col-span-2">
                   {recentRequests.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-neutral-400">ยังไม่มีคำขอลา</p>
+                    <p className="py-8 text-center text-sm text-ink-3">ยังไม่มีคำขอลา</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="min-w-full text-sm">
-                        <tbody className="divide-y divide-neutral-100">
+                        <tbody className="divide-y divide-hairline">
                           {recentRequests.map((r) => (
                             <tr key={r.id}>
-                              <td className="py-2 pr-3 font-medium text-neutral-800">{r.employee.fullName}</td>
-                              <td className="py-2 pr-3 text-neutral-500">{r.leaveType.name}</td>
-                              <td className="py-2 pr-3 text-neutral-500">
+                              <td className="py-2 pr-3 font-medium text-ink">{r.employee.fullName}</td>
+                              <td className="py-2 pr-3 text-ink-3">{r.leaveType.name}</td>
+                              <td className="py-2 pr-3 text-ink-3">
                                 {new Date(r.startDatetime).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
                               </td>
                               <td className="py-2 text-right">
                                 <span
                                   className="rounded px-2 py-0.5 text-xs font-medium"
-                                  style={{ backgroundColor: `${STATUS_COLOR[r.status]}1a`, color: STATUS_COLOR[r.status] }}
+                                  style={{
+                                    backgroundColor: `color-mix(in srgb, ${STATUS_COLOR[r.status]} 16%, transparent)`,
+                                    color: STATUS_COLOR[r.status],
+                                  }}
                                 >
                                   {STATUS_LABEL[r.status]}
                                 </span>
@@ -247,21 +250,21 @@ export default function DashboardPage() {
               {user.role === "approver" && (
                 <Card title="รออนุมัติของฉัน" className="lg:col-span-2">
                   {!pendingForMe || pendingForMe.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-neutral-400">🎉 ไม่มีคำขอค้างพิจารณา</p>
+                    <p className="py-8 text-center text-sm text-ink-3">🎉 ไม่มีคำขอค้างพิจารณา</p>
                   ) : (
-                    <ul className="divide-y divide-neutral-100">
+                    <ul className="divide-y divide-hairline">
                       {pendingForMe.slice(0, 6).map((r) => (
                         <li key={r.id} className="flex items-center justify-between py-2 text-sm">
-                          <span className="font-medium text-neutral-800">{r.employee.fullName}</span>
-                          <span className="text-neutral-500">{r.leaveType.name}</span>
-                          <span className="tabular-nums text-neutral-500">
+                          <span className="font-medium text-ink">{r.employee.fullName}</span>
+                          <span className="text-ink-3">{r.leaveType.name}</span>
+                          <span className="tabular-nums text-ink-3">
                             {new Date(r.startDatetime).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
                           </span>
                         </li>
                       ))}
                     </ul>
                   )}
-                  <Link href="/approvals" className="mt-3 inline-block text-sm font-medium text-sky-700 hover:text-sky-900">
+                  <Link href="/approvals" className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700">
                     ดูทั้งหมด →
                   </Link>
                 </Card>
@@ -269,19 +272,19 @@ export default function DashboardPage() {
 
               <Card title="วันหยุดถัดไป">
                 {!upcomingHoliday ? (
-                  <p className="py-8 text-center text-sm text-neutral-400">ไม่มีวันหยุดที่กำหนดไว้ล่วงหน้า</p>
+                  <p className="py-8 text-center text-sm text-ink-3">ไม่มีวันหยุดที่กำหนดไว้ล่วงหน้า</p>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
-                    <p className="text-3xl font-semibold text-sky-700">
+                    <p className="text-3xl font-semibold text-brand-600">
                       {new Date(upcomingHoliday.holidayDate).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
                     </p>
-                    <p className="text-sm text-neutral-600">{upcomingHoliday.name}</p>
-                    <p className="text-xs text-neutral-400">
+                    <p className="text-sm text-ink-2">{upcomingHoliday.name}</p>
+                    <p className="text-xs text-ink-3">
                       แจ้งเตือนล่วงหน้า {upcomingHoliday.notifyDaysBefore} วัน (ผ่าน LINE เมื่อเชื่อมต่อแล้ว)
                     </p>
                   </div>
                 )}
-                <Link href="/holidays" className="mt-3 inline-block text-sm font-medium text-sky-700 hover:text-sky-900">
+                <Link href="/holidays" className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700">
                   ดูปฏิทินทั้งหมด →
                 </Link>
               </Card>
@@ -294,10 +297,10 @@ export default function DashboardPage() {
 }
 
 const ACCENT_CLASSES: Record<string, string> = {
-  teal: "bg-sky-50 text-sky-700",
+  teal: "bg-info-bg text-info-fg",
   indigo: "bg-indigo-50 text-indigo-700",
-  amber: "bg-amber-50 text-amber-700",
-  red: "bg-red-50 text-red-700",
+  amber: "bg-pending-bg text-pending-fg",
+  red: "bg-risk-bg text-risk-fg",
 };
 
 function StatCard({
@@ -316,21 +319,21 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+      className="rounded-lg border border-hairline bg-surface p-4 shadow-e1 transition-shadow duration-150 hover:shadow-e2"
     >
       <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${ACCENT_CLASSES[accent]}`}>
         {label}
       </span>
-      <p className="mt-2 text-2xl font-semibold tabular-nums text-neutral-900">{value}</p>
-      <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>
+      <p className="mt-2 text-2xl font-semibold tabular-nums text-ink">{value}</p>
+      <p className="mt-0.5 text-xs text-ink-3">{sub}</p>
     </Link>
   );
 }
 
 function Card({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-neutral-200 bg-white p-5 shadow-sm ${className ?? ""}`}>
-      <h2 className="text-sm font-semibold text-neutral-800">{title}</h2>
+    <div className={`rounded-lg border border-hairline bg-surface p-5 shadow-e1 ${className ?? ""}`}>
+      <h2 className="text-sm font-semibold text-ink">{title}</h2>
       <div className="mt-3">{children}</div>
     </div>
   );
@@ -352,9 +355,9 @@ function Donut({ counts, total }: { counts: Record<string, number>; total: numbe
       className="relative h-28 w-28 shrink-0 rounded-full"
       style={{ background: `conic-gradient(${stops.join(", ")})` }}
     >
-      <div className="absolute inset-2 flex flex-col items-center justify-center rounded-full bg-white">
-        <span className="text-lg font-semibold tabular-nums text-neutral-900">{total}</span>
-        <span className="text-[10px] text-neutral-400">คำขอ</span>
+      <div className="absolute inset-2 flex flex-col items-center justify-center rounded-full bg-surface">
+        <span className="text-lg font-semibold tabular-nums text-ink">{total}</span>
+        <span className="text-[10px] text-ink-3">คำขอ</span>
       </div>
     </div>
   );

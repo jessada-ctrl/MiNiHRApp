@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { StatusBadge, type BadgeStatus } from "@/components/ui/Badge";
+import { ResponsiveTable, type TableColumn } from "@/components/ui/Table";
 import { type LeaveType, listLeaveTypes } from "@/lib/leaveTypes";
 import { type ReportFilters, type ReportRow, downloadLeaveReportCsv, fetchLeaveReport } from "@/lib/reports";
 
@@ -11,12 +13,37 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: "ปฏิเสธ",
   cancelled: "ยกเลิกแล้ว",
 };
-const STATUS_CLASS: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  approved: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  cancelled: "bg-neutral-200 text-neutral-600",
+const STATUS_BADGE: Record<string, BadgeStatus> = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+  cancelled: "quiet",
 };
+
+const COLUMNS: TableColumn<ReportRow>[] = [
+  { key: "employee", header: "พนักงาน", render: (r) => r.employee.fullName },
+  { key: "leaveType", header: "ประเภท", render: (r) => r.leaveType.name },
+  {
+    key: "period",
+    header: "ช่วงเวลา",
+    render: (r) => (
+      <span className="text-ink-2">
+        {new Date(r.startDatetime).toLocaleDateString("th-TH")} – {new Date(r.endDatetime).toLocaleDateString("th-TH")}
+      </span>
+    ),
+  },
+  { key: "totalDays", header: "วัน", render: (r) => r.totalDays },
+  {
+    key: "status",
+    header: "สถานะ",
+    render: (r) => <StatusBadge status={STATUS_BADGE[r.status] ?? "quiet"}>{STATUS_LABEL[r.status] ?? r.status}</StatusBadge>,
+  },
+  {
+    key: "remark",
+    header: "หมายเหตุ",
+    render: (r) => <span className="text-xs text-red-600">{r.isOverQuota ? "🚩 เกินโควตา (LWOP)" : ""}</span>,
+  },
+];
 
 export default function ReportsPage() {
   const [rows, setRows] = useState<ReportRow[]>([]);
@@ -68,21 +95,21 @@ export default function ReportsPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">รายงานคำขอลา</h1>
-        <p className="mt-1 text-sm text-neutral-500">การ Export แต่ละครั้งจะถูกบันทึกลง Audit Log</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">รายงานคำขอลา</h1>
+        <p className="mt-1 text-sm text-ink-3">การ Export แต่ละครั้งจะถูกบันทึกลง Audit Log</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <select
             value={filters.status ?? ""}
             onChange={(e) => updateFilter({ status: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกสถานะ</option>
             {Object.entries(STATUS_LABEL).map(([k, v]) => (
@@ -94,7 +121,7 @@ export default function ReportsPage() {
           <select
             value={filters.leaveTypeId ?? ""}
             onChange={(e) => updateFilter({ leaveTypeId: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกประเภทการลา</option>
             {leaveTypes.map((t) => (
@@ -107,72 +134,39 @@ export default function ReportsPage() {
             type="date"
             value={filters.startDate ?? ""}
             onChange={(e) => updateFilter({ startDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
           <input
             type="date"
             value={filters.endDate ?? ""}
             onChange={(e) => updateFilter({ endDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
-          <span className="ml-auto self-center text-xs text-neutral-400">{rows.length} รายการ</span>
+          <span className="ml-auto self-center text-xs text-ink-3">{rows.length} รายการ</span>
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50">
-              <tr>
-                <Th>พนักงาน</Th>
-                <Th>ประเภท</Th>
-                <Th>ช่วงเวลา</Th>
-                <Th>วัน</Th>
-                <Th>สถานะ</Th>
-                <Th>หมายเหตุ</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {loading && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                    กำลังโหลด...
-                  </td>
-                </tr>
-              )}
-              {!loading && rows.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
-                    ไม่พบรายการตามเงื่อนไข
-                  </td>
-                </tr>
-              )}
-              {rows.map((r) => (
-                <tr key={r.id} className={r.isOverQuota ? "bg-red-50" : undefined}>
-                  <td className="px-4 py-3">{r.employee.fullName}</td>
-                  <td className="px-4 py-3">{r.leaveType.name}</td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    {new Date(r.startDatetime).toLocaleDateString("th-TH")} – {new Date(r.endDatetime).toLocaleDateString("th-TH")}
-                  </td>
-                  <td className="px-4 py-3 tabular-nums">{r.totalDays}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[r.status]}`}>{STATUS_LABEL[r.status]}</span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-red-600">{r.isOverQuota ? "🚩 เกินโควตา (LWOP)" : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-4">
+          {loading ? (
+            <div className="rounded-lg border border-hairline bg-surface p-6 text-center text-sm text-ink-3 shadow-e1">
+              กำลังโหลด...
+            </div>
+          ) : (
+            <ResponsiveTable
+              columns={COLUMNS}
+              rows={rows}
+              rowKey={(r) => r.id}
+              rowTone={(r) => (r.isOverQuota ? "risk" : undefined)}
+              emptyState={
+                <div className="rounded-lg border border-hairline bg-surface p-6 text-center text-sm text-ink-3 shadow-e1">
+                  ไม่พบรายการตามเงื่อนไข
+                </div>
+              }
+            />
+          )}
         </div>
       </div>
     </AppShell>
-  );
-}
-
-function Th({ children }: { children?: React.ReactNode }) {
-  return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
-      {children}
-    </th>
   );
 }

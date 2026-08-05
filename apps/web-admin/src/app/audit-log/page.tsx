@@ -65,15 +65,15 @@ export default function AuditLogPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">บันทึกการตรวจสอบ</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">บันทึกการตรวจสอบ</h1>
+        <p className="mt-1 text-sm text-ink-3">
           ประวัติการเปลี่ยนแปลงข้อมูลสำคัญทั้งหมดในระบบ (ใคร ทำอะไร เมื่อไหร่) — การ Export แต่ละครั้งจะถูกบันทึกไว้ด้วย
         </p>
 
@@ -81,7 +81,7 @@ export default function AuditLogPage() {
           <select
             value={filters.targetTable ?? ""}
             onChange={(e) => updateFilter({ targetTable: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           >
             <option value="">ทุกประเภทข้อมูล</option>
             {Object.entries(TARGET_TABLE_LABEL).map(([k, v]) => (
@@ -95,21 +95,21 @@ export default function AuditLogPage() {
             placeholder="ค้นหาการกระทำ เช่น employee.update"
             value={filters.action ?? ""}
             onChange={(e) => updateFilter({ action: e.target.value || undefined })}
-            className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="w-56 rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
           <input
             type="date"
             value={filters.startDate ?? ""}
             onChange={(e) => updateFilter({ startDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
           <input
             type="date"
             value={filters.endDate ?? ""}
             onChange={(e) => updateFilter({ endDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
-          <span className="ml-auto self-center text-xs text-neutral-400">{rows.length} รายการ</span>
+          <span className="ml-auto self-center text-xs text-ink-3">{rows.length} รายการ</span>
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -119,9 +119,9 @@ export default function AuditLogPage() {
           </p>
         )}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
+          <table className="min-w-full divide-y divide-hairline text-sm">
+            <thead className="bg-surface-2">
               <tr>
                 <Th>เวลา</Th>
                 <Th>ผู้กระทำ</Th>
@@ -130,33 +130,33 @@ export default function AuditLogPage() {
                 <Th>IP</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-hairline">
               {loading && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={5} className="px-4 py-6 text-center text-ink-3">
                     กำลังโหลด...
                   </td>
                 </tr>
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={5} className="px-4 py-6 text-center text-ink-3">
                     ไม่พบรายการตามเงื่อนไข
                   </td>
                 </tr>
               )}
               {rows.map((r) => (
                 <tr key={r.id}>
-                  <td className="whitespace-nowrap px-4 py-3 text-neutral-600">
+                  <td className="whitespace-nowrap px-4 py-3 text-ink-2">
                     {new Date(r.timestamp).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-medium text-neutral-800">{r.actorFullName ?? r.userId}</span>
-                    {r.actorEmail && <span className="block text-xs text-neutral-400">{r.actorEmail}</span>}
+                    <span className="font-medium text-ink">{r.actorFullName ?? r.userId}</span>
+                    {r.actorEmail && <span className="block text-xs text-ink-3">{r.actorEmail}</span>}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-700">{r.action}</td>
-                  <td className="px-4 py-3 text-neutral-600">{TARGET_TABLE_LABEL[r.targetTable] ?? r.targetTable}</td>
-                  <td className="px-4 py-3 text-xs text-neutral-400">{r.ipAddress}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-ink-2">{r.action}</td>
+                  <td className="px-4 py-3 text-ink-2">{TARGET_TABLE_LABEL[r.targetTable] ?? r.targetTable}</td>
+                  <td className="px-4 py-3 text-xs text-ink-3">{r.ipAddress}</td>
                 </tr>
               ))}
             </tbody>
@@ -169,7 +169,7 @@ export default function AuditLogPage() {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-3">
       {children}
     </th>
   );

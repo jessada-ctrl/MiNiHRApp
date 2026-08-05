@@ -1,19 +1,30 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @theme {
-  /* LINE brand green ramp, anchored at the official LINE green (#06C755) at 500 */
+  /* ---- font (mapped to next/font variables set in layout.tsx) ---- */
+  --font-sans: var(--font-sarabun), ui-sans-serif, system-ui;
+  --font-brand: var(--font-caprasimo), Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace;
+
+  /* ---- brand ramp (from the Lala' mark) ---- */
+  --color-brand-50: #eef6fc;
+  --color-brand-100: #d9ecf8;
+  --color-brand-200: #b3d7f0;
+  --color-brand-300: #7fbbe4;
+  --color-brand-400: #4a9dd4;
+  --color-brand-500: #2f7fbf;
+  --color-brand-600: #24659c;
+  --color-brand-700: #1c4e79;
+  --color-brand-800: #163c5d;
+  --color-brand-900: #112c44;
+  --color-gold-100: #fdf3d4;
+  --color-gold-500: #f2c53d;
+  --color-gold-600: #d9a81f;
+  --color-gold-800: #8a5a06;
+  --color-clay-500: #c67139;
+  --color-sage-500: #7a8a5e;
+
+  /* ---- LINE brand green ramp (LINE OA touchpoints — unrelated to the Lala' brand ramp above) ---- */
   --color-line-50: #eafbf1;
   --color-line-100: #cff6de;
   --color-line-200: #9eebbe;
@@ -24,17 +35,106 @@
   --color-line-700: #048c3d;
   --color-line-800: #036e30;
   --color-line-900: #025024;
+
+  /* ---- radius ---- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* ---- elevation ---- */
+  --shadow-e1: 0 1px 1px rgb(34 30 26 / .04), 0 1px 2px rgb(34 30 26 / .06);
+  --shadow-e2: 0 1px 3px rgb(34 30 26 / .07), 0 4px 12px -2px rgb(34 30 26 / .08);
+  --shadow-e3: 0 2px 6px rgb(34 30 26 / .06), 0 12px 28px -6px rgb(34 30 26 / .14);
+  --shadow-e4: 0 4px 10px rgb(34 30 26 / .08), 0 24px 56px -12px rgb(34 30 26 / .20);
+
+  /* ---- motion ---- */
+  --ease-out-soft: cubic-bezier(.22,.61,.36,1);
+  --ease-spring: cubic-bezier(.34,1.32,.64,1);
+  --animate-shimmer: lalaShimmer 1.4s linear infinite;
+  --animate-grow: lalaGrow .42s cubic-bezier(.34,1.32,.64,1) both;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---- semantic + surface: swap per theme, same names ---- */
+:root {
+  --bg: #f1e8db;
+  --bg-elev: #faf5ed;
+  --surface: #fdfaf5;
+  --surface-2: #f6efe4;
+  --sidebar: #26211c;
+  --border: rgb(38 33 28 / .10);
+  --border-strong: rgb(38 33 28 / .20);
+  --text: #221e1a;
+  --text-2: #5d564c;
+  --text-3: #8a8175;
+
+  --pending: #e0a91b;  --pending-bg: #fdf1cf;  --pending-fg: #8a5a06;
+  --approved: #5b9146; --approved-bg: #e7f2de; --approved-fg: #3d6b33;
+  --rejected: #c0453b; --rejected-bg: #fbe6e3; --rejected-fg: #8f2f28;
+  --risk: #d67f48;     --risk-bg: #ffe8d8;     --risk-fg: #8c491a;
+  --info: #2f7fbf;     --info-bg: #d9ecf8;     --info-fg: #1c4e79;
+  --quiet: #a19786;    --quiet-bg: #efe8dc;    --quiet-fg: #5d564c;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.dark {
+  --bg: #14120f;
+  --bg-elev: #1b1815;
+  --surface: #221e1a;
+  --surface-2: #2a2521;
+  --sidebar: #100e0c;
+  --border: rgb(243 236 224 / .10);
+  --border-strong: rgb(243 236 224 / .22);
+  --text: #f3ece0;
+  --text-2: #b6ab9b;
+  --text-3: #8a8175;
+
+  --pending-bg: rgb(224 169 27 / .16);  --pending-fg: #f0c964;
+  --approved-bg: rgb(91 145 70 / .18);  --approved-fg: #9ccb84;
+  --rejected-bg: rgb(192 69 59 / .18);  --rejected-fg: #ef9a91;
+  --risk-bg: rgb(214 127 72 / .18);     --risk-fg: #f0a86f;
+  --info-bg: rgb(47 127 191 / .18);     --info-fg: #8ec6ec;
+  --quiet-bg: rgb(243 236 224 / .08);   --quiet-fg: #b6ab9b;
 }
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sidebar: var(--sidebar);
+  --color-hairline: var(--border);
+  --color-hairline-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-ink-3: var(--text-3);
+
+  --color-pending: var(--pending);
+  --color-pending-bg: var(--pending-bg);
+  --color-pending-fg: var(--pending-fg);
+  --color-approved: var(--approved);
+  --color-approved-bg: var(--approved-bg);
+  --color-approved-fg: var(--approved-fg);
+  --color-rejected: var(--rejected);
+  --color-rejected-bg: var(--rejected-bg);
+  --color-rejected-fg: var(--rejected-fg);
+  --color-risk: var(--risk);
+  --color-risk-bg: var(--risk-bg);
+  --color-risk-fg: var(--risk-fg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-fg: var(--info-fg);
+  --color-quiet: var(--quiet);
+  --color-quiet-bg: var(--quiet-bg);
+  --color-quiet-fg: var(--quiet-fg);
+}
+
+@layer base {
+  body { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+  .num { font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; }
+}
+
+@keyframes lalaShimmer { to { background-position: 240% 0 } }
+@keyframes lalaGrow { from { transform: scaleY(0) } }
+@keyframes lalaPop { from { transform: scale(.9); opacity: 0 } to { transform: scale(1); opacity: 1 } }

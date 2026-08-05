@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { StatusBadge } from "@/components/ui/Badge";
 import {
   type ApprovalTurnaroundFilters,
   type ApproverTurnaroundRow,
@@ -65,15 +66,15 @@ export default function ApprovalTurnaroundPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-800 disabled:opacity-60"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
         >
           {exporting ? "กำลังส่งออก..." : "⬇ Export CSV"}
         </button>
       }
     >
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">ความล่าช้าของสายอนุมัติ</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">ความล่าช้าของสายอนุมัติ</h1>
+        <p className="mt-1 text-sm text-ink-3">
           เวลารอเฉลี่ย/สูงสุดของแต่ละผู้อนุมัติ (จากประวัติที่ตัดสินใจแล้ว) และจำนวนคำขอที่ค้างอยู่กับแต่ละคนตอนนี้ —
           แถวที่ไฮไลต์คือค้างนานเกิน 2 วัน
         </p>
@@ -83,22 +84,22 @@ export default function ApprovalTurnaroundPage() {
             type="date"
             value={filters.startDate ?? ""}
             onChange={(e) => updateFilter({ startDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
           <input
             type="date"
             value={filters.endDate ?? ""}
             onChange={(e) => updateFilter({ endDate: e.target.value || undefined })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
-          <span className="ml-auto self-center text-xs text-neutral-400">{rows.length} คน</span>
+          <span className="ml-auto self-center text-xs text-ink-3">{rows.length} คน</span>
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-neutral-200 text-sm">
-            <thead className="bg-neutral-50">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
+          <table className="min-w-full divide-y divide-hairline text-sm">
+            <thead className="bg-surface-2">
               <tr>
                 <Th>ผู้อนุมัติ</Th>
                 <Th>ตัดสินใจแล้ว</Th>
@@ -110,17 +111,17 @@ export default function ApprovalTurnaroundPage() {
                 <Th>ค้างนานสุด</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-hairline">
               {loading && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={8} className="px-4 py-6 text-center text-ink-3">
                     กำลังโหลด...
                   </td>
                 </tr>
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-neutral-400">
+                  <td colSpan={8} className="px-4 py-6 text-center text-ink-3">
                     ไม่พบข้อมูลตามเงื่อนไข
                   </td>
                 </tr>
@@ -128,21 +129,21 @@ export default function ApprovalTurnaroundPage() {
               {rows.map((r) => {
                 const isBottleneck = (r.oldestPendingWaitHours ?? 0) >= BOTTLENECK_HOURS;
                 return (
-                  <tr key={r.approverId} className={isBottleneck ? "bg-red-50" : undefined}>
-                    <td className="px-4 py-3 font-medium text-neutral-800">{r.fullName}</td>
+                  <tr key={r.approverId} className={isBottleneck ? "bg-risk-bg" : undefined}>
+                    <td className="px-4 py-3 font-medium text-ink">{r.fullName}</td>
                     <td className="px-4 py-3 tabular-nums">{r.decidedCount}</td>
-                    <td className="px-4 py-3 tabular-nums text-green-700">{r.approvedCount}</td>
-                    <td className="px-4 py-3 tabular-nums text-red-700">{r.rejectedCount}</td>
+                    <td className="px-4 py-3 tabular-nums text-approved-fg">{r.approvedCount}</td>
+                    <td className="px-4 py-3 tabular-nums text-rejected-fg">{r.rejectedCount}</td>
                     <td className="px-4 py-3 tabular-nums">{formatHours(r.avgWaitHours)}</td>
                     <td className="px-4 py-3 tabular-nums">{formatHours(r.maxWaitHours)}</td>
                     <td className="px-4 py-3 tabular-nums">
                       {r.pendingCount > 0 ? (
-                        <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">{r.pendingCount} รายการ</span>
+                        <StatusBadge status="pending">{r.pendingCount} รายการ</StatusBadge>
                       ) : (
                         "—"
                       )}
                     </td>
-                    <td className={`px-4 py-3 tabular-nums ${isBottleneck ? "font-semibold text-red-700" : ""}`}>
+                    <td className={`px-4 py-3 tabular-nums ${isBottleneck ? "font-semibold text-risk-fg" : ""}`}>
                       {formatHours(r.oldestPendingWaitHours)}
                       {isBottleneck && " 🚩"}
                     </td>
@@ -159,7 +160,7 @@ export default function ApprovalTurnaroundPage() {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
+    <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-3">
       {children}
     </th>
   );

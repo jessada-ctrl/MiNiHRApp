@@ -21,6 +21,8 @@ import {
   checkQr,
   getAttendanceStatus,
 } from "@/lib/attendance";
+import { FlexCard } from "@/components/ui/FlexCard";
+import type { BadgeStatus } from "@/components/ui/Badge";
 
 interface QuotaSummary {
   leaveTypeId: string;
@@ -39,11 +41,11 @@ const STATUS_LABEL: Record<LeaveRequest["status"], string> = {
   rejected: "ปฏิเสธ",
   cancelled: "ยกเลิกแล้ว",
 };
-const STATUS_CLASS: Record<LeaveRequest["status"], string> = {
-  pending: "bg-amber-100 text-amber-800",
-  approved: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  cancelled: "bg-neutral-200 text-neutral-600",
+const STATUS_BADGE: Record<LeaveRequest["status"], BadgeStatus> = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+  cancelled: "quiet",
 };
 
 function toMinutes(hhmm: string): number {
@@ -167,10 +169,10 @@ export default function HomePage() {
   if (loadError) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
-        <p className="text-sm text-neutral-500">{loadError}</p>
+        <p className="text-sm text-ink-3">{loadError}</p>
         <button
           onClick={() => window.location.reload()}
-          className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white"
+          className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white"
         >
           ลองใหม่
         </button>
@@ -181,14 +183,14 @@ export default function HomePage() {
   if (loading || !user) {
     return (
       <main className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-neutral-500">กำลังโหลด...</p>
+        <p className="text-sm text-ink-3">กำลังโหลด...</p>
       </main>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-100">
-      <header className="flex items-center justify-between bg-gradient-to-r from-sky-500 to-amber-400 px-4 py-3 text-white">
+    <div className="flex min-h-screen flex-col bg-bg">
+      <header className="flex items-center justify-between bg-gradient-to-r from-brand-500 to-gold-500 px-4 py-3 text-white">
         <div>
           <p className="text-sm font-semibold">{user.fullName}</p>
           <p className="text-[11px] opacity-80">testco.lala.io</p>
@@ -208,7 +210,7 @@ export default function HomePage() {
         )}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 flex border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed inset-x-0 bottom-0 flex border-t border-hairline bg-surface pb-[env(safe-area-inset-bottom)]">
         <TabButton active={tab === "checkin"} label="เข้างาน" icon="⏱️" onClick={() => setTab("checkin")} />
         <TabButton active={tab === "form"} label="ขอลา" icon="📝" onClick={() => setTab("form")} />
         <TabButton active={tab === "history"} label="ประวัติ" icon="📜" onClick={() => setTab("history")} />
@@ -222,7 +224,7 @@ function TabButton({ active, label, icon, onClick }: { active: boolean; label: s
     <button
       onClick={onClick}
       className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
-        active ? "text-sky-700" : "text-neutral-400"
+        active ? "text-brand-600" : "text-ink-3"
       }`}
     >
       <span className="text-lg leading-none">{icon}</span>
@@ -307,7 +309,7 @@ function AttendanceTab() {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <p className="text-sm text-neutral-500">กำลังโหลด...</p>
+        <p className="text-sm text-ink-3">กำลังโหลด...</p>
       </div>
     );
   }
@@ -320,8 +322,8 @@ function AttendanceTab() {
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="text-center">
-        <p className="text-4xl font-semibold tabular-nums text-neutral-900">{timeStr}</p>
-        <p className="mt-1 text-sm text-neutral-500">{dateStr}</p>
+        <p className="text-4xl font-semibold tabular-nums text-ink">{timeStr}</p>
+        <p className="mt-1 text-sm text-ink-3">{dateStr}</p>
       </div>
 
       {lastResult ? (
@@ -331,16 +333,16 @@ function AttendanceTab() {
           <button
             onClick={handleScanQr}
             disabled={busy}
-            className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-neutral-600 bg-neutral-900 text-white disabled:opacity-60"
+            className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-white/25 bg-sidebar text-white disabled:opacity-60"
           >
             <span className="text-3xl">▢</span>
-            <span className="text-sm text-neutral-300">แตะเพื่อเริ่มสแกน QR</span>
+            <span className="text-sm text-white/70">แตะเพื่อเริ่มสแกน QR</span>
           </button>
 
           <button
             onClick={handleScanQr}
             disabled={busy}
-            className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 py-3.5 text-sm font-semibold text-white shadow-lg disabled:opacity-60"
+            className="w-full rounded-lg bg-gradient-to-r from-teal-600 to-emerald-600 py-3.5 text-sm font-semibold text-white shadow-e3 disabled:opacity-60"
           >
             {busy ? "กำลังดำเนินการ..." : `📷 สแกน QR ${nextAction === "in" ? "เข้างาน" : "ออกงาน"}`}
           </button>
@@ -348,7 +350,7 @@ function AttendanceTab() {
           <button
             onClick={handleUseGps}
             disabled={busy}
-            className="text-center text-sm font-medium text-sky-700 underline disabled:opacity-60"
+            className="text-center text-sm font-medium text-brand-600 underline disabled:opacity-60"
           >
             ใช้พิกัด GPS แทน
           </button>
@@ -358,7 +360,7 @@ function AttendanceTab() {
       {error && <p className="text-center text-sm text-red-600">{error}</p>}
 
       {branch && (
-        <div className="flex items-center gap-2 rounded-xl bg-white p-3 text-xs text-neutral-500 shadow-sm">
+        <div className="flex items-center gap-2 rounded-lg bg-surface p-3 text-xs text-ink-3 shadow-e1">
           <span>📍</span>
           <span>
             {branch.branchName} · รัศมีที่อนุญาต {branch.radiusMeters} ม.
@@ -367,11 +369,11 @@ function AttendanceTab() {
       )}
 
       {status && status.todayLogs.length > 0 && (
-        <div className="rounded-xl bg-white p-3 shadow-sm">
-          <p className="mb-2 text-xs font-medium text-neutral-500">การลงเวลาวันนี้</p>
+        <div className="rounded-lg bg-surface p-3 shadow-e1">
+          <p className="mb-2 text-xs font-medium text-ink-3">การลงเวลาวันนี้</p>
           <ul className="flex flex-col gap-1.5">
             {status.todayLogs.map((log) => (
-              <li key={log.id} className="flex justify-between text-xs text-neutral-600">
+              <li key={log.id} className="flex justify-between text-xs text-ink-2">
                 <span>{log.checkType === "in" ? "เข้างาน" : "ออกงาน"}</span>
                 <span className="tabular-nums">
                   {new Date(log.timestamp).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.
@@ -388,18 +390,18 @@ function AttendanceTab() {
 function SuccessCard({ result, onDismiss }: { result: CheckResult; onDismiss: () => void }) {
   const timeStr = new Date(result.timestamp).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-6 text-center shadow-sm">
-      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-2xl text-white">✓</span>
-      <p className="text-base font-semibold text-neutral-900">{result.checkType === "in" ? "เช็คอินสำเร็จ" : "เช็คเอาท์สำเร็จ"}</p>
-      <p className="text-xs text-neutral-500">
+    <div className="flex flex-col items-center gap-2 rounded-lg bg-surface p-6 text-center shadow-e1">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-approved text-2xl text-white">✓</span>
+      <p className="text-base font-semibold text-ink">{result.checkType === "in" ? "เช็คอินสำเร็จ" : "เช็คเอาท์สำเร็จ"}</p>
+      <p className="text-xs text-ink-3">
         {timeStr} น. · {result.branch.branchName}
       </p>
       {result.distanceMeters !== undefined && (
-        <div className="mt-1 w-full rounded-lg bg-green-50 p-2 text-xs text-green-700">
+        <div className="mt-1 w-full rounded-md bg-approved-bg p-2 text-xs text-approved-fg">
           ✓ ยืนยันพิกัดสำเร็จ — อยู่ห่างจากสาขา {result.distanceMeters} ม. (ในรัศมีที่กำหนด {result.branch.radiusMeters} ม.)
         </div>
       )}
-      <button onClick={onDismiss} className="mt-2 text-xs font-medium text-sky-700 underline">
+      <button onClick={onDismiss} className="mt-2 text-xs font-medium text-brand-600 underline">
         กลับไปหน้าเช็คอิน
       </button>
     </div>
@@ -477,12 +479,12 @@ function LeaveForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <label className="mb-1 block text-sm font-medium text-neutral-700">ประเภทการลา</label>
+      <div className="rounded-lg bg-surface p-4 shadow-e1">
+        <label className="mb-1 block text-sm font-medium text-ink-2">ประเภทการลา</label>
         <select
           value={leaveTypeId}
           onChange={(e) => setLeaveTypeId(e.target.value)}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm"
+          className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm"
         >
           {leaveTypes.map((t) => (
             <option key={t.id} value={t.id}>
@@ -492,8 +494,8 @@ function LeaveForm({
         </select>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <label className="mb-2 block text-sm font-medium text-neutral-700">ช่วงเวลา</label>
+      <div className="rounded-lg bg-surface p-4 shadow-e1">
+        <label className="mb-2 block text-sm font-medium text-ink-2">ช่วงเวลา</label>
         <div className="flex flex-wrap gap-2">
           {(
             [
@@ -508,7 +510,7 @@ function LeaveForm({
               type="button"
               onClick={() => setDuration(val)}
               className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                duration === val ? "border-sky-700 bg-sky-700 text-white" : "border-neutral-300 text-neutral-600"
+                duration === val ? "border-brand-500 bg-brand-500 text-white" : "border-hairline-strong text-ink-2"
               }`}
             >
               {label}
@@ -528,65 +530,65 @@ function LeaveForm({
           {duration === "hourly" && (
             <div className="flex gap-2">
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-neutral-500">เวลาเริ่ม</label>
+                <label className="mb-1 block text-xs text-ink-3">เวลาเริ่ม</label>
                 <input
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
                 />
               </div>
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-neutral-500">เวลาสิ้นสุด</label>
+                <label className="mb-1 block text-xs text-ink-3">เวลาสิ้นสุด</label>
                 <input
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
                 />
               </div>
             </div>
           )}
           {duration === "hourly" && (
-            <p className="text-[11px] text-neutral-400">⏱ ระบบหักเวลาพักเที่ยง (12:00–13:00 น.) ให้อัตโนมัติ</p>
+            <p className="text-[11px] text-ink-3">⏱ ระบบหักเวลาพักเที่ยง (12:00–13:00 น.) ให้อัตโนมัติ</p>
           )}
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <label className="mb-1 block text-sm font-medium text-neutral-700">เหตุผลการลา</label>
+      <div className="rounded-lg bg-surface p-4 shadow-e1">
+        <label className="mb-1 block text-sm font-medium text-ink-2">เหตุผลการลา</label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          className="w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
           placeholder="ระบุเหตุผลโดยย่อ"
         />
       </div>
 
       {quota && (
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <div className="mb-1 flex justify-between text-xs text-neutral-500">
+        <div className="rounded-lg bg-surface p-4 shadow-e1">
+          <div className="mb-1 flex justify-between text-xs text-ink-3">
             <span>โควตา {quota.name}</span>
-            <span className="tabular-nums font-medium text-neutral-800">
+            <span className="tabular-nums font-medium text-ink">
               {quota.remaining} / {quota.total} วันคงเหลือ
             </span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-neutral-200">
+          <div className="h-1.5 overflow-hidden rounded-full bg-quiet-bg">
             <div
-              className={`h-full rounded-full ${willExceed ? "bg-red-500" : "bg-gradient-to-r from-sky-400 to-amber-300"}`}
+              className={`h-full rounded-full ${willExceed ? "bg-red-500" : "bg-brand-500"}`}
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="mt-1 flex justify-between text-xs text-neutral-500">
+          <div className="mt-1 flex justify-between text-xs text-ink-3">
             <span>คำขอนี้</span>
-            <span className="tabular-nums font-medium text-neutral-800">{days} วัน</span>
+            <span className="tabular-nums font-medium text-ink">{days} วัน</span>
           </div>
         </div>
       )}
 
       {willExceed && (
-        <div className="rounded-xl bg-red-50 p-3 text-xs text-red-700">
+        <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700">
           ⚠️ คำขอนี้เกินโควตาคงเหลือ
           <label className="mt-2 flex items-start gap-2">
             <input type="checkbox" checked={ackChecked} onChange={(e) => setAckChecked(e.target.checked)} className="mt-0.5" />
@@ -596,12 +598,12 @@ function LeaveForm({
       )}
 
       {needsAttachment && (
-        <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
+        <div className="rounded-lg bg-pending-bg p-3 text-xs text-pending-fg">
           📎 ประเภทการลานี้อาจต้องแนบใบรับรองแพทย์หากลาสะสมครบ {selectedType?.requiresAttachmentAfterDays} วันในรอบ 30 วัน — ระบบจะตรวจสอบอีกครั้งตอนส่ง
           <button
             type="button"
             onClick={() => setAttachmentName(`certificate-${Date.now()}.jpg`)}
-            className="mt-2 block w-full rounded-lg border border-dashed border-amber-400 py-2 text-center"
+            className="mt-2 block w-full rounded-md border border-dashed border-pending py-2 text-center"
           >
             {attachmentName ? `📄 ${attachmentName} (แนบแล้ว)` : "แตะเพื่อแนบไฟล์ (จำลอง)"}
           </button>
@@ -613,7 +615,7 @@ function LeaveForm({
       <button
         type="submit"
         disabled={!canSubmit || submitting}
-        className="sticky bottom-20 w-full rounded-xl bg-gradient-to-r from-sky-500 to-amber-400 py-3.5 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
+        className="sticky bottom-20 w-full rounded-lg bg-gradient-to-r from-brand-500 to-gold-500 py-3.5 text-sm font-semibold text-white shadow-e3 disabled:opacity-50"
       >
         {submitting ? "กำลังส่งคำขอ..." : "ส่งคำขอลา"}
       </button>
@@ -624,12 +626,12 @@ function LeaveForm({
 function DateField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="mb-1 block text-xs text-neutral-500">{label}</label>
+      <label className="mb-1 block text-xs text-ink-3">{label}</label>
       <input
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+        className="w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
       />
     </div>
   );
@@ -649,7 +651,7 @@ function HistoryList({ requests, onChanged }: { requests: LeaveRequest[]; onChan
   }
 
   if (requests.length === 0) {
-    return <p className="p-6 text-center text-sm text-neutral-400">ยังไม่มีประวัติการลา</p>;
+    return <p className="p-6 text-center text-sm text-ink-3">ยังไม่มีประวัติการลา</p>;
   }
 
   return (
@@ -658,36 +660,38 @@ function HistoryList({ requests, onChanged }: { requests: LeaveRequest[]; onChan
         const canCancel = r.status === "pending" && r.approvalActions.length === 0;
         const rejection = r.approvalActions.find((a) => a.action === "reject");
         return (
-          <div key={r.id} className="rounded-xl bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-medium text-neutral-900">{r.leaveType.name}</p>
-                <p className="text-xs text-neutral-500">
-                  {new Date(r.startDatetime).toLocaleDateString("th-TH")} – {new Date(r.endDatetime).toLocaleDateString("th-TH")} · {r.totalDays} วัน
-                </p>
-              </div>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_CLASS[r.status]}`}>
-                {STATUS_LABEL[r.status]}
-              </span>
-            </div>
+          <FlexCard
+            key={r.id}
+            status={STATUS_BADGE[r.status]}
+            badgeLabel={STATUS_LABEL[r.status]}
+            title={r.leaveType.name}
+            faded={r.status === "cancelled"}
+            meta={[
+              {
+                label: "ช่วงวันที่",
+                value: `${new Date(r.startDatetime).toLocaleDateString("th-TH")} – ${new Date(r.endDatetime).toLocaleDateString("th-TH")}`,
+              },
+              { label: "จำนวนวัน", value: `${r.totalDays} วัน` },
+            ]}
+          >
             {r.status === "pending" && (
-              <p className="mt-1 text-[11px] text-neutral-400">
+              <p className="text-[11px] text-ink-3">
                 📍 รอ: {r.workflowSnapshot[r.currentStep]?.label ?? "ผู้อนุมัติ"}
               </p>
             )}
             {rejection && (
-              <div className="mt-2 rounded-lg bg-red-50 p-2 text-xs text-red-700">เหตุผลที่ปฏิเสธ: {rejection.comment}</div>
+              <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">เหตุผลที่ปฏิเสธ: {rejection.comment}</div>
             )}
             {canCancel && (
               <button
                 onClick={() => handleCancel(r.id)}
                 disabled={busyId === r.id}
-                className="mt-3 w-full rounded-lg border border-neutral-300 py-2 text-xs font-medium text-neutral-600 disabled:opacity-50"
+                className="w-full rounded-md border border-hairline-strong py-2 text-xs font-medium text-ink-2 disabled:opacity-50"
               >
                 {busyId === r.id ? "กำลังยกเลิก..." : "ยกเลิกคำขอ"}
               </button>
             )}
-          </div>
+          </FlexCard>
         );
       })}
     </div>

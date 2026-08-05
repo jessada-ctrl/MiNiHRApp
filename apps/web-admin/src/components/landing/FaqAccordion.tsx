@@ -34,17 +34,17 @@ export default function FaqAccordion() {
       {FAQS.map((item, index) => {
         const isOpen = openIndex === index;
         return (
-          <div key={item.q} className="rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <div key={item.q} className="rounded-lg border border-hairline bg-surface shadow-e1">
             <button
               type="button"
               onClick={() => setOpenIndex(isOpen ? null : index)}
               className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
               aria-expanded={isOpen}
             >
-              <span className="text-sm font-semibold text-neutral-900 md:text-base">{item.q}</span>
-              <IconChevronDown className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+              <span className="text-sm font-semibold text-ink md:text-base">{item.q}</span>
+              <IconChevronDown className={`h-4 w-4 shrink-0 text-ink-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
-            {isOpen && <p className="px-5 pb-4 text-sm leading-relaxed text-neutral-600">{item.a}</p>}
+            {isOpen && <p className="px-5 pb-4 text-sm leading-relaxed text-ink-2">{item.a}</p>}
           </div>
         );
       })}
