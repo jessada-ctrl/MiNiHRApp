@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { type Employee, listEmployees } from "@/lib/employees";
 import {
   type ApproverType,
@@ -109,6 +110,8 @@ function WorkflowCard({
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     setSteps(workflow.steps.map((s) => ({ approverType: s.approverType, approverEmployeeId: s.approverEmployeeId ?? undefined })));
@@ -162,11 +165,15 @@ function WorkflowCard({
   }
 
   async function handleDelete() {
+    setDeleting(true);
     try {
       await deleteWorkflow(workflow.id);
+      setConfirmingDelete(false);
       onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : "ลบไม่สำเร็จ");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -177,10 +184,21 @@ function WorkflowCard({
           <h2 className="font-semibold text-neutral-900">{workflow.name}</h2>
           <p className="text-xs text-neutral-500">{SCOPE_LABEL[workflow.scopeType]}</p>
         </div>
-        <button onClick={handleDelete} className="text-sm font-medium text-red-600 hover:text-red-800">
+        <button onClick={() => setConfirmingDelete(true)} className="text-sm font-medium text-red-600 hover:text-red-800">
           ลบสายอนุมัติ
         </button>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="ลบสายอนุมัติ"
+          message={`ยืนยันลบสายอนุมัติ "${workflow.name}" ใช่หรือไม่? การลบนี้ไม่สามารถย้อนกลับได้`}
+          confirmLabel="ลบสายอนุมัติ"
+          busy={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
 
       <div className="mt-4 flex flex-wrap items-stretch gap-3">
         {steps.map((step, idx) => (

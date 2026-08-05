@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   type LeaveType,
   createLeaveType,
@@ -18,6 +19,7 @@ export default function LeaveTypesPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [rowError, setRowError] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<LeaveType | null>(null);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -76,6 +78,7 @@ export default function LeaveTypesPage() {
     setRowError((r) => ({ ...r, [id]: "" }));
     try {
       await deleteLeaveType(id);
+      setConfirmTarget(null);
       await refresh();
     } catch (err) {
       setRowError((r) => ({ ...r, [id]: err instanceof Error ? err.message : "ลบไม่สำเร็จ" }));
@@ -168,7 +171,7 @@ export default function LeaveTypesPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => handleDelete(lt.id)}
+                        onClick={() => setConfirmTarget(lt)}
                         disabled={savingId === lt.id}
                         className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
                       >
@@ -190,6 +193,17 @@ export default function LeaveTypesPage() {
             setShowAdd(false);
             refresh();
           }}
+        />
+      )}
+
+      {confirmTarget && (
+        <ConfirmDialog
+          title="ลบประเภทการลา"
+          message={`ยืนยันลบประเภทการลา "${confirmTarget.name}" ใช่หรือไม่? การลบนี้ไม่สามารถย้อนกลับได้`}
+          confirmLabel="ลบประเภทการลา"
+          busy={savingId === confirmTarget.id}
+          onConfirm={() => handleDelete(confirmTarget.id)}
+          onCancel={() => setConfirmTarget(null)}
         />
       )}
     </AppShell>

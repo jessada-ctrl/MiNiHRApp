@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { getCurrentUser } from "@/lib/auth";
 import { type Holiday, createHoliday, deleteHoliday, listHolidays } from "@/lib/holidays";
 
@@ -11,6 +12,7 @@ export default function HolidaysPage() {
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Holiday | null>(null);
   const [canManage, setCanManage] = useState(false);
 
   useEffect(() => {
@@ -36,6 +38,7 @@ export default function HolidaysPage() {
     setBusyId(id);
     try {
       await deleteHoliday(id);
+      setConfirmTarget(null);
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "ลบไม่สำเร็จ");
@@ -78,7 +81,7 @@ export default function HolidaysPage() {
               <span className="text-xs text-neutral-400">🔔 ล่วงหน้า {h.notifyDaysBefore} วัน</span>
               {canManage && (
                 <button
-                  onClick={() => handleDelete(h.id)}
+                  onClick={() => setConfirmTarget(h)}
                   disabled={busyId === h.id}
                   className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
                 >
@@ -97,6 +100,17 @@ export default function HolidaysPage() {
             setShowAdd(false);
             refresh();
           }}
+        />
+      )}
+
+      {confirmTarget && (
+        <ConfirmDialog
+          title="ลบวันหยุด"
+          message={`ยืนยันลบวันหยุด "${confirmTarget.name}" ใช่หรือไม่? การลบนี้ไม่สามารถย้อนกลับได้`}
+          confirmLabel="ลบวันหยุด"
+          busy={busyId === confirmTarget.id}
+          onConfirm={() => handleDelete(confirmTarget.id)}
+          onCancel={() => setConfirmTarget(null)}
         />
       )}
     </AppShell>
