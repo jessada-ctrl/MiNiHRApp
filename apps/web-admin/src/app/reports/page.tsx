@@ -106,7 +106,12 @@ export default function ReportsPage() {
         <p className="mt-1 text-sm text-ink-3">การ Export แต่ละครั้งจะถูกบันทึกลง Audit Log</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <label htmlFor="report-status" className="sr-only">
+            สถานะ
+          </label>
           <select
+            id="report-status"
+            name="status"
             value={filters.status ?? ""}
             onChange={(e) => updateFilter({ status: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
@@ -118,7 +123,12 @@ export default function ReportsPage() {
               </option>
             ))}
           </select>
+          <label htmlFor="report-leave-type" className="sr-only">
+            ประเภทการลา
+          </label>
           <select
+            id="report-leave-type"
+            name="leaveTypeId"
             value={filters.leaveTypeId ?? ""}
             onChange={(e) => updateFilter({ leaveTypeId: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
@@ -130,13 +140,23 @@ export default function ReportsPage() {
               </option>
             ))}
           </select>
+          <label htmlFor="report-start-date" className="sr-only">
+            วันที่เริ่มต้น
+          </label>
           <input
+            id="report-start-date"
+            name="startDate"
             type="date"
             value={filters.startDate ?? ""}
             onChange={(e) => updateFilter({ startDate: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
+          <label htmlFor="report-end-date" className="sr-only">
+            วันที่สิ้นสุด
+          </label>
           <input
+            id="report-end-date"
+            name="endDate"
             type="date"
             value={filters.endDate ?? ""}
             onChange={(e) => updateFilter({ endDate: e.target.value || undefined })}

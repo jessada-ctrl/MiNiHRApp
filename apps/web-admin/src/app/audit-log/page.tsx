@@ -78,7 +78,12 @@ export default function AuditLogPage() {
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <label htmlFor="audit-target-table" className="sr-only">
+            ประเภทข้อมูล
+          </label>
           <select
+            id="audit-target-table"
+            name="targetTable"
             value={filters.targetTable ?? ""}
             onChange={(e) => updateFilter({ targetTable: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
@@ -90,20 +95,35 @@ export default function AuditLogPage() {
               </option>
             ))}
           </select>
+          <label htmlFor="audit-action-search" className="sr-only">
+            ค้นหาการกระทำ
+          </label>
           <input
+            id="audit-action-search"
+            name="action"
             type="text"
             placeholder="ค้นหาการกระทำ เช่น employee.update"
             value={filters.action ?? ""}
             onChange={(e) => updateFilter({ action: e.target.value || undefined })}
             className="w-56 rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
+          <label htmlFor="audit-start-date" className="sr-only">
+            วันที่เริ่มต้น
+          </label>
           <input
+            id="audit-start-date"
+            name="startDate"
             type="date"
             value={filters.startDate ?? ""}
             onChange={(e) => updateFilter({ startDate: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
+          <label htmlFor="audit-end-date" className="sr-only">
+            วันที่สิ้นสุด
+          </label>
           <input
+            id="audit-end-date"
+            name="endDate"
             type="date"
             value={filters.endDate ?? ""}
             onChange={(e) => updateFilter({ endDate: e.target.value || undefined })}

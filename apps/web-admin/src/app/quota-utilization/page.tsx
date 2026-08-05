@@ -82,13 +82,23 @@ export default function QuotaUtilizationPage() {
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <label htmlFor="quota-year" className="sr-only">
+            ปี
+          </label>
           <input
+            id="quota-year"
+            name="year"
             type="number"
             value={filters.year ?? ""}
             onChange={(e) => updateFilter({ year: e.target.value || undefined })}
             className="w-24 rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
+          <label htmlFor="quota-department" className="sr-only">
+            แผนก
+          </label>
           <select
+            id="quota-department"
+            name="departmentId"
             value={filters.departmentId ?? ""}
             onChange={(e) => updateFilter({ departmentId: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
@@ -100,7 +110,12 @@ export default function QuotaUtilizationPage() {
               </option>
             ))}
           </select>
+          <label htmlFor="quota-branch" className="sr-only">
+            สาขา
+          </label>
           <select
+            id="quota-branch"
+            name="branchId"
             value={filters.branchId ?? ""}
             onChange={(e) => updateFilter({ branchId: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
@@ -112,7 +127,12 @@ export default function QuotaUtilizationPage() {
               </option>
             ))}
           </select>
+          <label htmlFor="quota-leave-type" className="sr-only">
+            ประเภทการลา
+          </label>
           <select
+            id="quota-leave-type"
+            name="leaveTypeId"
             value={filters.leaveTypeId ?? ""}
             onChange={(e) => updateFilter({ leaveTypeId: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"

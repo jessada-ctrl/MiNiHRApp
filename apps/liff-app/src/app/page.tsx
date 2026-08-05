@@ -480,8 +480,12 @@ function LeaveForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
       <div className="rounded-lg bg-surface p-4 shadow-e1">
-        <label className="mb-1 block text-sm font-medium text-ink-2">ประเภทการลา</label>
+        <label htmlFor="leave-type" className="mb-1 block text-sm font-medium text-ink-2">
+          ประเภทการลา
+        </label>
         <select
+          id="leave-type"
+          name="leaveTypeId"
           value={leaveTypeId}
           onChange={(e) => setLeaveTypeId(e.target.value)}
           className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm"
@@ -521,17 +525,21 @@ function LeaveForm({
         <div className="mt-3 flex flex-col gap-2">
           {duration === "full_day" ? (
             <>
-              <DateField label="วันที่เริ่มลา" value={startDate} onChange={setStartDate} />
-              <DateField label="วันที่สิ้นสุด" value={endDate} onChange={setEndDate} />
+              <DateField id="leave-start-date" label="วันที่เริ่มลา" value={startDate} onChange={setStartDate} />
+              <DateField id="leave-end-date" label="วันที่สิ้นสุด" value={endDate} onChange={setEndDate} />
             </>
           ) : (
-            <DateField label="วันที่ลา" value={startDate} onChange={setStartDate} />
+            <DateField id="leave-single-date" label="วันที่ลา" value={startDate} onChange={setStartDate} />
           )}
           {duration === "hourly" && (
             <div className="flex gap-2">
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-ink-3">เวลาเริ่ม</label>
+                <label htmlFor="leave-start-time" className="mb-1 block text-xs text-ink-3">
+                  เวลาเริ่ม
+                </label>
                 <input
+                  id="leave-start-time"
+                  name="startTime"
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
@@ -539,8 +547,12 @@ function LeaveForm({
                 />
               </div>
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-ink-3">เวลาสิ้นสุด</label>
+                <label htmlFor="leave-end-time" className="mb-1 block text-xs text-ink-3">
+                  เวลาสิ้นสุด
+                </label>
                 <input
+                  id="leave-end-time"
+                  name="endTime"
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
@@ -556,8 +568,12 @@ function LeaveForm({
       </div>
 
       <div className="rounded-lg bg-surface p-4 shadow-e1">
-        <label className="mb-1 block text-sm font-medium text-ink-2">เหตุผลการลา</label>
+        <label htmlFor="leave-reason" className="mb-1 block text-sm font-medium text-ink-2">
+          เหตุผลการลา
+        </label>
         <textarea
+          id="leave-reason"
+          name="reason"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
@@ -623,11 +639,25 @@ function LeaveForm({
   );
 }
 
-function DateField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function DateField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <div>
-      <label className="mb-1 block text-xs text-ink-3">{label}</label>
+      <label htmlFor={id} className="mb-1 block text-xs text-ink-3">
+        {label}
+      </label>
       <input
+        id={id}
+        name={id}
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}

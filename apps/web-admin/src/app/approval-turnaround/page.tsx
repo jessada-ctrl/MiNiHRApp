@@ -80,13 +80,23 @@ export default function ApprovalTurnaroundPage() {
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <label htmlFor="turnaround-start-date" className="sr-only">
+            วันที่เริ่มต้น
+          </label>
           <input
+            id="turnaround-start-date"
+            name="startDate"
             type="date"
             value={filters.startDate ?? ""}
             onChange={(e) => updateFilter({ startDate: e.target.value || undefined })}
             className="rounded-md border border-hairline-strong px-3 py-1.5 text-sm"
           />
+          <label htmlFor="turnaround-end-date" className="sr-only">
+            วันที่สิ้นสุด
+          </label>
           <input
+            id="turnaround-end-date"
+            name="endDate"
             type="date"
             value={filters.endDate ?? ""}
             onChange={(e) => updateFilter({ endDate: e.target.value || undefined })}
