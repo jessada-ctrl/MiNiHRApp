@@ -22,9 +22,16 @@ export async function login(email: string, password: string): Promise<AuthUser> 
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   const res = await apiFetch("/auth/me");
-  if (!res.ok) {
+  if (res.status === 401) {
     clearToken();
     return null;
+  }
+  if (!res.ok) {
+    // A transient 5xx/network hiccup isn't "need to log in again" — let the
+    // caller's error handling (e.g. page.tsx's loadError banner) surface it,
+    // instead of silently falling through to a LINE re-login attempt.
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? `/auth/me failed (${res.status})`);
   }
   return unwrap(res);
 }
@@ -57,7 +64,12 @@ export async function resolveCurrentUser(): Promise<AuthUser | null> {
     const idToken = await getLineIdToken();
     if (!idToken) return null;
     return await loginWithLineIdToken(idToken);
-  } catch {
+  } catch (err) {
+    // Previously swallowed silently, which made every silent-relogin failure
+    // look identical (and indistinguishable from "no live LINE session") —
+    // log the real reason (e.g. backend rejected the id_token) so it's
+    // visible via remote debugging instead of only ever showing /login.
+    console.error("[auth] silent LINE re-login failed:", err instanceof Error ? err.message : err);
     return null;
   }
 }

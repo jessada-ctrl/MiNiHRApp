@@ -50,10 +50,21 @@ export async function getLineIdToken(): Promise<string | null> {
   if (!liffId) return null;
 
   const liff = (await import('@line/liff')).default;
-  await liff.init({ liffId });
+  // Same bounded-timeout pattern as completePendingLiffLogin — this runs on
+  // every page load via resolveCurrentUser(), so a hung liff.init() here must
+  // not block the silent re-login path forever.
+  await Promise.race([liff.init({ liffId }), new Promise((resolve) => setTimeout(resolve, 4000))]);
 
   if (!liff.isLoggedIn()) return null;
-  return liff.getIDToken();
+  const idToken = liff.getIDToken();
+  if (!idToken) {
+    // isLoggedIn() true but no ID token means the LIFF app's LINE Login
+    // channel doesn't have the "openid" scope granted (or the SDK hasn't
+    // refreshed it yet) — surface this distinctly so it doesn't read as a
+    // generic "not logged in" case during diagnosis.
+    console.warn('[liff] isLoggedIn() is true but getIDToken() returned null (check the "openid" scope)');
+  }
+  return idToken;
 }
 
 /**
