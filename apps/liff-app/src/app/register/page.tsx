@@ -83,19 +83,29 @@ export default function RegisterPage() {
         {step === "identify" && (
           <form onSubmit={handleRequestOtp} className="flex flex-col gap-3 rounded-lg bg-surface p-5 shadow-e1">
             <div>
-              <label className="mb-1 block text-sm font-medium text-ink-2">รหัสพนักงาน</label>
+              <label htmlFor="register-employee-code" className="mb-1 block text-sm font-medium text-ink-2">
+                รหัสพนักงาน
+              </label>
               <input
+                id="register-employee-code"
+                name="employeeCode"
                 required
+                autoComplete="username"
                 value={employeeCode}
                 onChange={(e) => setEmployeeCode(e.target.value)}
                 className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-ink-2">อีเมลบริษัท</label>
+              <label htmlFor="register-email" className="mb-1 block text-sm font-medium text-ink-2">
+                อีเมลบริษัท
+              </label>
               <input
+                id="register-email"
+                name="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-md border border-hairline-strong px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
@@ -118,10 +128,15 @@ export default function RegisterPage() {
           <form onSubmit={handleVerify} className="flex flex-col gap-3 rounded-lg bg-surface p-5 shadow-e1">
             {info && <p className="text-xs text-ink-3">{info}</p>}
             <div>
-              <label className="mb-1 block text-sm font-medium text-ink-2">รหัส OTP (6 หลัก)</label>
+              <label htmlFor="register-otp" className="mb-1 block text-sm font-medium text-ink-2">
+                รหัส OTP (6 หลัก)
+              </label>
               <input
+                id="register-otp"
+                name="otpCode"
                 required
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 maxLength={6}
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
@@ -131,9 +146,14 @@ export default function RegisterPage() {
 
             {!isLiffConfigured() && (
               <div>
-                <label className="mb-1 block text-sm font-medium text-ink-2">LINE User ID (สำหรับทดสอบ)</label>
+                <label htmlFor="register-dev-line-user-id" className="mb-1 block text-sm font-medium text-ink-2">
+                  LINE User ID (สำหรับทดสอบ)
+                </label>
                 <input
+                  id="register-dev-line-user-id"
+                  name="devLineUserId"
                   required
+                  autoComplete="off"
                   value={devLineUserId}
                   onChange={(e) => setDevLineUserId(e.target.value)}
                   placeholder="เช่น Ux_test_dev_001"

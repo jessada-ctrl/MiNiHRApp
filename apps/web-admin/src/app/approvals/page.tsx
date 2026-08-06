@@ -200,8 +200,12 @@ function ReviewModal({
 
         {rejecting ? (
           <div className="mt-4">
-            <label className="mb-1 block text-sm font-medium text-ink-2">เหตุผลการปฏิเสธ (จำเป็นต้องกรอก)</label>
+            <label htmlFor="reject-comment" className="mb-1 block text-sm font-medium text-ink-2">
+              เหตุผลการปฏิเสธ (จำเป็นต้องกรอก)
+            </label>
             <textarea
+              id="reject-comment"
+              name="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
