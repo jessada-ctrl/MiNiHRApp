@@ -9,7 +9,7 @@ import { getCurrentTenantId } from '../tenant/tenant-context';
 import { AuditService } from '../audit/audit.service';
 import { LineMessagingService } from '../line/line-messaging.service';
 import { AuthenticatedUser, JwtPayload } from './jwt-payload.interface';
-import { OtpMailerService } from './otp-mailer.service';
+import { MailerService } from './mailer.service';
 
 const OTP_TTL_MINUTES = 5;
 const MAX_OTP_ATTEMPTS = 5;
@@ -30,7 +30,7 @@ export class LineAuthService {
     private readonly platformPrisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly audit: AuditService,
-    private readonly mailer: OtpMailerService,
+    private readonly mailer: MailerService,
     private readonly lineMessaging: LineMessagingService,
   ) {}
 
@@ -66,10 +66,10 @@ export class LineAuthService {
       data: { tenantId, employeeId: employee?.id ?? null, employeeCode, email, otpCodeHash, expiresAt },
     });
 
-    if (employee) await this.mailer.send(email, code);
+    if (employee) await this.mailer.sendOtp(email, code);
 
     // Escape hatch for a local checkout with no SMTP configured, where
-    // OtpMailerService only logs the code and a real device/browser has no
+    // MailerService only logs the code and a real device/browser has no
     // way to read it. Hard-disabled when NODE_ENV=production regardless of
     // the flag: returning the OTP in the HTTP response defeats the entire
     // point of sending it out-of-band, and a stray env var on a customer
@@ -179,6 +179,7 @@ export class LineAuthService {
         role: employee.role as JwtPayload['role'],
         email: employee.email,
         fullName: employee.fullName,
+        mustChangePassword: employee.mustChangePassword,
       },
     };
   }
@@ -224,6 +225,7 @@ export class LineAuthService {
         role: employee.role as JwtPayload['role'],
         email: employee.email,
         fullName: employee.fullName,
+        mustChangePassword: employee.mustChangePassword,
       },
     };
   }
