@@ -90,7 +90,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
-      <header className="flex items-center gap-3 bg-gradient-to-r from-brand-500 to-gold-500 px-4 py-3 text-white">
+      <header className="flex items-center gap-3 border-b-2 border-gold-500 bg-sidebar px-4 py-3 text-sidebar-ink">
         <button onClick={() => router.push("/")} aria-label="กลับ" className="text-lg leading-none">
           ←
         </button>
@@ -168,7 +168,7 @@ export default function ProfilePage() {
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-rejected-fg">{error}</p>}
           {saved && !error && <p className="text-sm text-approved-fg">บันทึกข้อมูลเรียบร้อยแล้ว</p>}
 
           <button
