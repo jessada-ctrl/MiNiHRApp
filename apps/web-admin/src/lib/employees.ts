@@ -93,6 +93,22 @@ export async function createEmployee(input: CreateEmployeeInput): Promise<Create
   );
 }
 
+export interface PasswordResetResult {
+  employeeId: string;
+  fullName: string;
+  tempPassword: string;
+}
+
+/**
+ * For the employee who can't reach their company inbox at all — everyone
+ * else should use the self-service "ลืมรหัสผ่าน" flow, which never puts a
+ * password in front of a third party. The generated password is returned
+ * once and never retrievable again.
+ */
+export async function resetEmployeePassword(id: string): Promise<PasswordResetResult> {
+  return unwrap(await apiFetch(`/employees/${id}/reset-password`, { method: "POST" }));
+}
+
 export interface UpdateEmployeeInput {
   // Non-sensitive fields — never audited by the backend.
   fullName?: string;

@@ -25,6 +25,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { getCurrentUser, logout, type AuthUser } from "@/lib/auth";
+import ChangePasswordCard from "@/components/ChangePasswordCard";
 import logoIcon from "@/assets/logo-icon.png";
 
 type Role = AuthUser["role"];
@@ -136,6 +137,38 @@ export default function AppShell({
     return (
       <main className="flex min-h-screen flex-1 items-center justify-center bg-bg">
         <p className="text-sm text-ink-3">กำลังตรวจสอบสิทธิ์...</p>
+      </main>
+    );
+  }
+
+  // An account still on the password HR generated is held here until the
+  // employee picks their own. Rendered in place of the app rather than as a
+  // redirect, so there is no page they can navigate back to in order to skip
+  // it — a temp password relayed over chat or read aloud must not quietly
+  // become someone's permanent one.
+  //
+  // Enforced in the UI, not the API: the server would otherwise have to
+  // carve out an exception for the very endpoint needed to escape the state,
+  // and getting that wrong locks people out entirely. The flag's security
+  // value is in getting the password replaced promptly, not in fencing off
+  // data the employee is already entitled to see.
+  if (user.mustChangePassword) {
+    return (
+      <main className="flex min-h-screen flex-1 items-center justify-center bg-bg px-4">
+        <div className="w-full max-w-md">
+          {/* changePassword() already stored the replacement token, so
+              clearing the flag locally is enough to let the app render —
+              no refetch, and no window where the new token is live but the
+              UI still shows the blocking screen. */}
+          <ChangePasswordCard forced onChanged={() => setUser({ ...user, mustChangePassword: false })} />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-3 w-full text-center text-sm text-ink-3 underline hover:text-ink-2"
+          >
+            ออกจากระบบ
+          </button>
+        </div>
       </main>
     );
   }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
+import ChangePasswordCard from "@/components/ChangePasswordCard";
 import { getMyProfile, updateMyProfile, type MyProfile } from "@/lib/employees";
 
 export default function ProfilePage() {
@@ -130,6 +131,10 @@ export default function ProfilePage() {
                 </button>
               </div>
             </form>
+
+            <div className="mt-4">
+              <ChangePasswordCard />
+            </div>
           </>
         )}
 

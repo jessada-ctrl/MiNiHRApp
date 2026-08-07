@@ -10,6 +10,7 @@ import {
   type Department,
   type Employee,
   type EmployeeQuota,
+  type PasswordResetResult,
   type Role,
   type Status,
   bulkImportEmployees,
@@ -18,6 +19,7 @@ import {
   listBranches,
   listDepartments,
   listEmployees,
+  resetEmployeePassword,
   updateEmployee,
   updateEmployeeQuotas,
 } from "@/lib/employees";
@@ -45,6 +47,7 @@ export default function EmployeesPage() {
   const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [editingQuota, setEditingQuota] = useState<Employee | null>(null);
+  const [resetting, setResetting] = useState<Employee | null>(null);
   const [canManage, setCanManage] = useState(false);
 
   useEffect(() => {
@@ -155,6 +158,12 @@ export default function EmployeesPage() {
                           ⚙ โควตา
                         </button>
                         <button
+                          onClick={() => setResetting(e)}
+                          className="mr-3 text-sm font-medium text-ink-2 hover:text-ink"
+                        >
+                          🔑 รีเซ็ตรหัสผ่าน
+                        </button>
+                        <button
                           onClick={() => setEditing(e)}
                           className="text-sm font-medium text-brand-ink hover:text-brand-ink-strong"
                         >
@@ -201,6 +210,8 @@ export default function EmployeesPage() {
       {editingQuota && (
         <EditQuotaModal employee={editingQuota} onClose={() => setEditingQuota(null)} onSaved={() => setEditingQuota(null)} />
       )}
+
+      {resetting && <ResetPasswordModal employee={resetting} onClose={() => setResetting(null)} />}
 
       {showImport && (
         <ImportEmployeesModal
@@ -340,6 +351,76 @@ function AddEmployeeModal({
   );
 }
 
+/**
+ * The fallback for an employee who can't reach their company inbox — the one
+ * case /auth/forgot-password can't serve. It is framed as the second choice
+ * on purpose: this path necessarily puts a working password in front of a
+ * third party, so anyone who *can* receive email should use the self-service
+ * flow instead.
+ */
+function ResetPasswordModal({ employee, onClose }: { employee: Employee; onClose: () => void }) {
+  const [result, setResult] = useState<PasswordResetResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleReset() {
+    setError(null);
+    setSubmitting(true);
+    try {
+      setResult(await resetEmployeePassword(employee.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "รีเซ็ตรหัสผ่านไม่สำเร็จ");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal onClose={onClose} title={`รีเซ็ตรหัสผ่าน — ${employee.fullName}`}>
+      {result ? (
+        <div className="flex flex-col gap-3">
+          <TempPasswordNotice email={employee.email} tempPassword={result.tempPassword} />
+          <p className="text-xs text-ink-3">
+            เซสชันที่ {employee.fullName} เปิดค้างไว้ทุกเครื่องถูกตัดออกแล้ว และระบบจะบังคับให้ตั้งรหัสผ่านใหม่ของตัวเองก่อนใช้งานครั้งถัดไป
+          </p>
+          <div className="mt-1 flex justify-end">
+            <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
+              ปิด
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-ink-2">
+            ใช้เมื่อพนักงานเข้าอีเมลบริษัทไม่ได้เท่านั้น — ถ้ายังเข้าอีเมลได้ ให้กด &quot;ลืมรหัสผ่าน&quot; ที่หน้าเข้าสู่ระบบแทน
+            เพราะรหัสผ่านจะไม่ผ่านมือคนอื่นเลย
+          </p>
+          <p className="text-sm text-ink-2">
+            เมื่อรีเซ็ตแล้ว รหัสผ่านเดิมของ <span className="font-medium text-ink">{employee.fullName}</span> จะใช้ไม่ได้ทันที
+            และระบบจะแสดงรหัสผ่านชั่วคราวให้คุณคัดลอกเพียงครั้งเดียว
+          </p>
+
+          {error && <p className="text-sm text-rejected-fg">{error}</p>}
+
+          <div className="mt-1 flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
+              ยกเลิก
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={submitting}
+              className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600 disabled:opacity-60"
+            >
+              {submitting ? "กำลังรีเซ็ต..." : "รีเซ็ตรหัสผ่าน"}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 function TempPasswordNotice({ email, tempPassword }: { email: string; tempPassword: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -356,8 +437,8 @@ function TempPasswordNotice({ email, tempPassword }: { email: string; tempPasswo
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm text-ink-2">
-        ระบบยังไม่มีอีเมลอัตโนมัติ — กรุณาคัดลอกรหัสผ่านชั่วคราวนี้แล้วส่งให้ <span className="font-medium text-ink">{email}</span> เอง
-        (แสดงเพียงครั้งเดียว จะดูซ้ำภายหลังไม่ได้)
+        คัดลอกรหัสผ่านชั่วคราวนี้แล้วส่งให้ <span className="font-medium text-ink">{email}</span> ด้วยช่องทางที่ปลอดภัย
+        (แสดงเพียงครั้งเดียว จะดูซ้ำภายหลังไม่ได้) — พนักงานจะถูกบังคับให้ตั้งรหัสผ่านของตัวเองเมื่อเข้าใช้งานครั้งแรก
       </p>
       <div className="flex items-center gap-2 rounded-md border border-hairline-strong bg-surface-2 px-3 py-2">
         <code className="flex-1 font-mono text-sm text-ink">{tempPassword}</code>

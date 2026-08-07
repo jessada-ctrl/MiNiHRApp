@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/auth";
 
@@ -47,9 +48,14 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-ink-2">
-              รหัสผ่าน
-            </label>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor="password" className="block text-sm font-medium text-ink-2">
+                รหัสผ่าน
+              </label>
+              <Link href="/forgot-password" className="text-xs text-brand-ink underline hover:no-underline">
+                ลืมรหัสผ่าน?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"
