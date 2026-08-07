@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, ForbiddenException, HttpCode, Logger, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ChatbotOrchestratorService } from '../chatbot/chatbot-orchestrator.service';
 import { EmployeesService } from '../employees/employees.service';
 import { LeaveRequestsService } from '../leave-requests/leave-requests.service';
@@ -39,6 +40,12 @@ const WELCOME_TEXT =
  * TODO before this can accept the rest of real traffic:
  *  - Route the remaining `postback` events (FR-2.3 attendance check-in, etc).
  */
+// Exempt from the global per-IP rate limit: every employee of a tenant
+// reaches this through LINE's own servers, so all of a company's traffic
+// arrives from a handful of shared source IPs and an IP-keyed limit would
+// throttle legitimate use long before it stopped anything. Abuse is blocked
+// by LineSignatureGuard instead — an unsigned request never gets past it.
+@SkipThrottle()
 @Controller('v1/webhook/line')
 @UseGuards(LineSignatureGuard)
 export class WebhookController {

@@ -5,7 +5,9 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { AttendanceModule } from './attendance/attendance.module';
@@ -30,6 +32,14 @@ import { WorkflowsModule } from './workflows/workflows.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    // A blanket per-IP ceiling, deliberately far above what any human using
+    // the LIFF app or HR dashboard will hit — this is a backstop against a
+    // script hammering the API, not a usage quota. The endpoints that
+    // actually need a tight limit (login, OTP request/verify) declare their
+    // own much stricter @Throttle in auth.controller.ts, and the LINE
+    // webhook opts out entirely (all of one tenant's employees share LINE's
+    // egress IPs, so an IP-keyed limit there would throttle real traffic).
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
     PrismaModule,
     CryptoModule,
     AuditModule,
@@ -49,6 +59,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     SaasAdminModule,
   ],
   controllers: [AppController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

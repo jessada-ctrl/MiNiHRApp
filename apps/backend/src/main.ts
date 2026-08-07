@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { AppModule } from './app.module';
 
@@ -7,7 +8,16 @@ async function bootstrap() {
   // rawBody: true — LineSignatureGuard (NFR-3) needs the exact raw bytes LINE
   // signed, not the re-serialized parsed JSON (which can differ byte-for-byte
   // from what was actually sent and would make every signature check fail).
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+
+  // In every real deployment this process sits behind a reverse proxy
+  // (Easypanel/Traefik, Fly, ngrok in dev). Without this, req.ip is the
+  // proxy's address for every request — which would make the per-IP rate
+  // limits in auth.controller.ts a single shared bucket for the entire
+  // internet, and would write that same useless address into every audit log
+  // entry (NFR-4 requires the real client IP). '1' = trust exactly one
+  // proxy hop, so a client can't forge X-Forwarded-For by prepending values.
+  app.set('trust proxy', 1);
 
   // Dev-only: a free ngrok account only gets one stable public hostname, so
   // the LIFF app (its own Next.js dev server on :3002) is exposed through
