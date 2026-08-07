@@ -56,19 +56,21 @@ export default function SettingsPage() {
     }
   }
 
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      const c = await getLineConfig();
-      setConfig(c);
-      setChannelId(c.lineChannelId ?? "");
-      setChannelSecret("");
-      setAccessToken("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return getLineConfig()
+      .then((c) => {
+        setError(null);
+        setConfig(c);
+        setChannelId(c.lineChannelId ?? "");
+        setChannelSecret("");
+        setAccessToken("");
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

@@ -19,15 +19,18 @@ export default function HolidaysPage() {
     getCurrentUser().then((u) => setCanManage(u?.role === "tenant_admin"));
   }, []);
 
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      setHolidays(await listHolidays());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return listHolidays()
+      .then((rows) => {
+        setError(null);
+        setHolidays(rows);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

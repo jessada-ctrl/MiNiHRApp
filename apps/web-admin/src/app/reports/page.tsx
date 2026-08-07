@@ -53,15 +53,18 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  const refresh = useCallback(async (f: ReportFilters) => {
-    setError(null);
-    try {
-      setRows(await fetchLeaveReport(f));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback((f: ReportFilters) => {
+    return fetchLeaveReport(f)
+      .then((rows) => {
+        setError(null);
+        setRows(rows);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

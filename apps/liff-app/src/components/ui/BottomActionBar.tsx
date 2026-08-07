@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 /**
  * Bottom sticky action bar (C6) — surface background + border-top + an
  * upward-cast shadow so it reads as its own docked layer rather than a

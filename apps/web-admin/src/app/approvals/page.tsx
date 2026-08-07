@@ -24,15 +24,18 @@ export default function ApprovalsPage() {
   const [error, setError] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<LeaveRequest | null>(null);
 
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      setRequests(await listPendingForMe());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return listPendingForMe()
+      .then((rows) => {
+        setError(null);
+        setRequests(rows);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

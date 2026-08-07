@@ -22,17 +22,19 @@ export default function AuditLogPage() {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  const refresh = useCallback(async (f: AuditLogFilters) => {
-    setError(null);
-    try {
-      const report = await fetchAuditLog(f);
-      setRows(report.rows);
-      setTruncated(report.truncated);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback((f: AuditLogFilters) => {
+    return fetchAuditLog(f)
+      .then((report) => {
+        setError(null);
+        setRows(report.rows);
+        setTruncated(report.truncated);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

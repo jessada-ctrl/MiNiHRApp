@@ -25,15 +25,18 @@ export default function ApprovalTurnaroundPage() {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  const refresh = useCallback(async (f: ApprovalTurnaroundFilters) => {
-    setError(null);
-    try {
-      setRows(await fetchApprovalTurnaround(f));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback((f: ApprovalTurnaroundFilters) => {
+    return fetchApprovalTurnaround(f)
+      .then((rows) => {
+        setError(null);
+        setRows(rows);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

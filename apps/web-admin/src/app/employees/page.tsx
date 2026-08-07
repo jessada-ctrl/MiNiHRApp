@@ -51,18 +51,20 @@ export default function EmployeesPage() {
     getCurrentUser().then((u) => setCanManage(u?.role === "tenant_admin"));
   }, []);
 
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      const [emps, depts, brs] = await Promise.all([listEmployees(), listDepartments(), listBranches()]);
-      setEmployees(emps);
-      setDepartments(depts);
-      setBranches(brs);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return Promise.all([listEmployees(), listDepartments(), listBranches()])
+      .then(([emps, depts, brs]) => {
+        setError(null);
+        setEmployees(emps);
+        setDepartments(depts);
+        setBranches(brs);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

@@ -31,17 +31,19 @@ export default function OrganizationPage() {
     getCurrentUser().then((u) => setCanManage(u?.role === "tenant_admin"));
   }, []);
 
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      const [brs, depts] = await Promise.all([listBranches(), listDepartments()]);
-      setBranches(brs);
-      setDepartments(depts);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return Promise.all([listBranches(), listDepartments()])
+      .then(([brs, depts]) => {
+        setError(null);
+        setBranches(brs);
+        setDepartments(depts);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

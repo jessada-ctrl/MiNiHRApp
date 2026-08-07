@@ -93,6 +93,12 @@ export default function HomePage() {
     // Rich Menu's "ขอลา" and "ประวัติการลา" buttons deep-link here via
     // ?tab=form / ?tab=history; the bare URL (its "ลงเวลาทำงาน" button, and
     // the LIFF app's own root) defaults to the check-in tab per FR-2.3.
+    //
+    // This has to stay in an effect rather than seed useState during render:
+    // the route is statically prerendered, so `window` doesn't exist on the
+    // server and reading the query string while rendering would either crash
+    // the prerender or hydrate a different tab than the server emitted.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (params.get("tab") === "history") setTab("history");
     else if (params.get("tab") === "form") setTab("form");
 
@@ -248,14 +254,18 @@ function AttendanceTab() {
     return () => clearInterval(timer);
   }, []);
 
-  const refresh = useCallback(async () => {
-    try {
-      setStatus(await getAttendanceStatus());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return getAttendanceStatus()
+      .then((s) => {
+        setError(null);
+        setStatus(s);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -422,8 +432,8 @@ function LeaveForm({
   onGoHistory: () => void;
 }) {
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const [leaveTypeId, setLeaveTypeId] = useState("");
-  const [duration, setDuration] = useState<DurationType>("full_day");
+  const [pickedLeaveTypeId, setLeaveTypeId] = useState("");
+  const [pickedDuration, setDuration] = useState<DurationType>("full_day");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [startTime, setStartTime] = useState("09:00");
@@ -434,20 +444,23 @@ function LeaveForm({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!leaveTypeId && leaveTypes.length > 0) setLeaveTypeId(leaveTypes[0].id);
-  }, [leaveTypes, leaveTypeId]);
-
+  // Both defaults are derived during render rather than synced in by an effect:
+  // the leave-type list arrives after mount, and an effect would leave the
+  // <select> showing the first option while our state still said "" for a frame
+  // — long enough for a fast tap to submit an empty leaveTypeId.
+  const leaveTypeId = pickedLeaveTypeId || leaveTypes[0]?.id || "";
   const selectedType = leaveTypes.find((t) => t.id === leaveTypeId);
+  // Same reasoning for the hourly pill: switching to a type that doesn't allow
+  // hourly must drop back to full-day in the *same* render, so the highlighted
+  // pill, computeDays(), and the submitted payload can never disagree.
+  const duration: DurationType =
+    pickedDuration === "hourly" && selectedType && !selectedType.allowHourly ? "full_day" : pickedDuration;
+
   const quota = quotas.find((q) => q.leaveTypeId === leaveTypeId);
   const days = computeDays(duration, startDate, endDate, startTime, endTime);
   const willExceed = !!quota && days > quota.remaining;
   const needsAttachment = !!selectedType?.requiresAttachmentAfterDays && days >= 0.01; // real cumulative check happens server-side; this is a soft client hint
   const pct = quota && quota.total > 0 ? Math.min(100, ((quota.used + quota.pending + (willExceed ? 0 : days)) / quota.total) * 100) : 0;
-
-  useEffect(() => {
-    if (duration === "hourly" && selectedType && !selectedType.allowHourly) setDuration("full_day");
-  }, [selectedType, duration]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

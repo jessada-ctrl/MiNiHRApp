@@ -29,17 +29,19 @@ export default function WorkflowsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      const [wfs, emps] = await Promise.all([listWorkflows(), listEmployees()]);
-      setWorkflows(wfs);
-      setEmployees(emps);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return Promise.all([listWorkflows(), listEmployees()])
+      .then(([wfs, emps]) => {
+        setError(null);
+        setWorkflows(wfs);
+        setEmployees(emps);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -113,10 +115,16 @@ function WorkflowCard({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  // Re-seed the editable copy when the parent hands down a freshly fetched
+  // workflow. Adjusting state during render is React's documented answer here
+  // and re-renders before the DOM is touched — an effect would paint the stale
+  // steps first, then immediately re-render.
+  const [seededFrom, setSeededFrom] = useState(workflow);
+  if (seededFrom !== workflow) {
+    setSeededFrom(workflow);
     setSteps(workflow.steps.map((s) => ({ approverType: s.approverType, approverEmployeeId: s.approverEmployeeId ?? undefined })));
     setDirty(false);
-  }, [workflow]);
+  }
 
   function move(from: number, to: number) {
     if (from === to) return;

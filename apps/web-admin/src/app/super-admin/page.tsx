@@ -51,17 +51,19 @@ export default function SuperAdminPage() {
 
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setError(null);
-    try {
-      const [o, t] = await Promise.all([getPlatformOverview(), listTenants()]);
-      setOverview(o);
-      setTenants(t);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback(() => {
+    return Promise.all([getPlatformOverview(), listTenants()])
+      .then(([o, t]) => {
+        setError(null);
+        setOverview(o);
+        setTenants(t);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

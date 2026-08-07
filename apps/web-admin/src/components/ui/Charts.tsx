@@ -72,13 +72,15 @@ export function StatusDonut({
   centerLabel: string;
 }) {
   const total = segments.reduce((a, s) => a + s.value, 0) || 1;
-  let acc = 0;
+  // Each stop's start angle is the sum of everything before it. Recomputing
+  // that prefix sum per segment keeps the map pure — a `let acc` carried across
+  // iterations is a reassignment during render, which breaks under the React
+  // compiler's memoization. A donut has a handful of segments, so O(n²) is free.
   const stops = segments
-    .map((s) => {
-      const from = (acc / total) * 360;
-      acc += s.value;
-      const to = (acc / total) * 360;
-      return `${s.colorVar} ${from}deg ${to}deg`;
+    .map((s, i) => {
+      const from = segments.slice(0, i).reduce((a, x) => a + x.value, 0);
+      const to = from + s.value;
+      return `${s.colorVar} ${(from / total) * 360}deg ${(to / total) * 360}deg`;
     })
     .join(", ");
 

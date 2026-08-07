@@ -24,15 +24,18 @@ export default function QuotaUtilizationPage() {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  const refresh = useCallback(async (f: QuotaUtilizationFilters) => {
-    setError(null);
-    try {
-      setRows(await fetchQuotaUtilization(f));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback((f: QuotaUtilizationFilters) => {
+    return fetchQuotaUtilization(f)
+      .then((rows) => {
+        setError(null);
+        setRows(rows);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {

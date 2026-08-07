@@ -57,17 +57,19 @@ export default function NotificationLogPage() {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  const refresh = useCallback(async (f: NotificationLogFilters) => {
-    setError(null);
-    try {
-      const report = await fetchNotificationLog(f);
-      setRows(report.rows);
-      setTruncated(report.truncated);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback((f: NotificationLogFilters) => {
+    return fetchNotificationLog(f)
+      .then((report) => {
+        setError(null);
+        setRows(report.rows);
+        setTruncated(report.truncated);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "โหลดข้อมูลไม่สำเร็จ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
