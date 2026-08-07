@@ -21,6 +21,17 @@ export class EncryptionService {
   constructor(config: ConfigService) {
     const keyBase64 = config.get<string>('TENANT_CRED_ENCRYPTION_KEY');
     if (!keyBase64) {
+      // Fatal rather than a warning once real customers are involved: the
+      // fallback key is a literal in this file, so shipping with it means
+      // every tenant's LINE credentials and every medical-certificate
+      // reference are encrypted with a key anyone reading the repo has.
+      // A refusal to boot is loud and fixable; a warning in a log nobody
+      // reads is how that ships to production unnoticed.
+      if (config.get<string>('NODE_ENV') === 'production') {
+        throw new Error(
+          'TENANT_CRED_ENCRYPTION_KEY is required when NODE_ENV=production. Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"',
+        );
+      }
       this.logger.warn(
         'TENANT_CRED_ENCRYPTION_KEY is not set — falling back to an insecure well-known dev key. Set this env var before deploying to production.',
       );
