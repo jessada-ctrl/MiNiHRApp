@@ -68,13 +68,14 @@ export class LineAuthService {
 
     if (employee) await this.mailer.send(email, code);
 
-    // No real email provider is wired up yet (see OtpMailerService) and
-    // there's no reliable way to read the mock-logged code from outside the
-    // container, so real device/browser testing has no way to learn the
-    // code at all. Gated behind an explicit env flag (never set in
-    // production) so this never ships as a real vulnerability — it's purely
-    // a stand-in for "check your email" until a real provider exists.
-    const devOtpCode = process.env.EXPOSE_OTP_FOR_TESTING === 'true' ? code : undefined;
+    // Escape hatch for a local checkout with no SMTP configured, where
+    // OtpMailerService only logs the code and a real device/browser has no
+    // way to read it. Hard-disabled when NODE_ENV=production regardless of
+    // the flag: returning the OTP in the HTTP response defeats the entire
+    // point of sending it out-of-band, and a stray env var on a customer
+    // deployment must not be able to turn that on.
+    const devOtpCode =
+      process.env.EXPOSE_OTP_FOR_TESTING === 'true' && process.env.NODE_ENV !== 'production' ? code : undefined;
     return { message, devOtpCode };
   }
 
