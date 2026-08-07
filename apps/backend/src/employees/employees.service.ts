@@ -5,6 +5,7 @@ import { getCurrentTenantId } from '../tenant/tenant-context';
 import { AuditService } from '../audit/audit.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { UpdateSelfDto } from './dto/update-self.dto';
 import { parseCsv } from './csv.util';
 
 interface ActorContext {
@@ -41,6 +42,37 @@ export class EmployeesService {
       omit: { passwordHash: true },
       include: { department: true, branch: true, directManager: { select: { id: true, fullName: true } } },
       orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  getSelf(id: string) {
+    return this.prisma.employee.findUnique({
+      where: { id },
+      omit: { passwordHash: true },
+      include: { department: true, branch: true, directManager: { select: { id: true, fullName: true } } },
+    });
+  }
+
+  /**
+   * Self-service profile edit. `id` is always the caller's own JWT subject
+   * (never a client-supplied param, unlike `update()`), so there's no IDOR
+   * surface here, and JwtStrategy.validate() already re-checked this
+   * employee exists and is active on this same request. UpdateSelfDto's
+   * fields are all in the "non-sensitive" bucket per FR-4.6 (role, status,
+   * directManagerId aren't on the DTO at all), so — same as `update()`'s
+   * non-sensitive fields — this never writes an audit entry.
+   */
+  updateSelf(id: string, dto: UpdateSelfDto) {
+    const data: Record<string, unknown> = {};
+    if (dto.fullName !== undefined) data.fullName = dto.fullName;
+    if (dto.email !== undefined) data.email = dto.email;
+    if (dto.phone !== undefined) data.phone = dto.phone;
+
+    return this.prisma.employee.update({
+      where: { id },
+      data,
+      omit: { passwordHash: true },
+      include: { department: true, branch: true, directManager: { select: { id: true, fullName: true } } },
     });
   }
 

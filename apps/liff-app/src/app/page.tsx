@@ -191,10 +191,10 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       <header className="flex items-center justify-between bg-gradient-to-r from-brand-500 to-gold-500 px-4 py-3 text-white">
-        <div>
-          <p className="text-sm font-semibold">{user.fullName}</p>
+        <button onClick={() => router.push("/profile")} className="text-left">
+          <p className="text-sm font-semibold underline decoration-white/40 underline-offset-2">{user.fullName}</p>
           <p className="text-[11px] opacity-80">testco.lala.io</p>
-        </div>
+        </button>
         <button onClick={handleLogout} className="text-xs underline opacity-90">
           ออกจากระบบ
         </button>
