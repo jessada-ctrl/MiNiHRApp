@@ -46,6 +46,14 @@ export default function ProfilePage() {
     };
   }, [router]);
 
+  // The success toast auto-dismisses. Keyed by `saved` so a second save
+  // re-triggers the enter animation instead of leaving a stale banner up.
+  useEffect(() => {
+    if (!saved) return;
+    const t = setTimeout(() => setSaved(false), 3500);
+    return () => clearTimeout(t);
+  }, [saved]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -55,9 +63,12 @@ export default function ProfilePage() {
       const updated = await updateMyProfile({
         fullName: fullName.trim(),
         email: email.trim(),
-        phone: phone.trim() || undefined,
+        phone: phone.trim() || null,
       });
       setProfile(updated);
+      setFullName(updated.fullName);
+      setEmail(updated.email);
+      setPhone(updated.phone ?? "");
       setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "บันทึกข้อมูลไม่สำเร็จ");
@@ -90,6 +101,24 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
+      {/* Fixed, so it stays visible wherever the form was scrolled to when the
+          save landed. The live region is always mounted — a screen reader only
+          announces content that appears *inside* an existing one, so mounting
+          region and message together would announce nothing. The wrapper does
+          the centering; the pill owns the transform the animation drives. */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center px-4"
+      >
+        {saved && (
+          <p className="animate-toast-in flex items-center gap-2 rounded-full border border-approved bg-approved-bg px-4 py-2 text-sm font-medium text-approved-fg shadow-e2">
+            <span aria-hidden="true">✓</span>
+            อัปเดตข้อมูลเรียบร้อยแล้ว
+          </p>
+        )}
+      </div>
+
       <header className="flex items-center gap-3 border-b-2 border-gold-500 bg-sidebar px-4 py-3 text-sidebar-ink">
         <button onClick={() => router.push("/")} aria-label="กลับ" className="text-lg leading-none">
           ←
@@ -169,7 +198,6 @@ export default function ProfilePage() {
           </div>
 
           {error && <p className="text-sm text-rejected-fg">{error}</p>}
-          {saved && !error && <p className="text-sm text-approved-fg">บันทึกข้อมูลเรียบร้อยแล้ว</p>}
 
           <button
             type="submit"

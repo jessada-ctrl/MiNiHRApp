@@ -18,6 +18,7 @@ import {
   Bell,
   ScrollText,
   Settings,
+  UserRound,
   ChevronRight,
   Menu,
   PanelLeft,
@@ -51,6 +52,7 @@ const IconChevron = ChevronRight;
 const IconMenu = Menu;
 const IconPanel = PanelLeft;
 const IconLogout = LogOut;
+const IconProfile = UserRound;
 
 interface NavLink {
   kind: "link";
@@ -78,6 +80,9 @@ const NAV_ITEMS: NavEntry[] = [
   { kind: "link", href: "/workflows", label: "สายอนุมัติ", icon: IconFlow, roles: ["tenant_admin"] },
   { kind: "link", href: "/approvals", label: "รออนุมัติ", icon: IconCheck, roles: ["tenant_admin", "approver"] },
   { kind: "link", href: "/holidays", label: "ปฏิทินวันหยุด", icon: IconCalendar, roles: ["tenant_admin", "approver", "employee"] },
+  // Backed by /employees/me, so it works for a plain `employee` too — the
+  // only employee record they're allowed to read and edit here.
+  { kind: "link", href: "/profile", label: "ข้อมูลของฉัน", icon: IconProfile, roles: ["tenant_admin", "approver", "employee"] },
   {
     kind: "group",
     label: "รายงาน",

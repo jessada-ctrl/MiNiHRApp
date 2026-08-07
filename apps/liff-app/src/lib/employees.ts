@@ -18,7 +18,9 @@ export async function getMyProfile(): Promise<MyProfile> {
 export interface UpdateMyProfileInput {
   fullName?: string;
   email?: string;
-  phone?: string;
+  // `null` clears the number; omitting the key leaves it untouched. Sending
+  // `undefined` for an emptied field would silently keep the old value.
+  phone?: string | null;
 }
 
 export async function updateMyProfile(input: UpdateMyProfileInput): Promise<MyProfile> {

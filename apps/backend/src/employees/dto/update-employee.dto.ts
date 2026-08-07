@@ -10,21 +10,25 @@ export class UpdateEmployeeDto {
   @IsEmail()
   email?: string;
 
+  // `null` clears the column (all four are nullable, and the FKs are
+  // `onDelete: SetNull`). @IsOptional() skips validation for null as well as
+  // undefined, so @IsString() only ever runs on a real value — same pattern as
+  // directManagerId below.
   @IsOptional()
   @IsString()
-  phone?: string;
+  phone?: string | null;
 
   @IsOptional()
   @IsString()
-  departmentId?: string;
+  departmentId?: string | null;
 
   @IsOptional()
   @IsString()
-  branchId?: string;
+  branchId?: string | null;
 
   @IsOptional()
   @IsString()
-  position?: string;
+  position?: string | null;
 
   // Sensitive fields — changing any of these produces an audit log entry
   // (SRS FR-4.6 Audit Log Scope). Everything above this line does not.

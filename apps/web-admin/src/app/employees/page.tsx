@@ -187,6 +187,8 @@ export default function EmployeesPage() {
       {editing && (
         <EditEmployeeModal
           employee={editing}
+          departments={departments}
+          branches={branches}
           candidates={employees.filter((e) => e.id !== editing.id)}
           onClose={() => setEditing(null)}
           onSaved={() => {
@@ -373,15 +375,25 @@ function TempPasswordNotice({ email, tempPassword }: { email: string; tempPasswo
 
 function EditEmployeeModal({
   employee,
+  departments,
+  branches,
   candidates,
   onClose,
   onSaved,
 }: {
   employee: Employee;
+  departments: Department[];
+  branches: Branch[];
   candidates: Employee[];
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [fullName, setFullName] = useState(employee.fullName);
+  const [email, setEmail] = useState(employee.email);
+  const [phone, setPhone] = useState(employee.phone ?? "");
+  const [position, setPosition] = useState(employee.position ?? "");
+  const [departmentId, setDepartmentId] = useState(employee.departmentId ?? "");
+  const [branchId, setBranchId] = useState(employee.branchId ?? "");
   const [role, setRole] = useState<Role>(employee.role);
   const [directManagerId, setDirectManagerId] = useState(employee.directManagerId ?? "");
   const [status, setStatus] = useState<Status>(employee.status);
@@ -393,7 +405,15 @@ function EditEmployeeModal({
     setError(null);
     setSubmitting(true);
     try {
+      // Empty optional fields go out as null, not "" — the backend writes the
+      // value through verbatim, and "" on a foreign key is an FK violation.
       await updateEmployee(employee.id, {
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim() || null,
+        position: position.trim() || null,
+        departmentId: departmentId || null,
+        branchId: branchId || null,
         role,
         directManagerId: directManagerId || null,
         status,
@@ -410,8 +430,41 @@ function EditEmployeeModal({
     <Modal onClose={onClose} title={`แก้ไข — ${employee.fullName}`}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <p className="text-xs text-ink-3">
+          รหัสพนักงาน <span className="font-mono text-ink-2">{employee.employeeCode}</span> เปลี่ยนไม่ได้ —
           การเปลี่ยนบทบาท สายบังคับบัญชา หรือสถานะ จะถูกบันทึกลง Audit Log โดยอัตโนมัติ
         </p>
+        <Field label="ชื่อ-นามสกุล">
+          <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
+        </Field>
+        <Field label="อีเมล">
+          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+        </Field>
+        <Field label="เบอร์โทร">
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} />
+        </Field>
+        <Field label="ตำแหน่ง">
+          <input value={position} onChange={(e) => setPosition(e.target.value)} className={inputCls} />
+        </Field>
+        <Field label="แผนก">
+          <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className={inputCls}>
+            <option value="">- ไม่ระบุ -</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.departmentName}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="สาขา">
+          <select value={branchId} onChange={(e) => setBranchId(e.target.value)} className={inputCls}>
+            <option value="">- ไม่ระบุ -</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.branchName}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field label="บทบาท">
           <select value={role} onChange={(e) => setRole(e.target.value as Role)} className={inputCls}>
             <option value="employee">พนักงาน</option>
@@ -702,7 +755,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-lg bg-surface p-6 shadow-e3">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-surface p-6 shadow-e3">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg font-semibold text-ink">{title}</h2>
           <button

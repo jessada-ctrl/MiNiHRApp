@@ -42,6 +42,29 @@ export async function listEmployees(): Promise<Employee[]> {
   return unwrap(await apiFetch("/employees"));
 }
 
+/**
+ * `/employees/me` — open to every role, unlike `/employees` (tenant_admin +
+ * approver only). This is the one employee record a plain `employee` can
+ * read and edit from the admin web app.
+ */
+export type MyProfile = Omit<Employee, "role" | "status" | "directManagerId" | "directManager">;
+
+export async function getMyProfile(): Promise<MyProfile> {
+  return unwrap(await apiFetch("/employees/me"));
+}
+
+export interface UpdateMyProfileInput {
+  fullName?: string;
+  email?: string;
+  phone?: string | null;
+}
+
+export async function updateMyProfile(input: UpdateMyProfileInput): Promise<MyProfile> {
+  return unwrap(
+    await apiFetch("/employees/me", { method: "PATCH", body: JSON.stringify(input) }),
+  );
+}
+
 export async function listDepartments(): Promise<Department[]> {
   return unwrap(await apiFetch("/departments"));
 }
@@ -71,6 +94,14 @@ export async function createEmployee(input: CreateEmployeeInput): Promise<Create
 }
 
 export interface UpdateEmployeeInput {
+  // Non-sensitive fields — never audited by the backend.
+  fullName?: string;
+  email?: string;
+  phone?: string | null;
+  departmentId?: string | null;
+  branchId?: string | null;
+  position?: string | null;
+  // Sensitive fields (FR-4.6) — every real change lands in the Audit Log.
   role?: Role;
   directManagerId?: string | null;
   status?: Status;

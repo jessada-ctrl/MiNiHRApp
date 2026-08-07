@@ -16,7 +16,9 @@ export class UpdateSelfDto {
   @IsEmail()
   email?: string;
 
+  // `null` clears the number — an employee who wipes the field means to
+  // remove it, so the client sends null rather than omitting the key.
   @IsOptional()
   @IsString()
-  phone?: string;
+  phone?: string | null;
 }

@@ -58,6 +58,7 @@
   --ease-spring: cubic-bezier(.34,1.32,.64,1);
   --animate-shimmer: lalaShimmer 1.4s linear infinite;
   --animate-grow: lalaGrow .42s cubic-bezier(.34,1.32,.64,1) both;
+  --animate-toast-in: lalaToastIn .28s cubic-bezier(.22,.61,.36,1) both;
 }
 
 /* ---- semantic + surface: swap per theme, same names ---- */
@@ -172,3 +173,4 @@
 @keyframes lalaShimmer { to { background-position: 240% 0 } }
 @keyframes lalaGrow { from { transform: scaleY(0) } }
 @keyframes lalaPop { from { transform: scale(.9); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes lalaToastIn { from { transform: translateY(-10px); opacity: 0 } }
