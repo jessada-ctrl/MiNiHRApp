@@ -51,6 +51,7 @@ export class AuthService {
         role: employee.role as JwtPayload['role'],
         email: employee.email,
         fullName: employee.fullName,
+        mustChangePassword: employee.mustChangePassword,
       },
     };
   }

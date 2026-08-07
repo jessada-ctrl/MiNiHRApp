@@ -145,6 +145,9 @@ export class EmployeesService {
           role: dto.role ?? 'employee',
           status: 'active',
           passwordHash,
+          // The employee never chose this password — HR relays it out of
+          // band — so make replacing it the first thing they have to do.
+          mustChangePassword: true,
         },
       });
 
@@ -421,6 +424,9 @@ export class EmployeesService {
                 role: (role as 'employee' | 'approver' | 'tenant_admin') ?? 'employee',
                 status: (status as 'active' | 'inactive') ?? 'active',
                 passwordHash,
+                // Same as create(): an imported employee's temp password is
+                // not one they picked, so it must not become permanent.
+                mustChangePassword: true,
               },
             });
 

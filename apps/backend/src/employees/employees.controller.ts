@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
+import { PasswordService } from '../auth/password.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -15,7 +16,10 @@ import { BulkImportEmployeesDto } from './dto/bulk-import-employees.dto';
 @Controller('employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EmployeesController {
-  constructor(private readonly employees: EmployeesService) {}
+  constructor(
+    private readonly employees: EmployeesService,
+    private readonly password: PasswordService,
+  ) {}
 
   // Registered ahead of the `:id` routes below — Nest matches routes in
   // declaration order, and "me" would otherwise be captured as an :id.
@@ -56,6 +60,18 @@ export class EmployeesController {
     @Req() req: Request,
   ) {
     return this.employees.update(id, dto, { userId: user.id, ipAddress: req.ip ?? 'unknown' });
+  }
+
+  /**
+   * For the employee who can't reach their company inbox at all — the one
+   * case the self-service `POST /auth/forgot-password` flow cannot cover.
+   * Returns the generated password once, for the admin to relay in person.
+   */
+  @Post(':id/reset-password')
+  @HttpCode(200)
+  @Roles('tenant_admin')
+  resetPassword(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser, @Req() req: Request) {
+    return this.password.adminReset(id, { userId: user.id, ipAddress: req.ip ?? 'unknown' });
   }
 
   @Get(':id/quotas')

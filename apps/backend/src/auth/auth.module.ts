@@ -6,7 +6,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LineAuthService } from './line-auth.service';
 import { LineModule } from '../line/line.module';
-import { OtpMailerService } from './otp-mailer.service';
+import { MailerService } from './mailer.service';
+import { PasswordService } from './password.service';
 import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
 
@@ -25,7 +26,8 @@ import { RolesGuard } from './roles.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LineAuthService, OtpMailerService, JwtStrategy, RolesGuard],
-  exports: [RolesGuard],
+  providers: [AuthService, LineAuthService, MailerService, PasswordService, JwtStrategy, RolesGuard],
+  // PasswordService is exported for EmployeesController's HR-initiated reset.
+  exports: [RolesGuard, PasswordService],
 })
 export class AuthModule {}

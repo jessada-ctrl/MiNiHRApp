@@ -11,6 +11,7 @@ const TENANT_SCOPED_MODELS = new Set([
   'Department',
   'Employee',
   'OtpVerification',
+  'PasswordResetToken',
   'LeaveType',
   'LeaveQuota',
   'LeaveRequest',

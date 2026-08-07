@@ -20,12 +20,14 @@ function multerFile(buffer: Buffer, overrides: Partial<Express.Multer.File> = {}
     mimetype: 'image/jpeg',
     size: buffer.length,
     buffer,
+    // AttachmentsService never touches the stream — it works from `buffer`,
+    // because the file has to be inspected before it goes anywhere.
     stream: undefined as never,
     destination: '',
     filename: '',
     path: '',
     ...overrides,
-  } as Express.Multer.File;
+  };
 }
 
 function user(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
@@ -35,6 +37,7 @@ function user(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
     role: 'employee',
     email: 'e1@example.com',
     fullName: 'Employee One',
+    mustChangePassword: false,
     ...overrides,
   };
 }
@@ -70,16 +73,26 @@ describe('AttachmentsService', () => {
     return tenantContext.run({ tenantId: TENANT_ID }, () => service.upload(file, uploaderId));
   }
 
+  /**
+   * `expect.objectContaining` is typed `any`, so nesting one inside another
+   * trips no-unsafe-assignment at every call site. Named once here instead.
+   */
+  function expectCreatedWith(fields: Record<string, unknown>) {
+    expect(prisma.leaveAttachment.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining(fields) as object }),
+    );
+  }
+
   describe('upload validation (FR-2.2)', () => {
-    it.each([
+    const REAL_FILES: [label: string, bytes: Buffer, expectedMime: string][] = [
       ['JPEG', JPEG, 'image/jpeg'],
       ['PNG', PNG, 'image/png'],
       ['PDF', PDF, 'application/pdf'],
-    ])('accepts a real %s and records the sniffed type', async (_label, bytes, expectedMime) => {
+    ];
+
+    it.each(REAL_FILES)('accepts a real %s and records the sniffed type', async (_label, bytes, expectedMime) => {
       await upload(multerFile(bytes));
-      expect(prisma.leaveAttachment.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ mimeType: expectedMime }) }),
-      );
+      expectCreatedWith({ mimeType: expectedMime });
     });
 
     // The whole point of sniffing: a client can claim any mimetype it likes.
@@ -90,9 +103,7 @@ describe('AttachmentsService', () => {
 
     it('records the sniffed type rather than the one the client sent', async () => {
       await upload(multerFile(PDF, { mimetype: 'image/png' }));
-      expect(prisma.leaveAttachment.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ mimeType: 'application/pdf' }) }),
-      );
+      expectCreatedWith({ mimeType: 'application/pdf' });
     });
 
     it('rejects a file over 5MB', async () => {
@@ -105,9 +116,7 @@ describe('AttachmentsService', () => {
 
     it('strips path separators from the filename it stores for display', async () => {
       await upload(multerFile(JPEG, { originalname: '../../etc/passwd.jpg' }));
-      expect(prisma.leaveAttachment.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ originalFilename: '.._.._etc_passwd.jpg' }) }),
-      );
+      expectCreatedWith({ originalFilename: '.._.._etc_passwd.jpg' });
     });
   });
 

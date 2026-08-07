@@ -37,12 +37,29 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Session is no longer valid');
     }
 
+    // A password change ends every session that predates it. JWTs are
+    // stateless with an 8h life, so without this check a reset would leave
+    // whoever knew the old password signed in for the rest of the day —
+    // precisely the situation the reset was performed to end.
+    //
+    // Compared in whole seconds, not milliseconds: `iat` is a second-
+    // resolution claim, so the token minted immediately after a change
+    // carries an `iat` that floors to just *before* the sub-second
+    // passwordChangedAt, and a millisecond comparison would reject the
+    // replacement token the change itself just handed out.
+    if (employee.passwordChangedAt && payload.iat !== undefined) {
+      if (payload.iat < Math.floor(employee.passwordChangedAt.getTime() / 1000)) {
+        throw new UnauthorizedException('Password was changed — please sign in again');
+      }
+    }
+
     return {
       id: employee.id,
       tenantId: employee.tenantId,
       role: employee.role as JwtPayload['role'],
       email: employee.email,
       fullName: employee.fullName,
+      mustChangePassword: employee.mustChangePassword,
     };
   }
 }

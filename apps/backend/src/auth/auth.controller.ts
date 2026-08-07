@@ -10,6 +10,8 @@ import { VerifyLineOtpDto } from './dto/verify-line-otp.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import type { AuthenticatedUser } from './jwt-payload.interface';
+import { PasswordService } from './password.service';
+import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/password.dto';
 
 /**
  * Every unauthenticated endpoint here is rate limited per IP.
@@ -26,6 +28,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly lineAuthService: LineAuthService,
+    private readonly password: PasswordService,
   ) {}
 
   @Post('login')
@@ -71,5 +74,51 @@ export class AuthController {
   @Throttle({ default: { ttl: 60_000, limit: 60 } })
   lineLogin(@Body() dto: LineLoginDto) {
     return this.lineAuthService.loginWithIdToken(dto.idToken);
+  }
+
+  @Post('change-password')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { ttl: 300_000, limit: 10 } })
+  changePassword(@Body() dto: ChangePasswordDto, @CurrentUser() user: AuthenticatedUser, @Req() req: Request) {
+    return this.password.changePassword(user, dto.currentPassword, dto.newPassword, { ipAddress: req.ip ?? 'unknown' });
+  }
+
+  /**
+   * Tightest limit of the lot: each call sends a real email to an address
+   * the caller merely names, so this is the endpoint most usable as a
+   * harassment tool against someone else's inbox.
+   */
+  @Post('forgot-password')
+  @HttpCode(200)
+  @Throttle({ default: { ttl: 900_000, limit: 3 } })
+  forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    return this.password.requestReset(dto.email, this.resetUrlBase(req));
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  @Throttle({ default: { ttl: 900_000, limit: 10 } })
+  resetPassword(@Body() dto: ResetPasswordDto, @Req() req: Request) {
+    return this.password.resetPassword(dto.token, dto.newPassword, { ipAddress: req.ip ?? 'unknown' });
+  }
+
+  /**
+   * Where the emailed link points.
+   *
+   * Built from the request's own Host — which TenantMiddleware has already
+   * matched against a real tenant subdomain — and never from anything in the
+   * request body. A caller-supplied return URL would turn forgot-password
+   * into a phishing tool: a genuine, company-branded email carrying an
+   * attacker's link.
+   *
+   * PASSWORD_RESET_URL_BASE overrides it for local development, where the
+   * API answers on :3001 but web-admin runs on its own :3000 with no
+   * /admin basePath.
+   */
+  private resetUrlBase(req: Request): string {
+    const override = process.env.PASSWORD_RESET_URL_BASE?.trim();
+    if (override) return override.replace(/\/+$/, '');
+    return `${req.protocol}://${req.get('host') ?? ''}/admin/reset-password`;
   }
 }

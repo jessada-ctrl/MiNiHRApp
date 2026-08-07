@@ -59,6 +59,7 @@ model Tenant {
   auditLogs             AuditLog[]
   otpVerifications      OtpVerification[]
   leaveAttachments      LeaveAttachment[]
+  passwordResetTokens   PasswordResetToken[]
 
   @@map("tenants")
 }
@@ -144,6 +145,18 @@ model Employee {
   directManager    Employee?      @relation("EmployeeManager", fields: [directManagerId], references: [id], onDelete: SetNull)
   reports          Employee[]     @relation("EmployeeManager")
   passwordHash     String?        @map("password_hash")
+  /// Every session issued before this moment is rejected by JwtStrategy.
+  /// JWTs are stateless with an 8h life, so without this a password reset
+  /// would leave whoever knew the old password logged in for the rest of the
+  /// day — which is the exact situation a reset is meant to end. Null for
+  /// accounts whose password has never been changed, so existing sessions
+  /// aren't invalidated wholesale the first time this ships.
+  passwordChangedAt DateTime?     @map("password_changed_at")
+  /// Set whenever HR hands out a password the employee didn't choose (new
+  /// account, or an admin-initiated reset). The employee is sent to a change
+  /// -password screen until they pick their own, so a temp password relayed
+  /// over chat or read aloud doesn't quietly become permanent.
+  mustChangePassword Boolean      @default(false) @map("must_change_password")
   status           EmployeeStatus @default(active)
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
@@ -156,6 +169,7 @@ model Employee {
   otpVerifications        OtpVerification[]
   workflowStepAssignee    ApprovalWorkflowStep[]
   leaveAttachments        LeaveAttachment[]
+  passwordResetTokens     PasswordResetToken[]
 
   @@unique([tenantId, employeeCode])
   @@index([tenantId])
@@ -179,6 +193,34 @@ model OtpVerification {
 
   @@index([tenantId])
   @@map("otp_verifications")
+}
+
+/// A single-use "forgot password" link.
+///
+/// Only the SHA-256 of the token is stored: the plaintext exists solely in
+/// the email, so a database read alone can't be turned into account access.
+/// (SHA-256 rather than bcrypt because the token is 32 random bytes — there
+/// is no dictionary to slow an attacker down through, and bcrypt would only
+/// add latency to every verification.)
+model PasswordResetToken {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  employeeId String   @map("employee_id")
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  /// Stamped on use, rather than deleting the row, so a link that gets
+  /// clicked twice can be told apart from one that never existed.
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([tenantId])
+  @@index([tokenHash])
+  @@index([tenantId, employeeId])
+  @@map("password_reset_tokens")
 }
 
 // ===================== Leave management =====================
