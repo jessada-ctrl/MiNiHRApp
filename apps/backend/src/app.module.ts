@@ -7,6 +7,7 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
+import { AttachmentsModule } from './attachments/attachments.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
@@ -37,6 +38,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     EmployeesModule,
     OrgModule,
     AttendanceModule,
+    AttachmentsModule,
     LeaveTypesModule,
     WorkflowsModule,
     LeaveRequestsModule,

@@ -54,7 +54,12 @@ export function clearToken(): void {
 
 export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
+  // A FormData body (file uploads) must keep the browser-generated
+  // multipart Content-Type, including its boundary parameter — setting
+  // application/json over it makes the server unable to parse the parts.
+  if (!(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
   headers.set("X-Tenant-Subdomain", resolveTenantSubdomain());
   // Skips ngrok's free-tier browser-warning interstitial when the tunnel is ngrok — harmless no-op for any other host.
   headers.set("ngrok-skip-browser-warning", "true");

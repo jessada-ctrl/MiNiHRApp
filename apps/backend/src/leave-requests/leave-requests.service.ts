@@ -6,6 +6,7 @@ import { buildLeaveDecisionFlex, buildLeaveRequestFlex, buildOverQuotaAlertFlex 
 import { buildHrDigestFlex } from '../line/hr-digest-flex';
 import { LineMessagingService } from '../line/line-messaging.service';
 import { checkHighAbsenceFrequencyRisk } from './absence-frequency';
+import { AttachmentsService } from '../attachments/attachments.service';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
 
 const REMINDER_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -39,7 +40,31 @@ export class LeaveRequestsService {
   constructor(
     @Inject(TENANT_PRISMA) private readonly prisma: PrismaClient,
     private readonly lineMessaging: LineMessagingService,
+    private readonly attachments: AttachmentsService,
   ) {}
+
+  /**
+   * Swaps the raw `attachment_url_enc` ciphertext for the plain attachment id
+   * the client actually needs (to build a `GET /attachments/:id` link).
+   *
+   * These rows are returned to the browser wholesale, so shipping the
+   * ciphertext would hand every employee an offline copy of encrypted data
+   * for no benefit — the encryption exists to protect the DB at rest, not to
+   * be relayed onward. Undecryptable rows degrade to "no attachment" rather
+   * than failing the whole list.
+   */
+  private withAttachmentId<T extends { attachmentUrlEnc: string | null }>(request: T): Omit<T, 'attachmentUrlEnc'> & { attachmentId: string | null } {
+    const { attachmentUrlEnc, ...rest } = request;
+    let attachmentId: string | null = null;
+    if (attachmentUrlEnc) {
+      try {
+        attachmentId = this.attachments.decryptAttachmentId(attachmentUrlEnc);
+      } catch {
+        this.logger.warn('Could not decrypt an attachment reference — returning the request without it');
+      }
+    }
+    return { ...rest, attachmentId };
+  }
 
   /**
    * FR-3.1: pushes a LINE Flex Message to whichever approver is now
@@ -252,10 +277,25 @@ export class LeaveRequestsService {
       const cumulative = await this.getCumulativeAttachmentDays(employeeId, dto.leaveTypeId, startDatetime, totalDays);
       needsAttachment = cumulative >= leaveType.requiresAttachmentAfterDays;
     }
-    if (needsAttachment && !dto.attachmentUrl) {
+    if (needsAttachment && !dto.attachmentId) {
       throw new BadRequestException(
         `This leave type requires a medical certificate once your cumulative days reach ${leaveType.requiresAttachmentAfterDays} within a 30-day window — please attach one.`,
       );
+    }
+
+    // Confirm the id names a real upload by *this* employee before it is
+    // written to the request. Without this, a valid-looking UUID would
+    // satisfy the requires-attachment rule with no file behind it, and
+    // someone could point their own request at a colleague's certificate.
+    // Tenant scoping comes from the Prisma extension (NFR-1).
+    let attachmentUrlEnc: string | null = null;
+    if (dto.attachmentId) {
+      const attachment = await this.prisma.leaveAttachment.findFirst({
+        where: { id: dto.attachmentId, uploadedByEmployeeId: employeeId },
+        select: { id: true },
+      });
+      if (!attachment) throw new BadRequestException('ไม่พบไฟล์แนบที่ระบุ กรุณาอัปโหลดใหม่อีกครั้ง');
+      attachmentUrlEnc = this.attachments.encryptAttachmentId(attachment.id);
     }
 
     const workflowSnapshot = await this.resolveWorkflowSnapshot(employeeId, dto.leaveTypeId);
@@ -270,7 +310,7 @@ export class LeaveRequestsService {
         endDatetime,
         totalDays,
         reason: dto.reason,
-        attachmentUrlEnc: dto.attachmentUrl,
+        attachmentUrlEnc,
         isOverQuota,
         lwopAcknowledged: isOverQuota ? !!dto.lwopAcknowledged : false,
         status: 'pending',
@@ -280,6 +320,7 @@ export class LeaveRequestsService {
       },
       include: { leaveType: { select: { name: true } }, employee: { select: { fullName: true } } },
     });
+    const leaveRequestResponse = this.withAttachmentId(leaveRequest);
 
     this.notifyApprover({
       approverEmployeeId: workflowSnapshot[0].approverEmployeeId,
@@ -295,11 +336,11 @@ export class LeaveRequestsService {
       this.logger.error(`Failed to notify approver for leave request ${leaveRequest.id}: ${err instanceof Error ? err.message : String(err)}`),
     );
 
-    return leaveRequest;
+    return leaveRequestResponse;
   }
 
-  listMine(employeeId: string) {
-    return this.prisma.leaveRequest.findMany({
+  async listMine(employeeId: string) {
+    const requests = await this.prisma.leaveRequest.findMany({
       where: { employeeId },
       include: {
         leaveType: { select: { name: true } },
@@ -307,10 +348,11 @@ export class LeaveRequestsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return requests.map((request) => this.withAttachmentId(request));
   }
 
-  pendingForApprover(approverId: string) {
-    return this.prisma.leaveRequest.findMany({
+  async pendingForApprover(approverId: string) {
+    const requests = await this.prisma.leaveRequest.findMany({
       where: { currentApproverId: approverId, status: 'pending' },
       include: {
         leaveType: { select: { name: true } },
@@ -319,6 +361,7 @@ export class LeaveRequestsService {
       },
       orderBy: { createdAt: 'asc' },
     });
+    return requests.map((request) => this.withAttachmentId(request));
   }
 
   async cancel(id: string, employeeId: string) {

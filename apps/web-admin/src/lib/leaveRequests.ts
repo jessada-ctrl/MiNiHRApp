@@ -31,6 +31,8 @@ export interface LeaveRequest {
   workflowSnapshot: { label: string; approverType: string; approverEmployeeId: string }[];
   approvalActions: ApprovalAction[];
   employee: { id: string; fullName: string; departmentId: string | null };
+  /** Null unless a medical certificate was attached — open it via openAttachment(). */
+  attachmentId: string | null;
   createdAt: string;
 }
 

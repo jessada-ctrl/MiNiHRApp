@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { logout, resolveCurrentUser, type AuthUser } from "@/lib/auth";
+import { ACCEPTED_ATTACHMENT_TYPES, uploadAttachment, type UploadedAttachment } from "@/lib/attachments";
 import {
   type DurationType,
   type LeaveRequest,
@@ -439,10 +440,35 @@ function LeaveForm({
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
   const [reason, setReason] = useState("");
-  const [attachmentName, setAttachmentName] = useState("");
+  const [attachment, setAttachment] = useState<UploadedAttachment | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [ackChecked, setAckChecked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Uploaded as soon as it's picked, rather than held in memory until submit:
+  // on a phone the upload is the slow part, and doing it here means a
+  // validation failure (wrong type, too big) surfaces while the employee is
+  // still looking at the file picker instead of after they hit send.
+  async function handleFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Let the same file be re-picked after a failed attempt — without this
+    // the input keeps the old value and onChange never fires again.
+    e.target.value = "";
+    if (!file) return;
+
+    setError(null);
+    setUploading(true);
+    try {
+      setAttachment(await uploadAttachment(file));
+    } catch (err) {
+      setAttachment(null);
+      setError(err instanceof Error ? err.message : "อัปโหลดไฟล์ไม่สำเร็จ");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   // Both defaults are derived during render rather than synced in by an effect:
   // the leave-type list arrives after mount, and an effect would leave the
@@ -475,11 +501,11 @@ function LeaveForm({
         startTime: duration === "hourly" ? startTime : undefined,
         endTime: duration === "hourly" ? endTime : undefined,
         reason: reason || undefined,
-        attachmentUrl: attachmentName ? `mock://${attachmentName}` : undefined,
+        attachmentId: attachment?.id,
         lwopAcknowledged: ackChecked,
       });
       setReason("");
-      setAttachmentName("");
+      setAttachment(null);
       setAckChecked(false);
       await onSubmitted();
       onGoHistory();
@@ -631,13 +657,31 @@ function LeaveForm({
       {needsAttachment && (
         <div className="rounded-lg bg-pending-bg p-3 text-xs text-pending-fg">
           📎 ประเภทการลานี้อาจต้องแนบใบรับรองแพทย์หากลาสะสมครบ {selectedType?.requiresAttachmentAfterDays} วันในรอบ 30 วัน — ระบบจะตรวจสอบอีกครั้งตอนส่ง
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_ATTACHMENT_TYPES}
+            onChange={handleFilePicked}
+            className="hidden"
+          />
           <button
             type="button"
-            onClick={() => setAttachmentName(`certificate-${Date.now()}.jpg`)}
-            className="mt-2 block w-full rounded-md border border-dashed border-pending py-2 text-center"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="mt-2 block w-full rounded-md border border-dashed border-pending py-2 text-center disabled:opacity-60"
           >
-            {attachmentName ? `📄 ${attachmentName} (แนบแล้ว)` : "แตะเพื่อแนบไฟล์ (จำลอง)"}
+            {uploading ? "กำลังอัปโหลด..." : attachment ? `📄 ${attachment.originalFilename} (แนบแล้ว)` : "แตะเพื่อแนบใบรับรองแพทย์"}
           </button>
+          {attachment && (
+            <button
+              type="button"
+              onClick={() => setAttachment(null)}
+              className="mt-1.5 block w-full text-center underline"
+            >
+              เอาไฟล์ออก
+            </button>
+          )}
+          <p className="mt-1.5 text-center opacity-80">รองรับ JPG, PNG หรือ PDF ขนาดไม่เกิน 5MB</p>
         </div>
       )}
 

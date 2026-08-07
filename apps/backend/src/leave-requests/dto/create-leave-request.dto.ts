@@ -1,4 +1,4 @@
-import { IsBoolean, IsDateString, IsIn, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID, Matches, MinLength } from 'class-validator';
 
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -31,9 +31,16 @@ export class CreateLeaveRequestDto {
   @MinLength(1)
   reason?: string;
 
+  /**
+   * FR-2.2 medical certificate: the id returned by `POST /attachments`, which
+   * is where the file itself was validated and stored. Replaces the old free-
+   * text `attachmentUrl`, which accepted any string at all — the LIFF app was
+   * sending `mock://<filename>`, so a request that "had" a certificate might
+   * have no file behind it whatsoever.
+   */
   @IsOptional()
-  @IsString()
-  attachmentUrl?: string;
+  @IsUUID()
+  attachmentId?: string;
 
   @IsOptional()
   @IsBoolean()

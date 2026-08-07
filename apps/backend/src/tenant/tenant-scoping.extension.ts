@@ -14,6 +14,7 @@ const TENANT_SCOPED_MODELS = new Set([
   'LeaveType',
   'LeaveQuota',
   'LeaveRequest',
+  'LeaveAttachment',
   'ApprovalWorkflow',
   'ApprovalWorkflowStep',
   'LeaveApprovalAction',

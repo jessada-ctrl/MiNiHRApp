@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { AttachmentsService } from '../attachments/attachments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { tenantContext } from '../tenant/tenant-context';
 import { HolidaysService } from '../holidays/holidays.service';
 import { LeaveRequestsService } from '../leave-requests/leave-requests.service';
 
 const DIGEST_HOLIDAY_WINDOW_DAYS = 14;
+// Long enough to cover an employee who uploads a certificate, gets
+// interrupted, and comes back to finish the form later the same day.
+const ORPHAN_ATTACHMENT_GRACE_HOURS = 24;
 
 /**
  * Cross-tenant background jobs (FR-3.3, FR-4.3's automation). Runs outside
@@ -27,6 +31,7 @@ export class SchedulerService {
     private readonly prisma: PrismaService,
     private readonly leaveRequests: LeaveRequestsService,
     private readonly holidays: HolidaysService,
+    private readonly attachments: AttachmentsService,
   ) {}
 
   @Cron('0 9 * * *')
@@ -77,6 +82,36 @@ export class SchedulerService {
           if (sent > 0) this.logger.log(`Sent weekly HR digest to ${sent} admin(s) for tenant ${tenant.companyName}`);
         } catch (err) {
           this.logger.error(`Weekly HR digest failed for tenant ${tenant.companyName}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      });
+    }
+  }
+
+  /**
+   * Deletes medical certificates that were uploaded but never attached to a
+   * submitted leave request — an employee picking a file and then abandoning
+   * the form leaves the bytes on disk forever otherwise. These are health
+   * records, so "storage tidiness" is the lesser reason; not retaining data
+   * nobody asked us to keep is the real one.
+   *
+   * Runs over every tenant (not just LINE-configured ones, unlike the
+   * notification jobs — this is housekeeping, not delivery), and only
+   * considers uploads older than the grace window so a file uploaded while
+   * the employee is still filling in the form is never pulled out from under
+   * them. Daily at 03:40, off the 09:00 notification peak.
+   */
+  @Cron('40 3 * * *')
+  async pruneOrphanedAttachments() {
+    const cutoff = new Date(Date.now() - ORPHAN_ATTACHMENT_GRACE_HOURS * 60 * 60 * 1000);
+    const tenants = await this.prisma.tenant.findMany({ select: { id: true, companyName: true } });
+
+    for (const tenant of tenants) {
+      await tenantContext.run({ tenantId: tenant.id }, async () => {
+        try {
+          const removed = await this.attachments.pruneOrphaned(cutoff);
+          if (removed > 0) this.logger.log(`Pruned ${removed} unused attachment(s) for tenant ${tenant.companyName}`);
+        } catch (err) {
+          this.logger.error(`Attachment prune failed for tenant ${tenant.companyName}: ${err instanceof Error ? err.message : String(err)}`);
         }
       });
     }

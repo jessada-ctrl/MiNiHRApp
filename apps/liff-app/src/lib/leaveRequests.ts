@@ -35,6 +35,8 @@ export interface LeaveRequest {
   workflowSnapshot: { label: string; approverType: string; approverEmployeeId: string }[];
   approvalActions: ApprovalAction[];
   employee?: { id: string; fullName: string };
+  /** Null unless a medical certificate was attached — fetch it at GET /attachments/{id}. */
+  attachmentId: string | null;
   createdAt: string;
 }
 
@@ -54,7 +56,8 @@ export interface SubmitLeaveInput {
   startTime?: string;
   endTime?: string;
   reason?: string;
-  attachmentUrl?: string;
+  /** Id returned by uploadAttachment() — the file itself is uploaded first, separately. */
+  attachmentId?: string;
   lwopAcknowledged?: boolean;
 }
 

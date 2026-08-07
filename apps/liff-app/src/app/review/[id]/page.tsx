@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { resolveCurrentUser } from "@/lib/auth";
 import { type PendingApproval, approveLeaveRequest, listPendingForMe, rejectLeaveRequest } from "@/lib/approvals";
+import { openAttachment } from "@/lib/attachments";
 import { StatusBadge } from "@/components/ui/Badge";
 import { ApprovalTimeline, type TimelineStep } from "@/components/ui/Timeline";
 
@@ -167,6 +168,24 @@ export default function ReviewPage() {
             <dd className="tabular-nums">{request.totalDays} วัน</dd>
             <dt className="text-ink-3">เหตุผล</dt>
             <dd>{request.reason || "-"}</dd>
+            {request.attachmentId && (
+              <>
+                <dt className="text-ink-3">ใบรับรองแพทย์</dt>
+                <dd>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openAttachment(request.attachmentId!).catch((err) =>
+                        setError(err instanceof Error ? err.message : "เปิดไฟล์แนบไม่สำเร็จ"),
+                      )
+                    }
+                    className="font-medium text-brand-ink underline"
+                  >
+                    📎 เปิดดูไฟล์แนบ
+                  </button>
+                </dd>
+              </>
+            )}
           </dl>
         </div>
 

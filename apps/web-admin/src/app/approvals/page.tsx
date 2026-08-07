@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { StatusBadge } from "@/components/ui/Badge";
 import { ApprovalTimeline, type TimelineStep } from "@/components/ui/Timeline";
+import { openAttachment } from "@/lib/attachments";
 import {
   type LeaveRequest,
   approveLeaveRequest,
@@ -174,6 +175,20 @@ function ReviewModal({
           <dd className="tabular-nums">{request.totalDays} วัน</dd>
           <dt className="text-ink-3">เหตุผล</dt>
           <dd>{request.reason || "-"}</dd>
+          {request.attachmentId && (
+            <>
+              <dt className="text-ink-3">ใบรับรองแพทย์</dt>
+              <dd>
+                <button
+                  type="button"
+                  onClick={() => openAttachment(request.attachmentId!).catch((err) => setError(err instanceof Error ? err.message : "เปิดไฟล์แนบไม่สำเร็จ"))}
+                  className="font-medium text-brand-ink underline hover:no-underline"
+                >
+                  📎 เปิดดูไฟล์แนบ
+                </button>
+              </dd>
+            </>
+          )}
           {request.isOverQuota && (
             <>
               <dt className="text-ink-3">หมายเหตุ</dt>

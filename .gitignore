@@ -14,3 +14,6 @@ apps/backend/prisma/seed.js
 apps/backend/prisma/seed.js.map
 apps/backend/prisma/seed.d.ts
 .claude/scheduled_tasks.lock
+# Local attachment storage (ATTACHMENTS_DIR default) — uploaded medical
+# certificates must never end up in the repo.
+var/
