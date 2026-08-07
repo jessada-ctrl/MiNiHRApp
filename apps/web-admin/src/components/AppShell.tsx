@@ -165,14 +165,14 @@ export default function AppShell({
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } ${collapsed ? "md:w-16" : "md:w-60"}`}
       >
-        <div className="flex items-center gap-2.5 border-b border-white/10 px-4 py-5">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] shadow-e2" style={{ background: "var(--color-brand-500)", backgroundImage: "linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-400) 42%, var(--color-gold-500) 100%)" }}>
+        <div className="flex items-center gap-2.5 border-b border-sidebar-line px-4 py-5">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] shadow-e2" style={{ background: "var(--brand-mark)" }}>
             <Image src={logoIcon} alt="" width={22} height={22} className="shrink-0" priority />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate font-brand text-base text-[rgba(250,245,237,0.94)]">LaLa&apos;</p>
-              <p className="truncate text-[11px] text-[rgba(250,245,237,0.5)]">Leave &amp; Attendance</p>
+              <p className="truncate font-brand text-base text-sidebar-ink">LaLa&apos;</p>
+              <p className="truncate text-[11px] text-sidebar-ink-3">Leave &amp; Attendance</p>
             </div>
           )}
         </div>
@@ -190,8 +190,8 @@ export default function AppShell({
                   title={collapsed ? item.label : undefined}
                   className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
                     active
-                      ? "bg-brand-500/15 font-semibold text-brand-300"
-                      : "font-medium text-[rgba(250,245,237,0.68)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
+                      ? "bg-gold-500/15 font-semibold text-gold-300"
+                      : "font-medium text-sidebar-ink-2 hover:bg-white/5 hover:text-sidebar-ink"
                   } ${collapsed ? "justify-center" : ""}`}
                 >
                   <ItemIcon className="h-4 w-4 shrink-0" strokeWidth={2} />
@@ -214,8 +214,8 @@ export default function AppShell({
                   title={item.label}
                   className={`flex items-center justify-center rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
                     groupActive
-                      ? "bg-brand-500/15 font-semibold text-brand-300"
-                      : "font-medium text-[rgba(250,245,237,0.68)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
+                      ? "bg-gold-500/15 font-semibold text-gold-300"
+                      : "font-medium text-sidebar-ink-2 hover:bg-white/5 hover:text-sidebar-ink"
                   }`}
                 >
                   <GroupIcon className="h-4 w-4 shrink-0" strokeWidth={2} />
@@ -230,8 +230,8 @@ export default function AppShell({
                   onClick={() => toggleGroup(item)}
                   className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
                     groupActive
-                      ? "font-semibold text-brand-300"
-                      : "font-medium text-[rgba(250,245,237,0.68)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
+                      ? "font-semibold text-gold-300"
+                      : "font-medium text-sidebar-ink-2 hover:bg-white/5 hover:text-sidebar-ink"
                   }`}
                 >
                   <GroupIcon className="h-4 w-4 shrink-0" strokeWidth={2} />
@@ -239,7 +239,7 @@ export default function AppShell({
                   <IconChevron className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 ${open ? "rotate-90" : ""}`} />
                 </button>
                 {open && (
-                  <div className="mt-1 space-y-1 border-l border-white/10 pl-3">
+                  <div className="mt-1 space-y-1 border-l border-sidebar-line pl-3">
                     {item.children.map((child) => {
                       const active = pathname === child.href;
                       const ChildIcon = child.icon;
@@ -250,8 +250,8 @@ export default function AppShell({
                           onClick={() => setMobileOpen(false)}
                           className={`flex items-center gap-3 rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
                             active
-                              ? "bg-brand-500/15 font-semibold text-brand-300"
-                              : "text-[rgba(250,245,237,0.5)] hover:bg-white/5 hover:text-[rgba(250,245,237,0.94)]"
+                              ? "bg-gold-500/15 font-semibold text-gold-300"
+                              : "text-sidebar-ink-3 hover:bg-white/5 hover:text-sidebar-ink"
                           }`}
                         >
                           <ChildIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
@@ -266,24 +266,23 @@ export default function AppShell({
           })}
         </nav>
 
-        <div className="border-t border-white/10 p-3">
+        <div className="border-t border-sidebar-line p-3">
           <div className={`flex items-center gap-2 rounded-md px-1 py-1 ${collapsed ? "justify-center" : ""}`}>
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: "linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-400) 42%, var(--color-gold-500) 100%)" }}
-            >
+            {/* Solid gold, not the brand-mark gradient: white initials over the
+                gradient's gold end fall under 3:1. Navy-on-gold clears 10:1. */}
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-500 text-xs font-bold text-brand-900">
               {initials}
             </div>
             {!collapsed && (
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-[rgba(250,245,237,0.94)]">{user.fullName}</p>
-                <p className="truncate text-[11px] text-[rgba(250,245,237,0.5)]">{ROLE_LABEL[user.role]}</p>
+                <p className="truncate text-sm font-medium text-sidebar-ink">{user.fullName}</p>
+                <p className="truncate text-[11px] text-sidebar-ink-3">{ROLE_LABEL[user.role]}</p>
               </div>
             )}
             <button
               onClick={handleLogout}
               title="ออกจากระบบ"
-              className="shrink-0 rounded-md p-1.5 text-[rgba(250,245,237,0.5)] transition-colors hover:bg-white/10 hover:text-[rgba(250,245,237,0.94)]"
+              className="shrink-0 rounded-md p-1.5 text-sidebar-ink-3 transition-colors hover:bg-white/10 hover:text-sidebar-ink"
             >
               <IconLogout className="h-4 w-4" strokeWidth={2} />
             </button>

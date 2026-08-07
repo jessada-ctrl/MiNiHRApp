@@ -108,7 +108,7 @@ export default function LeaveTypesPage() {
           </Link>
         </p>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
           <table className="min-w-full divide-y divide-hairline text-sm">
@@ -173,11 +173,11 @@ export default function LeaveTypesPage() {
                       <button
                         onClick={() => setConfirmTarget(lt)}
                         disabled={savingId === lt.id}
-                        className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                        className="text-sm font-medium text-rejected-fg hover:text-rejected-hover disabled:opacity-50"
                       >
                         ลบ
                       </button>
-                      {rowError[lt.id] && <p className="mt-1 text-xs text-red-600">{rowError[lt.id]}</p>}
+                      {rowError[lt.id] && <p className="mt-1 text-xs text-rejected-fg">{rowError[lt.id]}</p>}
                     </td>
                   </tr>
                 ))}
@@ -305,7 +305,7 @@ function AddLeaveTypeModal({ onClose, onCreated }: { onClose: () => void; onCrea
             <span className="text-sm text-ink-2">อนุญาตให้ลารายชั่วโมง</span>
           </label>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
           <div className="mt-2 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm text-ink">

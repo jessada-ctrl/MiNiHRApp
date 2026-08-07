@@ -45,7 +45,7 @@ export default function ApprovalsPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-ink">คำขอลาที่รออนุมัติ</h1>
         <p className="mt-1 text-sm text-ink-3">แสดงเฉพาะคำขอที่ถึงคิวคุณในขั้นตอนปัจจุบัน</p>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
         {loading && <p className="mt-4 text-sm text-ink-3">กำลังโหลด...</p>}
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -174,7 +174,7 @@ function ReviewModal({
           {request.isOverQuota && (
             <>
               <dt className="text-ink-3">หมายเหตุ</dt>
-              <dd className="text-red-600">เกินโควตา · พนักงานยอมรับเงื่อนไข LWOP แล้ว</dd>
+              <dd className="text-rejected-fg">เกินโควตา · พนักงานยอมรับเงื่อนไข LWOP แล้ว</dd>
             </>
           )}
         </dl>
@@ -211,7 +211,7 @@ function ReviewModal({
               rows={3}
               className="w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
             />
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-sm text-rejected-fg">{error}</p>}
             <div className="mt-3 flex gap-2">
               <button onClick={() => setRejecting(false)} className="flex-1 rounded-md border border-hairline-strong py-2 text-sm">
                 ยกเลิก
@@ -219,7 +219,7 @@ function ReviewModal({
               <button
                 onClick={handleReject}
                 disabled={busy}
-                className="flex-1 rounded-md bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                className="flex-1 rounded-md bg-rejected py-2 text-sm font-medium text-white hover:bg-rejected-hover disabled:opacity-60"
               >
                 {busy ? "กำลังบันทึก..." : "ยืนยันปฏิเสธ"}
               </button>
@@ -227,11 +227,11 @@ function ReviewModal({
           </div>
         ) : (
           <>
-            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-3 text-sm text-rejected-fg">{error}</p>}
             <div className="mt-4 flex gap-2">
               <button
                 onClick={() => setRejecting(true)}
-                className="flex-1 rounded-md bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700"
+                className="flex-1 rounded-md bg-rejected py-2.5 text-sm font-medium text-white hover:bg-rejected-hover"
               >
                 ❌ ปฏิเสธ
               </button>

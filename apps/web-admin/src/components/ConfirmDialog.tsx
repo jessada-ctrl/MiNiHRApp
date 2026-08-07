@@ -43,7 +43,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             disabled={busy}
             className={`rounded-md px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 disabled:opacity-60 ${
-              danger ? "bg-red-600 hover:bg-red-700" : "bg-brand-500 hover:bg-brand-600"
+              danger ? "bg-rejected hover:bg-rejected-hover" : "bg-brand-500 hover:bg-brand-600"
             }`}
           >
             {busy ? "กำลังดำเนินการ..." : confirmLabel}

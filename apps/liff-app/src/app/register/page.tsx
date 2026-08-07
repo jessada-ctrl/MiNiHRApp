@@ -75,7 +75,7 @@ export default function RegisterPage() {
         </div>
 
         {!isLiffConfigured() && (
-          <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <p className="mb-3 rounded-lg bg-pending-bg px-3 py-2 text-xs text-pending-fg">
             ⚠️ ยังไม่ได้เชื่อมต่อ LINE จริง (โหมดทดสอบ) — ระบบจริงจะดึง LINE User ID จาก LIFF SDK อัตโนมัติ
           </p>
         )}
@@ -112,7 +112,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
             <button
               type="submit"
@@ -162,7 +162,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
             <button
               type="submit"

@@ -151,7 +151,7 @@ export default function SettingsPage() {
               />
             </label>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-rejected-fg">{error}</p>}
             {success && <p className="text-sm text-brand-600">{success}</p>}
 
             <div className="flex justify-end">
@@ -219,7 +219,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {visibilityError && <p className="mt-3 text-sm text-red-600">{visibilityError}</p>}
+          {visibilityError && <p className="mt-3 text-sm text-rejected-fg">{visibilityError}</p>}
           {visibilitySuccess && <p className="mt-3 text-sm text-brand-600">{visibilitySuccess}</p>}
         </div>
       </div>

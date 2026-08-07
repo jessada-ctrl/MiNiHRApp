@@ -56,7 +56,7 @@ export default function OrganizationPage() {
           จัดการสาขา (พร้อมพิกัดและรัศมีสำหรับเช็คอินเข้างาน) และแผนก — การปิดใช้งานจะถูกบันทึกลง Audit Log
         </p>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
 
         <section className="mt-6">
           <div className="flex items-center justify-between">
@@ -313,7 +313,7 @@ function BranchModal({ branch, onClose, onSaved }: { branch?: Branch; onClose: (
 
         {branch && <QrCodeSection branchId={branch.id} />}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">
@@ -413,7 +413,7 @@ function QrCodeSection({ branchId }: { branchId: string }) {
       ) : (
         <p className="mt-2 text-xs text-ink-3">ยังไม่มี QR Code สำหรับวันนี้ — พนักงานจะใช้พิกัด GPS แทนได้เสมอ</p>
       )}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-rejected-fg">{error}</p>}
       <p className="mt-1 text-[11px] text-ink-3">รหัสจะหมดอายุอัตโนมัติเมื่อขึ้นวันใหม่ หรือเมื่อสุ่มรหัสใหม่</p>
     </div>
   );
@@ -479,7 +479,7 @@ function DepartmentModal({
           </Field>
         )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm">

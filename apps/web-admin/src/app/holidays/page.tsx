@@ -67,7 +67,7 @@ export default function HolidaysPage() {
           ระบบจะแจ้งเตือนพนักงานผ่าน LINE ล่วงหน้าตามจำนวนวันที่กำหนด — ส่วนการส่งแจ้งเตือนอัตโนมัติจริงยังไม่เปิดใช้งาน (รอเชื่อมต่อ LINE)
         </p>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
 
         <div className="mt-4 max-w-xl rounded-lg border border-hairline bg-surface shadow-e1">
           {loading && <p className="p-4 text-sm text-ink-3">กำลังโหลด...</p>}
@@ -83,7 +83,7 @@ export default function HolidaysPage() {
                 <button
                   onClick={() => setConfirmTarget(h)}
                   disabled={busyId === h.id}
-                  className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                  className="text-xs font-medium text-rejected-fg hover:text-rejected-hover disabled:opacity-50"
                 >
                   ลบ
                 </button>
@@ -188,7 +188,7 @@ function AddHolidayModal({ onClose, onCreated }: { onClose: () => void; onCreate
             />
           </label>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
           <div className="mt-2 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm text-ink">

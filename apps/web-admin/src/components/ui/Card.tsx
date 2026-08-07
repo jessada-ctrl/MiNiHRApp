@@ -119,7 +119,7 @@ export function MetricCard({
   );
 }
 
-/** Person summary row — avatar (gradient + initials) + name/meta + status badge. */
+/** Person summary row — avatar (navy + initials) + name/meta + status badge. */
 export function PersonRow({
   name,
   meta,
@@ -135,8 +135,7 @@ export function PersonRow({
   return (
     <Card padding="compact" className="flex items-center gap-3">
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-        style={{ background: "linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-400) 42%, var(--color-gold-500) 100%)" }}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white"
         aria-hidden="true"
       >
         {initial}

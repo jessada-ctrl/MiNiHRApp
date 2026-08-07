@@ -62,7 +62,7 @@ export default function WorkflowsPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-ink">สายอนุมัติ (Approval Workflow Builder)</h1>
         <p className="mt-1 text-sm text-ink-3">ลากบล็อกเพื่อสลับลำดับขั้นตอน แล้วกดบันทึกในแต่ละสาย</p>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
         {loading && <p className="mt-4 text-sm text-ink-3">กำลังโหลด...</p>}
 
         <div className="mt-4 flex flex-col gap-6">
@@ -184,7 +184,7 @@ function WorkflowCard({
           <h2 className="font-semibold text-ink">{workflow.name}</h2>
           <p className="text-xs text-ink-3">{SCOPE_LABEL[workflow.scopeType]}</p>
         </div>
-        <button onClick={() => setConfirmingDelete(true)} className="text-sm font-medium text-red-600 hover:text-red-800">
+        <button onClick={() => setConfirmingDelete(true)} className="text-sm font-medium text-rejected-fg hover:text-rejected-hover">
           ลบสายอนุมัติ
         </button>
       </div>
@@ -242,7 +242,7 @@ function WorkflowCard({
               {steps.length > 1 && (
                 <button
                   onClick={() => removeStep(idx)}
-                  className="self-end text-xs font-medium text-red-600 hover:text-red-800"
+                  className="self-end text-xs font-medium text-rejected-fg hover:text-rejected-hover"
                 >
                   ✕ ลบขั้นตอน
                 </button>
@@ -259,7 +259,7 @@ function WorkflowCard({
         </button>
       </div>
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-rejected-fg">{error}</p>}
 
       {dirty && (
         <div className="mt-4 flex items-center gap-2">
@@ -341,7 +341,7 @@ function AddWorkflowModal({ onClose, onCreated }: { onClose: () => void; onCreat
           </label>
           <p className="text-xs text-ink-3">เริ่มต้นด้วย 1 ขั้นตอน (หัวหน้างานตรง) — เพิ่ม/แก้ไขขั้นตอนได้หลังสร้างแล้ว</p>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
           <div className="mt-2 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="rounded-md border border-hairline-strong px-4 py-2 text-sm text-ink">

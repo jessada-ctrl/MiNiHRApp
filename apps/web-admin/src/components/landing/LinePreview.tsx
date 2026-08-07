@@ -1,11 +1,13 @@
 import { IconCheck, IconClose } from "./icons";
 
 export default function LinePreview() {
+  // Device shell is brand-700, a step lighter than the navy hero it sits on —
+  // `bg-sidebar` would make the frame and notch vanish into the section.
   return (
-    <div className="relative mx-auto w-[280px] rounded-[2.25rem] border-[8px] border-sidebar bg-sidebar shadow-2xl sm:w-[300px]">
-      <div className="absolute left-1/2 top-0 h-5 w-28 -translate-x-1/2 rounded-b-xl bg-sidebar" />
+    <div className="relative mx-auto w-[280px] rounded-[2.25rem] border-[8px] border-brand-700 bg-brand-700 shadow-2xl sm:w-[300px]">
+      <div className="absolute left-1/2 top-0 h-5 w-28 -translate-x-1/2 rounded-b-xl bg-brand-700" />
       <div className="flex h-[560px] flex-col overflow-hidden rounded-[1.6rem] bg-[#e9eef1]">
-        <div className="flex items-center gap-2 bg-[#06c755] px-4 py-3 text-white">
+        <div className="flex items-center gap-2 bg-line-500 px-4 py-3 text-white">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-semibold">HR</div>
           <div className="leading-tight">
             <p className="text-xs font-semibold">LaLa&apos; HR Bot</p>
@@ -32,15 +34,15 @@ export default function LinePreview() {
               <p className="text-[11px] text-ink-3">
                 วันที่: <span className="font-medium text-ink">12–13 ส.ค. 2569</span>
               </p>
-              <span className="mt-1 inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+              <span className="mt-1 inline-flex items-center rounded-full bg-pending-bg px-2 py-0.5 text-[10px] font-medium text-pending-fg">
                 รออนุมัติ
               </span>
             </div>
             <div className="grid grid-cols-2 divide-x divide-hairline border-t border-hairline text-xs font-medium">
-              <button type="button" className="flex items-center justify-center gap-1 py-2.5 text-rose-600">
+              <button type="button" className="flex items-center justify-center gap-1 py-2.5 text-rejected-fg">
                 <IconClose className="h-3.5 w-3.5" /> ปฏิเสธ
               </button>
-              <button type="button" className="flex items-center justify-center gap-1 py-2.5 text-emerald-600">
+              <button type="button" className="flex items-center justify-center gap-1 py-2.5 text-approved-fg">
                 <IconCheck className="h-3.5 w-3.5" /> อนุมัติ
               </button>
             </div>

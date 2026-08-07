@@ -22,15 +22,15 @@ const STATUS_LABEL: Record<SubscriptionStatus, string> = {
 };
 
 const STATUS_BADGE: Record<SubscriptionStatus, string> = {
-  trial: "bg-amber-500/15 text-amber-300",
-  active: "bg-emerald-500/15 text-emerald-300",
-  suspended: "bg-red-500/15 text-red-300",
+  trial: "bg-pending-bg text-pending-fg",
+  active: "bg-approved-bg text-approved-fg",
+  suspended: "bg-rejected-bg text-rejected-fg",
 };
 
 const STATUS_ACCENT: Record<SubscriptionStatus, string> = {
-  trial: "text-amber-300",
-  active: "text-emerald-300",
-  suspended: "text-red-300",
+  trial: "text-pending-fg",
+  active: "text-approved-fg",
+  suspended: "text-rejected-fg",
 };
 
 export default function SuperAdminPage() {
@@ -129,7 +129,7 @@ export default function SuperAdminPage() {
 
   return (
     <div className="dark min-h-screen bg-bg text-ink">
-      <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+      <header className="flex items-center justify-between border-b border-sidebar-line px-6 py-4">
         <div>
           <p className="text-sm font-semibold text-ink">LaLa&apos; Platform — SaaS Super Admin</p>
           <p className="text-xs text-ink-2">จัดการ Tenant ทั้งหมดในระบบ</p>
@@ -138,7 +138,7 @@ export default function SuperAdminPage() {
           <span className="text-sm text-ink-2">{admin.name}</span>
           <button
             onClick={handleLogout}
-            className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-ink-2 transition-colors duration-150 hover:bg-white/5"
+            className="rounded-md border border-sidebar-line px-3 py-1.5 text-xs font-medium text-ink-2 transition-colors duration-150 hover:bg-white/5"
           >
             ออกจากระบบ
           </button>
@@ -146,7 +146,7 @@ export default function SuperAdminPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-8">
-        {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+        {error && <p className="mb-4 text-sm text-rejected-fg">{error}</p>}
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           <StatTile label="Tenant ทั้งหมด" value={loading ? "…" : (overview?.totalTenants ?? 0)} />
@@ -169,7 +169,7 @@ export default function SuperAdminPage() {
         {showCreate && (
           <form
             onSubmit={handleCreate}
-            className="mt-4 flex flex-col gap-3 rounded-lg border border-white/10 bg-surface p-5 sm:flex-row sm:items-end"
+            className="mt-4 flex flex-col gap-3 rounded-lg border border-sidebar-line bg-surface p-5 sm:flex-row sm:items-end"
           >
             <label className="flex-1">
               <span className="block text-xs font-medium text-ink-2">ชื่อบริษัท</span>
@@ -177,7 +177,7 @@ export default function SuperAdminPage() {
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-1 w-full rounded-md border border-white/10 bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                className="mt-1 w-full rounded-md border border-sidebar-line bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
               />
             </label>
             <label className="flex-1">
@@ -188,7 +188,7 @@ export default function SuperAdminPage() {
                 title="ตัวพิมพ์เล็ก ตัวเลข และขีดกลางเท่านั้น"
                 value={subdomain}
                 onChange={(e) => setSubdomain(e.target.value.toLowerCase())}
-                className="mt-1 w-full rounded-md border border-white/10 bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                className="mt-1 w-full rounded-md border border-sidebar-line bg-surface-2 px-3 py-2 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
               />
             </label>
             <button
@@ -198,11 +198,11 @@ export default function SuperAdminPage() {
             >
               {creating ? "กำลังสร้าง..." : "สร้าง"}
             </button>
-            {createError && <p className="text-sm text-red-400 sm:basis-full">{createError}</p>}
+            {createError && <p className="text-sm text-rejected-fg sm:basis-full">{createError}</p>}
           </form>
         )}
 
-        <div className="mt-4 overflow-x-auto rounded-lg border border-white/10">
+        <div className="mt-4 overflow-x-auto rounded-lg border border-sidebar-line">
           <table className="min-w-full divide-y divide-white/10 text-sm">
             <thead>
               <tr className="text-left text-xs font-medium uppercase tracking-wide text-ink-2">
@@ -244,7 +244,7 @@ export default function SuperAdminPage() {
                             key={s}
                             onClick={() => handleStatusChange(t.id, s)}
                             disabled={updatingId === t.id}
-                            className="rounded-md border border-white/10 px-2 py-1 text-xs text-ink-2 transition-colors duration-150 hover:bg-white/5 disabled:opacity-50"
+                            className="rounded-md border border-sidebar-line px-2 py-1 text-xs text-ink-2 transition-colors duration-150 hover:bg-white/5 disabled:opacity-50"
                           >
                             {STATUS_LABEL[s]}
                           </button>
@@ -263,7 +263,7 @@ export default function SuperAdminPage() {
 
 function StatTile({ label, value, accentClass }: { label: string; value: string | number; accentClass?: string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-surface p-4">
+    <div className="rounded-lg border border-sidebar-line bg-surface p-4">
       <p className="text-xs font-medium uppercase tracking-wide text-ink-2">{label}</p>
       <p className={`mt-2 text-2xl font-semibold tabular-nums ${accentClass ?? "text-ink"}`}>{value}</p>
     </div>

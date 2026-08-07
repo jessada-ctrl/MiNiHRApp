@@ -41,7 +41,7 @@ const COLUMNS: TableColumn<ReportRow>[] = [
   {
     key: "remark",
     header: "หมายเหตุ",
-    render: (r) => <span className="text-xs text-red-600">{r.isOverQuota ? "🚩 เกินโควตา (LWOP)" : ""}</span>,
+    render: (r) => <span className="text-xs text-rejected-fg">{r.isOverQuota ? "🚩 เกินโควตา (LWOP)" : ""}</span>,
   },
 ];
 
@@ -165,7 +165,7 @@ export default function ReportsPage() {
           <span className="ml-auto self-center text-xs text-ink-3">{rows.length} รายการ</span>
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
 
         <div className="mt-4">
           {loading ? (

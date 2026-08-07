@@ -136,7 +136,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
         {user.role === "employee" && (
           <div className="rounded-lg border border-hairline bg-surface p-6 text-center shadow-e1">
@@ -149,17 +149,17 @@ export default function DashboardPage() {
         {(user.role === "tenant_admin" || user.role === "approver") && (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-              <StatCard label="พนักงานทั้งหมด" value={loading ? "…" : employees.length} sub={`${activeEmployees} กำลังทำงาน`} accent="teal" href="/employees" />
+              <StatCard label="พนักงานทั้งหมด" value={loading ? "…" : employees.length} sub={`${activeEmployees} กำลังทำงาน`} accent="info" href="/employees" />
               {user.role === "tenant_admin" && (
                 <>
-                  <StatCard label="สาขาที่ใช้งาน" value={loading ? "…" : activeBranches} sub={`จาก ${branches.length} สาขา`} accent="indigo" href="/organization" />
-                  <StatCard label="แผนกที่ใช้งาน" value={loading ? "…" : activeDepartments} sub={`จาก ${departments.length} แผนก`} accent="indigo" href="/organization" />
-                  <StatCard label="คำขอลารออนุมัติ" value={loading ? "…" : statusCounts.pending} sub={`จาก ${totalRequests} คำขอทั้งหมด`} accent="amber" href="/approvals" />
-                  <StatCard label="เกินโควตา (LWOP)" value={loading ? "…" : overQuotaCount} sub="ต้องตรวจสอบก่อนตัดเงินเดือน" accent="red" href="/reports" />
+                  <StatCard label="สาขาที่ใช้งาน" value={loading ? "…" : activeBranches} sub={`จาก ${branches.length} สาขา`} accent="brand" href="/organization" />
+                  <StatCard label="แผนกที่ใช้งาน" value={loading ? "…" : activeDepartments} sub={`จาก ${departments.length} แผนก`} accent="brand" href="/organization" />
+                  <StatCard label="คำขอลารออนุมัติ" value={loading ? "…" : statusCounts.pending} sub={`จาก ${totalRequests} คำขอทั้งหมด`} accent="pending" href="/approvals" />
+                  <StatCard label="เกินโควตา (LWOP)" value={loading ? "…" : overQuotaCount} sub="ต้องตรวจสอบก่อนตัดเงินเดือน" accent="risk" href="/reports" />
                 </>
               )}
               {user.role === "approver" && (
-                <StatCard label="รออนุมัติของฉัน" value={loading ? "…" : pendingForMe?.length ?? 0} sub="คำขอที่ถึงคิวคุณ" accent="amber" href="/approvals" />
+                <StatCard label="รออนุมัติของฉัน" value={loading ? "…" : pendingForMe?.length ?? 0} sub="คำขอที่ถึงคิวคุณ" accent="pending" href="/approvals" />
               )}
             </div>
 
@@ -296,11 +296,12 @@ export default function DashboardPage() {
   );
 }
 
+// Keyed by intent, not by color name, so a palette swap never has to touch call sites.
 const ACCENT_CLASSES: Record<string, string> = {
-  teal: "bg-info-bg text-info-fg",
-  indigo: "bg-indigo-50 text-indigo-700",
-  amber: "bg-pending-bg text-pending-fg",
-  red: "bg-risk-bg text-risk-fg",
+  info: "bg-info-bg text-info-fg",
+  brand: "bg-brand-50 text-brand-700",
+  pending: "bg-pending-bg text-pending-fg",
+  risk: "bg-risk-bg text-risk-fg",
 };
 
 function StatCard({

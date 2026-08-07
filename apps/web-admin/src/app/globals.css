@@ -6,25 +6,40 @@
   --font-brand: var(--font-caprasimo), Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace;
 
-  /* ---- brand ramp (from the Lala' mark) ---- */
-  --color-brand-50: #eef6fc;
-  --color-brand-100: #d9ecf8;
-  --color-brand-200: #b3d7f0;
-  --color-brand-300: #7fbbe4;
-  --color-brand-400: #4a9dd4;
-  --color-brand-500: #2f7fbf;
-  --color-brand-600: #24659c;
-  --color-brand-700: #1c4e79;
-  --color-brand-800: #163c5d;
-  --color-brand-900: #112c44;
+  /* ---- brand ramp: Lala' navy (primary) ---- */
+  --color-brand-50: #eff4fa;
+  --color-brand-100: #dbe7f4;
+  --color-brand-200: #b8cde8;
+  --color-brand-300: #8bacd6;
+  --color-brand-400: #5183b8;
+  --color-brand-500: #2a5f9e;
+  --color-brand-600: #204b80;
+  --color-brand-700: #183a64;
+  --color-brand-800: #122d4d;
+  --color-brand-900: #0d2038;
+
+  /* ---- accent ramp: gold. Gold is a FILL, not an ink: 500 carries navy text at
+         10:1 but white text at only 1.7:1, so text on gold must be brand-900,
+         and gold text on a light surface must come from 700+. ---- */
+  --color-gold-50: #fdf9ea;
   --color-gold-100: #fdf3d4;
+  --color-gold-200: #fae5a4;
+  --color-gold-300: #f7d670;
+  --color-gold-400: #f4cb4f;
   --color-gold-500: #f2c53d;
   --color-gold-600: #d9a81f;
+  --color-gold-700: #b0850f;
   --color-gold-800: #8a5a06;
+  --color-gold-900: #5e3d05;
+
+  /* ---- chart-series tertiaries (never for UI state) ---- */
   --color-clay-500: #c67139;
   --color-sage-500: #7a8a5e;
 
-  /* ---- LINE brand green ramp (LINE OA touchpoints — unrelated to the Lala' brand ramp above) ---- */
+  /* ---- LINE brand green ramp. NOT a Lala' brand color: use it only where the UI
+         literally depicts LINE's own surface (LinePreview's chat mockup) or sits on
+         a real LINE action. The marketing page is navy+gold like the app — a green
+         CTA there made the product read as a green brand. ---- */
   --color-line-50: #eafbf1;
   --color-line-100: #cff6de;
   --color-line-200: #9eebbe;
@@ -62,19 +77,36 @@
   --bg-elev: #faf5ed;
   --surface: #fdfaf5;
   --surface-2: #f6efe4;
-  --sidebar: #26211c;
+  --sidebar: #12253f;
   --border: rgb(38 33 28 / .10);
   --border-strong: rgb(38 33 28 / .20);
   --text: #221e1a;
   --text-2: #5d564c;
   --text-3: #8a8175;
 
-  --pending: #e0a91b;  --pending-bg: #fdf1cf;  --pending-fg: #8a5a06;
+  /* Statuses keep a readable hue gap from each other AND from the gold accent:
+     gold ~47° · pending ~36° · risk ~18° · rejected ~5°. pending used to sit at
+     ~44° — close enough to gold that a pending chip read as a brand accent. */
+  --pending: #d9880f;  --pending-bg: #fce8c4;  --pending-fg: #8a5205;
   --approved: #5b9146; --approved-bg: #e7f2de; --approved-fg: #3d6b33;
   --rejected: #c0453b; --rejected-bg: #fbe6e3; --rejected-fg: #8f2f28;
-  --risk: #d67f48;     --risk-bg: #ffe8d8;     --risk-fg: #8c491a;
-  --info: #2f7fbf;     --info-bg: #d9ecf8;     --info-fg: #1c4e79;
+  --risk: #cd6a3a;     --risk-bg: #fbe2d4;     --risk-fg: #8a3f16;
+  --info: #2a5f9e;     --info-bg: #dbe7f4;     --info-fg: #183a64;
   --quiet: #a19786;    --quiet-bg: #efe8dc;    --quiet-fg: #5d564c;
+
+  /* hover for the one solid status fill that is clickable (destructive buttons) */
+  --rejected-hover: #a63a31;
+
+  /* The sidebar is dark navy in BOTH themes, so its ink scale lives outside the
+     light/dark swap — warm cream over navy keeps the base palette's warmth. */
+  --sidebar-ink: rgb(250 245 237 / .94);
+  --sidebar-ink-2: rgb(250 245 237 / .68);
+  --sidebar-ink-3: rgb(250 245 237 / .50);
+  --sidebar-line: rgb(250 245 237 / .10);
+
+  /* Brand mark: mid-navy→gold sweep. Decoration only (the logo tile) — it must
+     never sit under text, since white over its gold end is ~1.7:1. */
+  --brand-mark: linear-gradient(135deg, var(--color-brand-400) 0%, var(--color-gold-500) 100%);
 }
 
 .dark {
@@ -82,19 +114,21 @@
   --bg-elev: #1b1815;
   --surface: #221e1a;
   --surface-2: #2a2521;
-  --sidebar: #100e0c;
+  --sidebar: #0b1626;
   --border: rgb(243 236 224 / .10);
   --border-strong: rgb(243 236 224 / .22);
   --text: #f3ece0;
   --text-2: #b6ab9b;
   --text-3: #8a8175;
 
-  --pending-bg: rgb(224 169 27 / .16);  --pending-fg: #f0c964;
+  --pending-bg: rgb(217 136 15 / .18);  --pending-fg: #f0b45e;
   --approved-bg: rgb(91 145 70 / .18);  --approved-fg: #9ccb84;
   --rejected-bg: rgb(192 69 59 / .18);  --rejected-fg: #ef9a91;
-  --risk-bg: rgb(214 127 72 / .18);     --risk-fg: #f0a86f;
-  --info-bg: rgb(47 127 191 / .18);     --info-fg: #8ec6ec;
+  --risk-bg: rgb(205 106 58 / .20);     --risk-fg: #e89a6b;
+  --info-bg: rgb(42 95 158 / .24);      --info-fg: #8bacd6;
   --quiet-bg: rgb(243 236 224 / .08);   --quiet-fg: #b6ab9b;
+
+  --rejected-hover: #d1504a;
 }
 
 @theme inline {
@@ -103,6 +137,10 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-sidebar: var(--sidebar);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-ink-2: var(--sidebar-ink-2);
+  --color-sidebar-ink-3: var(--sidebar-ink-3);
+  --color-sidebar-line: var(--sidebar-line);
   --color-hairline: var(--border);
   --color-hairline-strong: var(--border-strong);
   --color-ink: var(--text);
@@ -118,6 +156,7 @@
   --color-rejected: var(--rejected);
   --color-rejected-bg: var(--rejected-bg);
   --color-rejected-fg: var(--rejected-fg);
+  --color-rejected-hover: var(--rejected-hover);
   --color-risk: var(--risk);
   --color-risk-bg: var(--risk-bg);
   --color-risk-fg: var(--risk-fg);

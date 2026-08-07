@@ -193,7 +193,7 @@ export default function ReviewPage() {
                 rows={3}
                 className="w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
               />
-              {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+              {error && <p className="mt-2 text-sm text-rejected-fg">{error}</p>}
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => {
@@ -207,7 +207,7 @@ export default function ReviewPage() {
                 <button
                   onClick={handleReject}
                   disabled={busy}
-                  className="flex-1 rounded-md bg-red-600 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+                  className="flex-1 rounded-md bg-rejected py-2.5 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {busy ? "กำลังบันทึก..." : "ยืนยันปฏิเสธ"}
                 </button>
@@ -215,11 +215,11 @@ export default function ReviewPage() {
             </>
           ) : (
             <>
-              {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+              {error && <p className="mb-3 text-sm text-rejected-fg">{error}</p>}
               <div className="flex gap-2">
                 <button
                   onClick={() => setRejecting(true)}
-                  className="flex-1 rounded-md bg-red-600 py-3 text-sm font-medium text-white"
+                  className="flex-1 rounded-md bg-rejected py-3 text-sm font-medium text-white"
                 >
                   ❌ ปฏิเสธ
                 </button>

@@ -24,7 +24,7 @@ export default function LandingHeader() {
           <Image src={logoIcon} alt="LaLa'" width={32} height={32} className="rounded-md" priority />
           <div className="leading-tight">
             <p className="text-base font-semibold text-ink">
-              LaLa<span className="text-line-600">&apos;</span>
+              LaLa<span className="text-gold-700">&apos;</span>
             </p>
             <p className="hidden text-[11px] text-ink-3 sm:block">Leave &amp; Attendance on LINE</p>
           </div>
@@ -32,19 +32,19 @@ export default function LandingHeader() {
 
         <nav className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-line-700">
+            <a key={link.href} href={link.href} className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-brand-600">
               {link.label}
             </a>
           ))}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login" className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-line-700">
+          <Link href="/login" className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-brand-600">
             เข้าสู่ระบบ
           </Link>
           <a
             href="#contact"
-            className="rounded-md bg-line-600 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-line-700"
+            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-700"
           >
             เริ่มต้นใช้งาน
           </a>
@@ -85,7 +85,7 @@ export default function LandingHeader() {
             <a
               href="#contact"
               onClick={() => setOpen(false)}
-              className="rounded-md bg-line-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-line-700"
+              className="rounded-md bg-brand-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-brand-700"
             >
               เริ่มต้นใช้งาน
             </a>

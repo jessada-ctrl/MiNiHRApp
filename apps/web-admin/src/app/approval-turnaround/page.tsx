@@ -105,7 +105,7 @@ export default function ApprovalTurnaroundPage() {
           <span className="ml-auto self-center text-xs text-ink-3">{rows.length} คน</span>
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
           <table className="min-w-full divide-y divide-hairline text-sm">

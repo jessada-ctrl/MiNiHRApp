@@ -102,39 +102,39 @@ export default function LandingPage() {
         {/* Hero */}
         <section className="relative overflow-hidden bg-sidebar">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-line-500/30 blur-[100px]" />
-            <div className="absolute right-0 top-40 h-72 w-72 rounded-full bg-line-300/20 blur-[100px]" />
-            <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-line-200/10 blur-[100px]" />
+            <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-brand-400/30 blur-[100px]" />
+            <div className="absolute right-0 top-40 h-72 w-72 rounded-full bg-gold-500/14 blur-[100px]" />
+            <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-gold-400/10 blur-[100px]" />
           </div>
 
           <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 md:grid-cols-2 md:items-center md:px-6 md:py-24">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-line-200">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-gold-300">
                 SaaS จัดการวันลา · เชื่อมต่อ LINE OA ของบริษัทคุณ
               </span>
-              <h1 className="mt-5 text-3xl font-bold leading-snug text-white sm:text-4xl sm:leading-tight lg:text-[2.6rem]">
-                จัดการวันลาและเวลาเข้างาน ผ่าน <span className="text-line-300">LINE</span>{" "}
+              <h1 className="mt-5 text-3xl font-bold leading-snug text-sidebar-ink sm:text-4xl sm:leading-tight lg:text-[2.6rem]">
+                จัดการวันลาและเวลาเข้างาน ผ่าน <span className="text-gold-400">LINE</span>{" "}
                 ที่พนักงานใช้อยู่แล้ว
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-[rgba(250,245,237,0.75)]">
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-sidebar-ink-2">
                 LaLa&apos; คือระบบลาและลงเวลาเข้างานแบบ Multi-Tenant SaaS พนักงานยื่นคำขอและสแกนเข้างานผ่าน LINE
                 หัวหน้าอนุมัติได้ในแชท ส่วนฝ่ายบุคคลบริหารนโยบาย ดูรายงาน และตรวจสอบ Audit Log ได้ครบจากเว็บเดียว
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
                   href="#contact"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-line-500 px-5 py-3 text-sm font-semibold text-white shadow-e3 shadow-line-500/20 transition-colors duration-150 hover:bg-line-400"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-gold-500 px-5 py-3 text-sm font-semibold text-brand-900 shadow-e3 shadow-gold-500/25 transition-colors duration-150 hover:bg-gold-400"
                 >
                   เริ่มต้นใช้งาน <IconArrowRight className="h-4 w-4" />
                 </a>
                 <a
                   href="#how-it-works"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-white/10"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-white/20 px-5 py-3 text-sm font-semibold text-sidebar-ink transition-colors duration-150 hover:bg-white/10"
                 >
                   ดูวิธีการทำงาน
                 </a>
               </div>
-              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[rgba(250,245,237,0.5)]">
+              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-sidebar-ink-3">
                 <span>✓ ไม่ต้องติดตั้งแอปเพิ่ม</span>
                 <span>✓ แยกข้อมูลแต่ละบริษัท 100%</span>
                 <span>✓ ตั้งค่า LINE OA ของบริษัทเองได้</span>
@@ -159,7 +159,7 @@ export default function LandingPage() {
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <div key={f.title} className="rounded-lg border border-hairline p-6 transition-shadow hover:shadow-e2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-line-50 text-line-700">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                   <f.icon className="h-5 w-5" />
                 </div>
                 <h3 className="mt-4 text-sm font-semibold text-ink">{f.title}</h3>
@@ -181,10 +181,10 @@ export default function LandingPage() {
               {STEPS.map((step, i) => (
                 <div key={step.title} className="relative rounded-lg bg-surface p-6 shadow-e1">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-line-700 text-xs font-bold text-white">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
                       {i + 1}
                     </div>
-                    <step.icon className="h-5 w-5 text-line-700" />
+                    <step.icon className="h-5 w-5 text-brand-600" />
                   </div>
                   <h3 className="mt-4 text-sm font-semibold text-ink">{step.title}</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-ink-3">{step.desc}</p>
@@ -197,27 +197,27 @@ export default function LandingPage() {
         {/* Security */}
         <section id="security" className="relative overflow-hidden bg-sidebar py-20">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute left-1/4 top-0 h-72 w-72 rounded-full bg-line-500/10 blur-[120px]" />
+            <div className="absolute left-1/4 top-0 h-72 w-72 rounded-full bg-brand-400/14 blur-[120px]" />
           </div>
           <div className="relative mx-auto max-w-6xl px-4 md:px-6">
             <div className="mx-auto max-w-2xl text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-white/10 text-line-300">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-gold-500/15 text-gold-300">
                 <IconShield className="h-6 w-6" />
               </div>
-              <h2 className="mt-5 text-2xl font-bold text-white sm:text-3xl">ออกแบบให้ปลอดภัยตั้งแต่วันแรก</h2>
-              <p className="mt-3 text-sm text-[rgba(250,245,237,0.75)] sm:text-base">
+              <h2 className="mt-5 text-2xl font-bold text-sidebar-ink sm:text-3xl">ออกแบบให้ปลอดภัยตั้งแต่วันแรก</h2>
+              <p className="mt-3 text-sm text-sidebar-ink-2 sm:text-base">
                 ระบบ Multi-Tenant ที่แยกข้อมูลแต่ละองค์กรอย่างเข้มงวด เหมาะสำหรับข้อมูลพนักงานที่ต้องการความรัดกุมสูง
               </p>
             </div>
 
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {SECURITY_POINTS.map((p) => (
-                <div key={p.title} className="rounded-lg border border-white/10 bg-white/5 p-6">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-white/10 text-line-300">
+                <div key={p.title} className="rounded-lg border border-sidebar-line bg-white/5 p-6">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gold-500/15 text-gold-300">
                     <p.icon className="h-4.5 w-4.5" />
                   </div>
-                  <h3 className="mt-4 text-sm font-semibold text-white">{p.title}</h3>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[rgba(250,245,237,0.5)]">{p.desc}</p>
+                  <h3 className="mt-4 text-sm font-semibold text-sidebar-ink">{p.title}</h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-sidebar-ink-3">{p.desc}</p>
                 </div>
               ))}
             </div>
@@ -238,11 +238,11 @@ export default function LandingPage() {
               <div
                 key={plan.name}
                 className={`flex flex-col rounded-lg border p-7 ${
-                  plan.highlight ? "border-line-600 bg-line-50/50 shadow-e3" : "border-hairline"
+                  plan.highlight ? "border-brand-500 bg-brand-50/60 shadow-e3" : "border-hairline"
                 }`}
               >
                 {plan.highlight && (
-                  <span className="mb-3 inline-flex w-fit items-center rounded-full bg-line-700 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                  <span className="mb-3 inline-flex w-fit items-center rounded-full bg-gold-500 px-2.5 py-0.5 text-[11px] font-semibold text-brand-900">
                     แนะนำ
                   </span>
                 )}
@@ -251,7 +251,7 @@ export default function LandingPage() {
                 <ul className="mt-6 flex flex-1 flex-col gap-3">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-ink-2">
-                      <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-line-700" />
+                      <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
                       {f}
                     </li>
                   ))}
@@ -260,7 +260,7 @@ export default function LandingPage() {
                   href="#contact"
                   className={`mt-7 inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ${
                     plan.highlight
-                      ? "bg-line-700 text-white hover:bg-line-800"
+                      ? "bg-brand-600 text-white hover:bg-brand-700"
                       : "border border-hairline-strong text-ink-2 hover:bg-bg"
                   }`}
                 >
@@ -287,29 +287,29 @@ export default function LandingPage() {
         <section id="contact" className="mx-auto max-w-6xl px-4 py-16 md:px-6">
           <div className="relative overflow-hidden rounded-3xl bg-sidebar px-6 py-14 text-center sm:px-16">
             <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-line-300/20 blur-[100px]" />
-              <div className="absolute -bottom-10 -left-10 h-56 w-56 rounded-full bg-line-500/20 blur-[100px]" />
+              <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-gold-500/14 blur-[100px]" />
+              <div className="absolute -bottom-10 -left-10 h-56 w-56 rounded-full bg-gold-500/16 blur-[100px]" />
             </div>
             <div className="relative">
-              <h2 className="text-2xl font-bold text-white sm:text-3xl">พร้อมให้ LINE จัดการเรื่องลาแทนกระดาษและ Excel แล้วหรือยัง?</h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm text-[rgba(250,245,237,0.75)] sm:text-base">
+              <h2 className="text-2xl font-bold text-sidebar-ink sm:text-3xl">พร้อมให้ LINE จัดการเรื่องลาแทนกระดาษและ Excel แล้วหรือยัง?</h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm text-sidebar-ink-2 sm:text-base">
                 ทักทีมงาน LaLa&apos; เพื่อขอเดโมและประเมินแพ็กเกจที่เหมาะกับองค์กรของคุณ ไม่มีค่าใช้จ่ายในการปรึกษา
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a
                   href="mailto:hello@lala.app"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-line-500 px-5 py-3 text-sm font-semibold text-white shadow-e3 shadow-line-500/20 transition-colors duration-150 hover:bg-line-400"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md bg-gold-500 px-5 py-3 text-sm font-semibold text-brand-900 shadow-e3 shadow-gold-500/25 transition-colors duration-150 hover:bg-gold-400"
                 >
                   ติดต่อทีมงาน <IconArrowRight className="h-4 w-4" />
                 </a>
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center rounded-md border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-white/10"
+                  className="inline-flex items-center justify-center rounded-md border border-white/20 px-5 py-3 text-sm font-semibold text-sidebar-ink transition-colors duration-150 hover:bg-white/10"
                 >
                   เข้าสู่ระบบ
                 </Link>
               </div>
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-[rgba(250,245,237,0.5)]">
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-sidebar-ink-3">
                 <IconClock className="h-3.5 w-3.5" /> ตอบกลับภายใน 1 วันทำการ
               </p>
             </div>
@@ -321,31 +321,31 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 md:px-6 lg:grid-cols-4">
           <div>
             <p className="text-lg font-semibold text-ink">
-              LaLa<span className="text-line-600">&apos;</span>
+              LaLa<span className="text-gold-700">&apos;</span>
             </p>
             <p className="mt-2 max-w-[220px] text-sm text-ink-3">ระบบลาและลงเวลาเข้างานผ่าน LINE สำหรับ HR ยุคใหม่</p>
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">ผลิตภัณฑ์</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-3">
-              <li><a href="#features" className="hover:text-line-700">ฟีเจอร์</a></li>
-              <li><a href="#how-it-works" className="hover:text-line-700">วิธีการทำงาน</a></li>
-              <li><a href="#security" className="hover:text-line-700">ความปลอดภัย</a></li>
-              <li><a href="#pricing" className="hover:text-line-700">แพ็กเกจ</a></li>
+              <li><a href="#features" className="hover:text-brand-600">ฟีเจอร์</a></li>
+              <li><a href="#how-it-works" className="hover:text-brand-600">วิธีการทำงาน</a></li>
+              <li><a href="#security" className="hover:text-brand-600">ความปลอดภัย</a></li>
+              <li><a href="#pricing" className="hover:text-brand-600">แพ็กเกจ</a></li>
             </ul>
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">บริษัท</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-3">
-              <li><a href="#faq" className="hover:text-line-700">คำถามที่พบบ่อย</a></li>
-              <li><a href="#contact" className="hover:text-line-700">ติดต่อเรา</a></li>
-              <li><Link href="/login" className="hover:text-line-700">เข้าสู่ระบบ</Link></li>
+              <li><a href="#faq" className="hover:text-brand-600">คำถามที่พบบ่อย</a></li>
+              <li><a href="#contact" className="hover:text-brand-600">ติดต่อเรา</a></li>
+              <li><Link href="/login" className="hover:text-brand-600">เข้าสู่ระบบ</Link></li>
             </ul>
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">ติดต่อ</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-3">
-              <li><a href="mailto:hello@lala.app" className="hover:text-line-700">hello@lala.app</a></li>
+              <li><a href="mailto:hello@lala.app" className="hover:text-brand-600">hello@lala.app</a></li>
             </ul>
           </div>
         </div>

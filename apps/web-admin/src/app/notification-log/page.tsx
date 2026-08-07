@@ -172,9 +172,9 @@ export default function NotificationLogPage() {
           <span className="ml-auto self-center text-xs text-ink-3">{rows.length} รายการ</span>
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
         {truncated && (
-          <p className="mt-4 text-sm text-amber-700">
+          <p className="mt-4 text-sm text-pending-fg">
             แสดงเฉพาะ {rows.length} รายการล่าสุดที่ตรงเงื่อนไข — ยังมีรายการเก่ากว่านี้อีก ลองแคบช่วงวันที่เพื่อดูให้ครบ
           </p>
         )}

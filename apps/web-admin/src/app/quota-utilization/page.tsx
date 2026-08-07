@@ -147,7 +147,7 @@ export default function QuotaUtilizationPage() {
           <span className="ml-auto self-center text-xs text-ink-3">{rows.length} รายการ</span>
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rejected-fg">{error}</p>}
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-hairline bg-surface shadow-e1">
           <table className="min-w-full divide-y divide-hairline text-sm">
@@ -185,7 +185,7 @@ export default function QuotaUtilizationPage() {
                   <td className="px-4 py-3 tabular-nums">{r.employeeCount}</td>
                   <td className="px-4 py-3 tabular-nums">{r.totalQuota}</td>
                   <td className="px-4 py-3 tabular-nums">{r.used}</td>
-                  <td className="px-4 py-3 tabular-nums text-amber-700">{r.pending}</td>
+                  <td className="px-4 py-3 tabular-nums text-pending-fg">{r.pending}</td>
                   <td className="px-4 py-3 tabular-nums">{r.remaining}</td>
                   <td className="px-4 py-3">
                     <div className="w-24">

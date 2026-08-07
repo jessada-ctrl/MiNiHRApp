@@ -190,7 +190,9 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
-      <header className="flex items-center justify-between bg-gradient-to-r from-brand-500 to-gold-500 px-4 py-3 text-white">
+      {/* Navy bar under a gold rule, not a navy→gold gradient: white text over
+          the gradient's gold end sits near 1.7:1. */}
+      <header className="flex items-center justify-between border-b-2 border-gold-500 bg-sidebar px-4 py-3 text-sidebar-ink">
         <button onClick={() => router.push("/profile")} className="text-left">
           <p className="text-sm font-semibold underline decoration-white/40 underline-offset-2">{user.fullName}</p>
           <p className="text-[11px] opacity-80">testco.lala.io</p>
@@ -342,7 +344,7 @@ function AttendanceTab() {
           <button
             onClick={handleScanQr}
             disabled={busy}
-            className="w-full rounded-lg bg-gradient-to-r from-teal-600 to-emerald-600 py-3.5 text-sm font-semibold text-white shadow-e3 disabled:opacity-60"
+            className="w-full rounded-lg bg-brand-500 py-3.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-600 shadow-e3 disabled:opacity-60"
           >
             {busy ? "กำลังดำเนินการ..." : `📷 สแกน QR ${nextAction === "in" ? "เข้างาน" : "ออกงาน"}`}
           </button>
@@ -357,7 +359,7 @@ function AttendanceTab() {
         </>
       )}
 
-      {error && <p className="text-center text-sm text-red-600">{error}</p>}
+      {error && <p className="text-center text-sm text-rejected-fg">{error}</p>}
 
       {branch && (
         <div className="flex items-center gap-2 rounded-lg bg-surface p-3 text-xs text-ink-3 shadow-e1">
@@ -592,7 +594,7 @@ function LeaveForm({
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-quiet-bg">
             <div
-              className={`h-full rounded-full ${willExceed ? "bg-red-500" : "bg-brand-500"}`}
+              className={`h-full rounded-full ${willExceed ? "bg-rejected" : "bg-brand-500"}`}
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -604,7 +606,7 @@ function LeaveForm({
       )}
 
       {willExceed && (
-        <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700">
+        <div className="rounded-lg bg-rejected-bg p-3 text-xs text-rejected-fg">
           ⚠️ คำขอนี้เกินโควตาคงเหลือ
           <label className="mt-2 flex items-start gap-2">
             <input type="checkbox" checked={ackChecked} onChange={(e) => setAckChecked(e.target.checked)} className="mt-0.5" />
@@ -626,12 +628,12 @@ function LeaveForm({
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-rejected-fg">{error}</p>}
 
       <button
         type="submit"
         disabled={!canSubmit || submitting}
-        className="fixed inset-x-4 bottom-20 z-10 rounded-lg bg-gradient-to-r from-brand-500 to-gold-500 py-3.5 text-sm font-semibold text-white shadow-e3 disabled:opacity-50"
+        className="fixed inset-x-4 bottom-20 z-10 rounded-lg bg-brand-500 py-3.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-brand-600 shadow-e3 disabled:opacity-50"
       >
         {submitting ? "กำลังส่งคำขอ..." : "ส่งคำขอลา"}
       </button>
@@ -710,7 +712,7 @@ function HistoryList({ requests, onChanged }: { requests: LeaveRequest[]; onChan
               </p>
             )}
             {rejection && (
-              <div className="rounded-md bg-red-50 p-2 text-xs text-red-700">เหตุผลที่ปฏิเสธ: {rejection.comment}</div>
+              <div className="rounded-md bg-rejected-bg p-2 text-xs text-rejected-fg">เหตุผลที่ปฏิเสธ: {rejection.comment}</div>
             )}
             {canCancel && (
               <button
