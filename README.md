@@ -47,6 +47,65 @@ LINE-integrated Leave & Attendance Management System (Multi-Tenant SaaS). See [D
    npm run dev:liff         # http://localhost:3002
    ```
 
+## Tests
+
+```bash
+npm run test     --workspace=apps/backend   # unit — no database needed
+npm run test:e2e --workspace=apps/backend   # integration — needs a running database
+```
+
+`test:e2e` includes `test/tenant-isolation.e2e-spec.ts`, which asserts NFR-1
+against a real database with two tenants: a row created by one must be
+invisible and unwritable to the other, across reads, writes and bulk
+operations. It also fails if a model gains a `tenant_id` column in
+`schema.prisma` without being added to `TENANT_SCOPED_MODELS` in
+`src/tenant/tenant-scoping.extension.ts` — the one mistake that would silently
+remove isolation for that table. It creates and tears down its own tenants,
+so it is safe against a development database.
+
+## Multi-tenant deployment
+
+One built image serves every customer. Nothing tenant-specific is baked in at
+build time — the front-ends read it at runtime:
+
+| Value | Where it comes from |
+|---|---|
+| Which tenant | The subdomain the browser is on (`Host` header → `TenantMiddleware`) |
+| API base URL | The same origin the page was served from |
+| LINE LIFF ID | `GET /tenant/public-config`, per tenant, from the DB |
+| LINE channel id / secret / token | Each tenant admin's own `/settings` page |
+
+Onboarding a new customer is therefore: create the tenant in the Super Admin
+console (this provisions the subdomain), point that subdomain's DNS at the
+same deployment, and hand the tenant admin the `/settings` page — it shows
+them the Webhook URL and LIFF Endpoint URL to paste into their own LINE
+Developers console. No rebuild, no redeploy.
+
+> `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_TENANT_SUBDOMAIN` and
+> `NEXT_PUBLIC_LIFF_ID` still exist for local development, where there is no
+> real subdomain to read. They must stay unset in the deployed image —
+> `next build` inlines them, and a value set there pins the image to a single
+> customer.
+
+### Required in production
+
+`docker-entrypoint.sh` refuses to start without these, because each one fails
+*quietly* rather than loudly when missing:
+
+- `DATABASE_URL`, `JWT_SECRET`
+- `TENANT_CRED_ENCRYPTION_KEY` — without it the app falls back to a key that
+  is a literal in this repo
+- `SMTP_HOST` (+ port/user/password/`MAIL_FROM`) — without it OTP codes are
+  logged to stdout instead of emailed, and no employee can ever bind their
+  LINE account
+- `ATTACHMENTS_DIR` — **must be a mounted volume.** The entrypoint checks this
+  with `mountpoint` and exits if it isn't: medical certificates written inside
+  the container image are destroyed on the next deploy, with no error at the
+  time it happens. Override with `ALLOW_EPHEMERAL_ATTACHMENTS=true` for
+  throwaway test environments only.
+
+See `.env.example` for the full list and how to generate the key.
+
 ## Known local-dev gotchas (this machine)
 
 Found and fixed while first standing this up — leaving them here so nobody burns hours rediscovering them.
