@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Colors here are the single source of truth for both apps — keep this file and
+   apps/liff-app/src/app/globals.css in sync (liff has no line-* ramp and no
+   --brand-mark). Rules, rationale and the contrast traps: Doc/Lala_DesignSystem-Colors-V1.md */
+
 @theme {
   /* ---- font (mapped to next/font variables set in layout.tsx) ---- */
   --font-sans: var(--font-sarabun), ui-sans-serif, system-ui;

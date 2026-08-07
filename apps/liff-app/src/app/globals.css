@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Colors here must stay in sync with apps/web-admin/src/app/globals.css, which is
+   the single source of truth (it additionally carries the line-* ramp and
+   --brand-mark). Rules and rationale: Doc/Lala_DesignSystem-Colors-V1.md */
+
 @theme {
   /* ---- font (mapped to next/font variables set in layout.tsx) ---- */
   --font-sans: var(--font-sarabun), ui-sans-serif, system-ui;

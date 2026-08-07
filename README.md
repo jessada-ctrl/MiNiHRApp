@@ -2,6 +2,8 @@
 
 LINE-integrated Leave & Attendance Management System (Multi-Tenant SaaS). See [Doc/MiniHR_SRS-V1.md](Doc/MiniHR_SRS-V1.md) for the full specification.
 
+**Read before touching any UI color:** [Doc/Lala_DesignSystem-Colors-V1.md](Doc/Lala_DesignSystem-Colors-V1.md) — the navy+gold token system, which token to reach for, and the contrast traps that are easy to reintroduce.
+
 ## Stack
 
 - **Backend:** NestJS + TypeScript + Prisma → PostgreSQL (`apps/backend`)
