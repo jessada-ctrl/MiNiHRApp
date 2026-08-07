@@ -34,15 +34,34 @@ export class SettingsService {
     private readonly encryption: EncryptionService,
   ) {}
 
+  /**
+   * Unauthenticated — see PublicTenantConfigController for why, and for the
+   * rule that nothing secret may be added to this shape.
+   */
+  async getPublicTenantConfig() {
+    const tenantId = getCurrentTenantId();
+    const tenant = await this.prisma.tenant.findUniqueOrThrow({
+      where: { id: tenantId },
+      select: { companyName: true, subdomain: true, lineLiffId: true },
+    });
+
+    return {
+      companyName: tenant.companyName,
+      subdomain: tenant.subdomain,
+      liffId: tenant.lineLiffId,
+    };
+  }
+
   async getLineConfig() {
     const tenantId = getCurrentTenantId();
     const tenant = await this.prisma.tenant.findUniqueOrThrow({
       where: { id: tenantId },
-      select: { lineChannelId: true, lineChannelSecretEnc: true, lineChannelAccessTokenEnc: true },
+      select: { lineChannelId: true, lineLiffId: true, lineChannelSecretEnc: true, lineChannelAccessTokenEnc: true },
     });
 
     return {
       lineChannelId: tenant.lineChannelId,
+      lineLiffId: tenant.lineLiffId,
       hasChannelSecret: !!tenant.lineChannelSecretEnc,
       hasChannelAccessToken: !!tenant.lineChannelAccessTokenEnc,
     };
@@ -61,6 +80,9 @@ export class SettingsService {
       if (dto.lineChannelId !== undefined && dto.lineChannelId !== before.lineChannelId) {
         data.lineChannelId = dto.lineChannelId;
       }
+      if (dto.lineLiffId !== undefined && dto.lineLiffId !== before.lineLiffId) {
+        data.lineLiffId = dto.lineLiffId;
+      }
       if (dto.lineChannelSecret !== undefined && dto.lineChannelSecret !== beforeSecret) {
         data.lineChannelSecretEnc = this.encryption.encrypt(dto.lineChannelSecret);
       }
@@ -71,6 +93,7 @@ export class SettingsService {
       if (Object.keys(data).length === 0) {
         return {
           lineChannelId: before.lineChannelId,
+          lineLiffId: before.lineLiffId,
           hasChannelSecret: !!before.lineChannelSecretEnc,
           hasChannelAccessToken: !!before.lineChannelAccessTokenEnc,
         };
@@ -93,6 +116,7 @@ export class SettingsService {
 
       return {
         lineChannelId: updated.lineChannelId,
+        lineLiffId: updated.lineLiffId,
         hasChannelSecret: !!updated.lineChannelSecretEnc,
         hasChannelAccessToken: !!updated.lineChannelAccessTokenEnc,
       };

@@ -1,3 +1,5 @@
+import { getTenantConfig } from "./tenantConfig";
+
 // Real LIFF ids look like "1234567890-abcdEFGh" (numeric app id, hyphen,
 // alphanumeric suffix) — used to tell a genuine id apart from an unset,
 // empty, or placeholder value (e.g. "REPLACE_WITH_LINE_LIFF_ID") left in a
@@ -5,9 +7,30 @@
 // configured when it isn't.
 const LIFF_ID_SHAPE = /^\d+-[a-zA-Z0-9]+$/;
 
-function configuredLiffId(): string | null {
-  const value = process.env.NEXT_PUBLIC_LIFF_ID;
-  return value && LIFF_ID_SHAPE.test(value) ? value : null;
+/**
+ * Resolved per tenant at runtime, not baked in at build time.
+ *
+ * Each customer runs the LIFF app on their own LINE Login channel, so the
+ * LIFF id differs per tenant — the old NEXT_PUBLIC_LIFF_ID constant was
+ * inlined by `next build` and pinned one built image to one customer. The id
+ * now comes from GET /tenant/public-config, keyed off the subdomain LINE
+ * opened this app on.
+ *
+ * NEXT_PUBLIC_LIFF_ID still wins when set, purely so a local checkout can
+ * point at a personal test LIFF app without touching the tenant's DB row.
+ * Any failure to reach the backend degrades to "not configured", which every
+ * caller already handles as the manual/dev fallback path rather than a crash.
+ */
+async function configuredLiffId(): Promise<string | null> {
+  const envOverride = process.env.NEXT_PUBLIC_LIFF_ID;
+  if (envOverride && LIFF_ID_SHAPE.test(envOverride)) return envOverride;
+
+  try {
+    const { liffId } = await getTenantConfig();
+    return liffId && LIFF_ID_SHAPE.test(liffId) ? liffId : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -17,10 +40,10 @@ function configuredLiffId(): string | null {
  * navigates away anyway and the caller re-runs after the redirect back.
  */
 export async function getLineUserId(): Promise<string | null> {
-  const liffId = configuredLiffId();
+  const liffId = await configuredLiffId();
   if (!liffId) return null;
 
-  const liff = (await import('@line/liff')).default;
+  const liff = (await import("@line/liff")).default;
   await liff.init({ liffId });
 
   if (!liff.isLoggedIn()) {
@@ -32,8 +55,9 @@ export async function getLineUserId(): Promise<string | null> {
   return profile.userId;
 }
 
-export function isLiffConfigured(): boolean {
-  return configuredLiffId() !== null;
+/** Async because the LIFF id is now fetched per tenant — see configuredLiffId. */
+export async function isLiffConfigured(): Promise<boolean> {
+  return (await configuredLiffId()) !== null;
 }
 
 /**
@@ -46,10 +70,10 @@ export function isLiffConfigured(): boolean {
  * fall back to the manual `/login` screen.
  */
 export async function getLineIdToken(): Promise<string | null> {
-  const liffId = configuredLiffId();
+  const liffId = await configuredLiffId();
   if (!liffId) return null;
 
-  const liff = (await import('@line/liff')).default;
+  const liff = (await import("@line/liff")).default;
   // Same bounded-timeout pattern as completePendingLiffLogin — this runs on
   // every page load via resolveCurrentUser(), so a hung liff.init() here must
   // not block the silent re-login path forever.
@@ -79,10 +103,10 @@ export async function getLineIdToken(): Promise<string | null> {
  * gets a chance to complete, regardless of which page originally triggered it.
  */
 export async function completePendingLiffLogin(): Promise<void> {
-  const liffId = configuredLiffId();
+  const liffId = await configuredLiffId();
   if (!liffId) return;
   try {
-    const liff = (await import('@line/liff')).default;
+    const liff = (await import("@line/liff")).default;
     await liff.init({ liffId });
   } catch {
     // best-effort — getLineUserId() will surface a real error later if LIFF is genuinely broken
@@ -101,12 +125,12 @@ export async function completePendingLiffLogin(): Promise<void> {
  * (getLineUserId) never even reaches here to prevent.
  */
 export async function scanQrCode(): Promise<string | null> {
-  const liffId = configuredLiffId();
-  if (!liffId) throw new Error('LIFF_NOT_CONFIGURED');
+  const liffId = await configuredLiffId();
+  if (!liffId) throw new Error("LIFF_NOT_CONFIGURED");
 
-  const liff = (await import('@line/liff')).default;
+  const liff = (await import("@line/liff")).default;
   await liff.init({ liffId });
-  if (!liff.isInClient()) throw new Error('LIFF_NOT_CONFIGURED');
+  if (!liff.isInClient()) throw new Error("LIFF_NOT_CONFIGURED");
 
   const result = await liff.scanCodeV2();
   return result.value ?? null;

@@ -26,20 +26,19 @@ COPY . .
 RUN npx prisma generate --schema apps/backend/prisma/schema.prisma
 RUN npm run build --workspace=apps/backend
 
-# Baked into the client bundles at build time (Next.js requirement) — ARGs
-# default to the active deploy target's values since Easypanel's Git-source
-# app builder has no UI for passing --build-arg (checked in the 2.32.2
-# dashboard: Advanced tab only exposes Ports/Replicas/Command, nothing for
-# build args), so these defaults are what actually ships. Update here when
-# the target domain changes; platforms that DO support build-args (DO, a
-# custom CI) can still override per environment instead of editing this file.
-ARG NEXT_PUBLIC_API_URL=https://testco-lala-dev.jibsoft.co.th
-ARG NEXT_PUBLIC_LIFF_ID=2010683188-c6CdKvGw
-ARG NEXT_PUBLIC_TENANT_SUBDOMAIN=testco
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_LIFF_ID=$NEXT_PUBLIC_LIFF_ID
-ENV NEXT_PUBLIC_TENANT_SUBDOMAIN=$NEXT_PUBLIC_TENANT_SUBDOMAIN
-
+# No NEXT_PUBLIC_* values are set here on purpose.
+#
+# `next build` inlines them into the client bundles, so anything tenant-
+# specific baked in at this point would pin the resulting image to exactly one
+# customer — previously this file hardcoded testco's domain, LIFF id and
+# subdomain, which is why one image could only ever serve one tenant.
+#
+# With them unset, both apps resolve everything at runtime instead:
+#  - API base URL  -> empty, i.e. root-relative to whichever tenant subdomain
+#                     the browser is on (this same container serves it)
+#  - tenant        -> the Host header / window.location.hostname
+#  - LIFF id       -> GET /tenant/public-config, per tenant, from the DB
+# See apps/web-admin/src/lib/api.ts and apps/liff-app/src/lib/liff.ts.
 RUN npm run build --workspace=apps/liff-app
 
 # Only web-admin needs the /admin basePath (see next.config.ts) — set just

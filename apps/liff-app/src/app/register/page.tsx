@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,6 +13,10 @@ type Step = "identify" | "otp";
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("identify");
+  // Starts null (= "still checking") rather than false, so the dev-mode
+  // warning and the manual LINE-User-ID field don't flash on screen for a
+  // properly configured tenant while the config request is in flight.
+  const [liffConfigured, setLiffConfigured] = useState<boolean | null>(null);
   const [employeeCode, setEmployeeCode] = useState("");
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -20,6 +24,16 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void isLiffConfigured().then((configured) => {
+      if (active) setLiffConfigured(configured);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleRequestOtp(e: FormEvent) {
     e.preventDefault();
@@ -74,7 +88,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {!isLiffConfigured() && (
+        {liffConfigured === false && (
           <p className="mb-3 rounded-lg bg-pending-bg px-3 py-2 text-xs text-pending-fg">
             ⚠️ ยังไม่ได้เชื่อมต่อ LINE จริง (โหมดทดสอบ) — ระบบจริงจะดึง LINE User ID จาก LIFF SDK อัตโนมัติ
           </p>
@@ -144,7 +158,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {!isLiffConfigured() && (
+            {liffConfigured === false && (
               <div>
                 <label htmlFor="register-dev-line-user-id" className="mb-1 block text-sm font-medium text-ink-2">
                   LINE User ID (สำหรับทดสอบ)

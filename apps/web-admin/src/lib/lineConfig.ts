@@ -2,12 +2,15 @@ import { apiFetch } from "./api";
 
 export interface LineConfig {
   lineChannelId: string | null;
+  /** Served to the LIFF app at runtime via GET /tenant/public-config — see apps/liff-app/src/lib/liff.ts. */
+  lineLiffId: string | null;
   hasChannelSecret: boolean;
   hasChannelAccessToken: boolean;
 }
 
 export interface UpdateLineConfigInput {
   lineChannelId?: string;
+  lineLiffId?: string;
   lineChannelSecret?: string;
   lineChannelAccessToken?: string;
 }

@@ -1,13 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import AppShell from "@/components/AppShell";
+import { getApiOrigin } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { type LineConfig, getLineConfig, updateLineConfig } from "@/lib/lineConfig";
 import { type ChatbotLeaveVisibility, getChatbotConfig, updateChatbotConfig } from "@/lib/chatbotConfig";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const SECRET_PLACEHOLDER = "•••• ตั้งค่าไว้แล้ว — เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน";
+
+// Module-level so their identity is stable across renders — useSyncExternalStore
+// re-subscribes whenever the subscribe function changes.
+const subscribeToNothing = () => () => {};
+const getServerApiOrigin = () => "";
 
 const VISIBILITY_OPTIONS: { value: ChatbotLeaveVisibility; label: string; hint: string }[] = [
   { value: "hr_only", label: "ฝ่ายบุคคลเท่านั้น", hint: "หัวหน้างานและพนักงานถามผ่านแชทบอทไม่ได้" },
@@ -22,9 +27,17 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  // getApiOrigin() falls back to window.location.origin in the single-origin
+  // deploy, which doesn't exist on the server — so this is read through
+  // useSyncExternalStore with a distinct server snapshot ("") rather than a
+  // setState in an effect, which would hydrate to one value and immediately
+  // re-render with another. There is nothing to subscribe to: the origin
+  // can't change without a full page load.
+  const apiOrigin = useSyncExternalStore(subscribeToNothing, getApiOrigin, getServerApiOrigin);
 
   const [channelId, setChannelId] = useState("");
+  const [liffId, setLiffId] = useState("");
   const [channelSecret, setChannelSecret] = useState("");
   const [accessToken, setAccessToken] = useState("");
 
@@ -62,6 +75,7 @@ export default function SettingsPage() {
         setError(null);
         setConfig(c);
         setChannelId(c.lineChannelId ?? "");
+        setLiffId(c.lineLiffId ?? "");
         setChannelSecret("");
         setAccessToken("");
       })
@@ -86,6 +100,7 @@ export default function SettingsPage() {
     try {
       await updateLineConfig({
         lineChannelId: channelId.trim() === "" ? undefined : channelId.trim(),
+        lineLiffId: liffId.trim() === "" ? undefined : liffId.trim(),
         lineChannelSecret: channelSecret.trim() === "" ? undefined : channelSecret.trim(),
         lineChannelAccessToken: accessToken.trim() === "" ? undefined : accessToken.trim(),
       });
@@ -98,13 +113,15 @@ export default function SettingsPage() {
     }
   }
 
-  const webhookUrl = tenantId ? `${API_URL}/v1/webhook/line/${tenantId}` : null;
+  // Both URLs are per-tenant: the origin is whatever subdomain this admin is
+  // signed in on, which is exactly what LINE must call back / open.
+  const webhookUrl = tenantId && apiOrigin ? `${apiOrigin}/v1/webhook/line/${tenantId}` : null;
+  const liffEndpointUrl = apiOrigin ? `${apiOrigin}/liff` : null;
 
-  function handleCopy() {
-    if (!webhookUrl) return;
-    navigator.clipboard.writeText(webhookUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  function handleCopy(key: string, value: string) {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
     });
   }
 
@@ -127,6 +144,19 @@ export default function SettingsPage() {
                 onChange={(e) => setChannelId(e.target.value)}
                 className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
               />
+            </label>
+
+            <label className="block">
+              <span className="block text-sm font-medium text-ink-2">LIFF ID</span>
+              <input
+                value={liffId}
+                onChange={(e) => setLiffId(e.target.value)}
+                placeholder="เช่น 2010683188-c6CdKvGw"
+                className="mt-1 w-full rounded-md border border-hairline-strong px-3 py-2 text-sm"
+              />
+              <span className="mt-1 block text-xs text-ink-3">
+                จาก LINE Developers Console → LINE Login → LIFF — พนักงานของบริษัทคุณจะเปิดแอปผ่าน LIFF ID นี้
+              </span>
             </label>
 
             <label className="block">
@@ -170,20 +200,42 @@ export default function SettingsPage() {
 
         {!loading && webhookUrl && (
           <div className="mt-6 rounded-lg border border-hairline bg-surface shadow-e1 p-5">
-            <h2 className="text-sm font-semibold text-ink">Webhook URL</h2>
+            <h2 className="text-sm font-semibold text-ink">URL ที่ต้องนำไปตั้งค่าใน LINE</h2>
             <p className="mt-1 text-sm text-ink-3">
-              นำ URL นี้ไปวางใน LINE Developers Console → Messaging API → Webhook URL แล้วกด Verify (ต้องเปิด backend ผ่าน ngrok หรือ deploy จริงก่อนถึงจะ verify ผ่าน)
+              ทั้งสอง URL นี้เป็นของบริษัทคุณโดยเฉพาะ (อิงจากโดเมนที่คุณกำลังใช้งานอยู่)
             </p>
-            <div className="mt-3 flex items-center gap-2">
+
+            <p className="mt-4 text-xs font-medium text-ink-2">
+              Webhook URL — วางใน Messaging API → Webhook URL แล้วกด Verify
+            </p>
+            <div className="mt-1.5 flex items-center gap-2">
               <code className="flex-1 truncate rounded-md bg-quiet-bg px-3 py-2 text-xs text-ink-2">{webhookUrl}</code>
               <button
                 type="button"
-                onClick={handleCopy}
+                onClick={() => handleCopy("webhook", webhookUrl)}
                 className="shrink-0 rounded-md border border-hairline-strong px-3 py-2 text-xs font-medium text-ink-2 hover:bg-quiet-bg"
               >
-                {copied ? "คัดลอกแล้ว ✓" : "คัดลอก"}
+                {copied === "webhook" ? "คัดลอกแล้ว ✓" : "คัดลอก"}
               </button>
             </div>
+
+            {liffEndpointUrl && (
+              <>
+                <p className="mt-4 text-xs font-medium text-ink-2">
+                  LIFF Endpoint URL — วางใน LINE Login → LIFF → Endpoint URL
+                </p>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <code className="flex-1 truncate rounded-md bg-quiet-bg px-3 py-2 text-xs text-ink-2">{liffEndpointUrl}</code>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy("liff", liffEndpointUrl)}
+                    className="shrink-0 rounded-md border border-hairline-strong px-3 py-2 text-xs font-medium text-ink-2 hover:bg-quiet-bg"
+                  >
+                    {copied === "liff" ? "คัดลอกแล้ว ✓" : "คัดลอก"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
 
