@@ -152,8 +152,8 @@ export default function DashboardPage() {
               <StatCard label="พนักงานทั้งหมด" value={loading ? "…" : employees.length} sub={`${activeEmployees} กำลังทำงาน`} accent="info" href="/employees" />
               {user.role === "tenant_admin" && (
                 <>
-                  <StatCard label="สาขาที่ใช้งาน" value={loading ? "…" : activeBranches} sub={`จาก ${branches.length} สาขา`} accent="brand" href="/organization" />
-                  <StatCard label="แผนกที่ใช้งาน" value={loading ? "…" : activeDepartments} sub={`จาก ${departments.length} แผนก`} accent="brand" href="/organization" />
+                  <StatCard label="สาขาที่ใช้งาน" value={loading ? "…" : activeBranches} sub={`จาก ${branches.length} สาขา`} accent="quiet" href="/organization" />
+                  <StatCard label="แผนกที่ใช้งาน" value={loading ? "…" : activeDepartments} sub={`จาก ${departments.length} แผนก`} accent="quiet" href="/organization" />
                   <StatCard label="คำขอลารออนุมัติ" value={loading ? "…" : statusCounts.pending} sub={`จาก ${totalRequests} คำขอทั้งหมด`} accent="pending" href="/approvals" />
                   <StatCard label="เกินโควตา (LWOP)" value={loading ? "…" : overQuotaCount} sub="ต้องตรวจสอบก่อนตัดเงินเดือน" accent="risk" href="/reports" />
                 </>
@@ -296,10 +296,12 @@ export default function DashboardPage() {
   );
 }
 
-// Keyed by intent, not by color name, so a palette swap never has to touch call sites.
+// Keyed by intent, not by color name, so a palette swap never has to touch call
+// sites. No `brand` entry: brand and info are the same navy now, so a second
+// navy chip only differed by being too pale to read as a chip at all.
 const ACCENT_CLASSES: Record<string, string> = {
   info: "bg-info-bg text-info-fg",
-  brand: "bg-brand-50 text-brand-700",
+  quiet: "bg-quiet-bg text-quiet-fg",
   pending: "bg-pending-bg text-pending-fg",
   risk: "bg-risk-bg text-risk-fg",
 };
