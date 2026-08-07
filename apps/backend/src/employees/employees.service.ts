@@ -1,5 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt';
 import { TENANT_PRISMA } from '../prisma/prisma.module';
 import { getCurrentTenantId } from '../tenant/tenant-context';
 import { AuditService } from '../audit/audit.service';
@@ -22,12 +24,20 @@ export interface BulkImportRowError {
   message: string;
 }
 
+export interface BulkImportCredential {
+  row: number;
+  employeeCode: string;
+  email: string;
+  tempPassword: string;
+}
+
 export interface BulkImportResult {
   totalRows: number;
   created: number;
   updated: number;
   unchanged: number;
   errors: BulkImportRowError[];
+  credentials: BulkImportCredential[];
 }
 
 @Injectable()
@@ -84,6 +94,19 @@ export class EmployeesService {
    * gets silently accepted (leak) or crashes as an unhandled FK-violation
    * 500 instead of a clean 400.
    */
+  /**
+   * There's no email provider wired up yet (otp-mailer.service.ts is a
+   * stub) and no self-service reset/change-password flow, so a newly
+   * created employee has no way to ever set a password themselves. Instead,
+   * every new employee gets a random temp password up front, returned once
+   * in the create/import response for the admin to relay out-of-band —
+   * otherwise `passwordHash` stays NULL forever and email/password login is
+   * permanently broken for that account.
+   */
+  private generateTempPassword(): string {
+    return crypto.randomBytes(9).toString('base64url');
+  }
+
   private async assertInTenant(model: 'department' | 'branch' | 'employee', id: string, label: string) {
     const found =
       model === 'department'
@@ -100,8 +123,10 @@ export class EmployeesService {
 
     const tenantId = getCurrentTenantId();
     const year = new Date().getFullYear();
+    const tempPassword = this.generateTempPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-    return this.prisma.$transaction(async (tx) => {
+    const employee = await this.prisma.$transaction(async (tx) => {
       const employee = await tx.employee.create({
         omit: { passwordHash: true },
         data: {
@@ -119,6 +144,7 @@ export class EmployeesService {
           position: dto.position,
           role: dto.role ?? 'employee',
           status: 'active',
+          passwordHash,
         },
       });
 
@@ -140,6 +166,8 @@ export class EmployeesService {
 
       return employee;
     });
+
+    return { ...employee, tempPassword };
   }
 
   async update(id: string, dto: UpdateEmployeeDto, actor: ActorContext) {
@@ -314,6 +342,7 @@ export class EmployeesService {
     const branchByName = new Map(branches.map((b) => [b.branchName.trim().toLowerCase(), b.id]));
 
     const errors: BulkImportRowError[] = [];
+    const credentials: BulkImportCredential[] = [];
     let created = 0;
     let updated = 0;
     let unchanged = 0;
@@ -369,10 +398,16 @@ export class EmployeesService {
           quotaOverrides.set(lt.id, value);
         }
 
+        // Only generated for rows that turn out to create a new employee —
+        // existing employees keep their current password on update.
+        let tempPassword: string | undefined;
+
         const outcome = await this.prisma.$transaction(async (tx) => {
           const existing = await tx.employee.findUnique({ where: { tenantId_employeeCode: { tenantId, employeeCode } } });
 
           if (!existing) {
+            tempPassword = this.generateTempPassword();
+            const passwordHash = await bcrypt.hash(tempPassword, 10);
             const employee = await tx.employee.create({
               data: {
                 tenantId,
@@ -385,6 +420,7 @@ export class EmployeesService {
                 position: r['position']?.trim() || undefined,
                 role: (role as 'employee' | 'approver' | 'tenant_admin') ?? 'employee',
                 status: (status as 'active' | 'inactive') ?? 'active',
+                passwordHash,
               },
             });
 
@@ -463,8 +499,10 @@ export class EmployeesService {
           return 'updated' as const;
         });
 
-        if (outcome === 'created') created++;
-        else if (outcome === 'updated') updated++;
+        if (outcome === 'created') {
+          created++;
+          if (tempPassword) credentials.push({ row: rowNum, employeeCode, email, tempPassword });
+        } else if (outcome === 'updated') updated++;
         else unchanged++;
       } catch (err) {
         errors.push({
@@ -512,6 +550,6 @@ export class EmployeesService {
       }
     }
 
-    return { totalRows: rows.length, created, updated, unchanged, errors };
+    return { totalRows: rows.length, created, updated, unchanged, errors, credentials };
   }
 }

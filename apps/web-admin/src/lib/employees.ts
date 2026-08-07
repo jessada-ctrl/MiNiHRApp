@@ -60,7 +60,11 @@ export interface CreateEmployeeInput {
   role?: Role;
 }
 
-export async function createEmployee(input: CreateEmployeeInput): Promise<Employee> {
+export interface CreatedEmployee extends Employee {
+  tempPassword: string;
+}
+
+export async function createEmployee(input: CreateEmployeeInput): Promise<CreatedEmployee> {
   return unwrap(
     await apiFetch("/employees", { method: "POST", body: JSON.stringify(input) }),
   );
@@ -104,12 +108,20 @@ export interface BulkImportRowError {
   message: string;
 }
 
+export interface BulkImportCredential {
+  row: number;
+  employeeCode: string;
+  email: string;
+  tempPassword: string;
+}
+
 export interface BulkImportResult {
   totalRows: number;
   created: number;
   updated: number;
   unchanged: number;
   errors: BulkImportRowError[];
+  credentials: BulkImportCredential[];
 }
 
 export async function bulkImportEmployees(csvText: string): Promise<BulkImportResult> {

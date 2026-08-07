@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import {
   type Branch,
   type BulkImportResult,
+  type CreatedEmployee,
   type Department,
   type Employee,
   type EmployeeQuota,
@@ -236,13 +237,14 @@ function AddEmployeeModal({
   const [role, setRole] = useState<Role>("employee");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [created, setCreated] = useState<CreatedEmployee | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      await createEmployee({
+      const employee = await createEmployee({
         employeeCode,
         fullName,
         email,
@@ -250,12 +252,29 @@ function AddEmployeeModal({
         branchId: branchId || undefined,
         role,
       });
-      onCreated();
+      setCreated(employee);
     } catch (err) {
       setError(err instanceof Error ? err.message : "เพิ่มพนักงานไม่สำเร็จ");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (created) {
+    return (
+      <Modal onClose={onCreated} title="เพิ่มพนักงานสำเร็จ">
+        <TempPasswordNotice email={created.email} tempPassword={created.tempPassword} />
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={onCreated}
+            className="rounded-md bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-e1 transition-colors duration-150 hover:bg-brand-600"
+          >
+            เสร็จสิ้น
+          </button>
+        </div>
+      </Modal>
+    );
   }
 
   return (
@@ -314,6 +333,39 @@ function AddEmployeeModal({
         </div>
       </form>
     </Modal>
+  );
+}
+
+function TempPasswordNotice({ email, tempPassword }: { email: string; tempPassword: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(tempPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable — the password is still shown for manual copy.
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm text-ink-2">
+        ระบบยังไม่มีอีเมลอัตโนมัติ — กรุณาคัดลอกรหัสผ่านชั่วคราวนี้แล้วส่งให้ <span className="font-medium text-ink">{email}</span> เอง
+        (แสดงเพียงครั้งเดียว จะดูซ้ำภายหลังไม่ได้)
+      </p>
+      <div className="flex items-center gap-2 rounded-md border border-hairline-strong bg-surface-2 px-3 py-2">
+        <code className="flex-1 font-mono text-sm text-ink">{tempPassword}</code>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="rounded-md border border-hairline-strong px-2 py-1 text-xs font-medium text-ink-2 hover:bg-quiet-bg"
+        >
+          {copied ? "คัดลอกแล้ว" : "คัดลอก"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -525,6 +577,21 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
     URL.revokeObjectURL(url);
   }
 
+  function downloadCredentials(credentials: BulkImportResult["credentials"]) {
+    const header = ["employeeCode", "email", "tempPassword"].join(",");
+    const rows = credentials.map((c) => [c.employeeCode, c.email, c.tempPassword].join(","));
+    const csv = `${header}\n${rows.join("\n")}\n`;
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "lala-new-employee-passwords.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleImport() {
     if (!csvText) return;
     setError(null);
@@ -579,6 +646,30 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
                   </li>
                 ))}
               </ul>
+            )}
+            {result.credentials.length > 0 && (
+              <div className="mt-3 border-t border-hairline pt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-ink-3">
+                    ระบบยังไม่มีอีเมลอัตโนมัติ — ดาวน์โหลดรหัสผ่านชั่วคราวของพนักงานใหม่ {result.credentials.length} คนแล้วส่งให้แต่ละคนเอง
+                    (ดูซ้ำภายหลังไม่ได้)
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => downloadCredentials(result.credentials)}
+                    className="shrink-0 rounded-md border border-hairline-strong px-2 py-1 text-xs font-medium text-ink-2 hover:bg-quiet-bg"
+                  >
+                    ⬇ ดาวน์โหลด
+                  </button>
+                </div>
+                <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto font-mono text-xs text-ink-2">
+                  {result.credentials.map((c) => (
+                    <li key={c.row}>
+                      {c.employeeCode} ({c.email}): {c.tempPassword}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         )}
