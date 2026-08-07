@@ -63,6 +63,36 @@ operations. It also fails if a model gains a `tenant_id` column in
 remove isolation for that table. It creates and tears down its own tenants,
 so it is safe against a development database.
 
+## Passwords
+
+Three routes, in order of preference:
+
+| Situation | Route |
+|---|---|
+| Knows their password, wants a new one | `/profile` → เปลี่ยนรหัสผ่าน |
+| Forgot it, can read their company email | `/login` → ลืมรหัสผ่าน? → emailed link, valid 60 min, single use |
+| Can't reach their company email at all | HR: `/employees` → 🔑 รีเซ็ตรหัสผ่าน → temp password shown once |
+
+Two properties worth knowing about, because neither is visible from the UI:
+
+- **A password change ends every other session.** JWTs are stateless with an
+  8h life, so `employees.password_changed_at` is compared against each
+  token's `iat` on every request — otherwise a reset would leave whoever knew
+  the old password signed in for the rest of the day. The endpoint that
+  changes a password hands back a replacement token for the caller's own
+  session.
+- **A password the employee didn't choose can't become permanent.** New
+  accounts, bulk imports and HR resets all set `must_change_password`, and
+  the admin app shows nothing but the change-password screen until it clears.
+  This is enforced in the UI rather than the API: the server would otherwise
+  need an exception for the very endpoint used to escape the state, and
+  getting that wrong locks people out entirely.
+
+`POST /auth/forgot-password` answers identically whether or not the address
+belongs to a real account, and the link it emails is built from the request's
+own `Host` — never from anything in the request body, which would make it a
+way to send genuine company-branded email containing an attacker's link.
+
 ## Multi-tenant deployment
 
 One built image serves every customer. Nothing tenant-specific is baked in at
