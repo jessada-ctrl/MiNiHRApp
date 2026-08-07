@@ -118,7 +118,7 @@ export default function ReviewPage() {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-2 bg-bg px-5 text-center">
         <p className="text-sm text-ink-3">ไม่พบคำขอนี้ในคิวของคุณ — อาจมีคนดำเนินการไปแล้ว หรือไม่ใช่คำขอที่ถึงคิวคุณ</p>
-        <button onClick={() => router.push("/")} className="mt-2 text-xs text-brand-600 underline">
+        <button onClick={() => router.push("/")} className="mt-2 text-xs text-brand-ink underline">
           กลับหน้าแรก
         </button>
       </main>

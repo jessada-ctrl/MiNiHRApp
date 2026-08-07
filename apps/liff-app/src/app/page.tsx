@@ -226,7 +226,7 @@ function TabButton({ active, label, icon, onClick }: { active: boolean; label: s
     <button
       onClick={onClick}
       className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
-        active ? "text-brand-600" : "text-ink-3"
+        active ? "text-brand-ink" : "text-ink-3"
       }`}
     >
       <span className="text-lg leading-none">{icon}</span>
@@ -352,7 +352,7 @@ function AttendanceTab() {
           <button
             onClick={handleUseGps}
             disabled={busy}
-            className="text-center text-sm font-medium text-brand-600 underline disabled:opacity-60"
+            className="text-center text-sm font-medium text-brand-ink underline disabled:opacity-60"
           >
             ใช้พิกัด GPS แทน
           </button>
@@ -403,7 +403,7 @@ function SuccessCard({ result, onDismiss }: { result: CheckResult; onDismiss: ()
           ✓ ยืนยันพิกัดสำเร็จ — อยู่ห่างจากสาขา {result.distanceMeters} ม. (ในรัศมีที่กำหนด {result.branch.radiusMeters} ม.)
         </div>
       )}
-      <button onClick={onDismiss} className="mt-2 text-xs font-medium text-brand-600 underline">
+      <button onClick={onDismiss} className="mt-2 text-xs font-medium text-brand-ink underline">
         กลับไปหน้าเช็คอิน
       </button>
     </div>

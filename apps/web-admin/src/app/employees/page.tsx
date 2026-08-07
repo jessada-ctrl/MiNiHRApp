@@ -76,7 +76,7 @@ export default function EmployeesPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowImport(true)}
-              className="rounded-md border border-brand-500 px-4 py-2 text-sm font-medium text-brand-600 transition-colors duration-150 hover:bg-brand-50"
+              className="rounded-md border border-brand-500 px-4 py-2 text-sm font-medium text-brand-ink transition-colors duration-150 hover:bg-brand-50"
             >
               ⬆ นำเข้าจากไฟล์
             </button>
@@ -153,7 +153,7 @@ export default function EmployeesPage() {
                         </button>
                         <button
                           onClick={() => setEditing(e)}
-                          className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                          className="text-sm font-medium text-brand-ink hover:text-brand-ink-strong"
                         >
                           แก้ไข
                         </button>
@@ -554,7 +554,7 @@ function ImportEmployeesModal({ onClose, onDone }: { onClose: () => void; onDone
             {leaveTypes.map((t) => `quota:${t.name}`).join(", ")}
           </p>
         )}
-        <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-brand-600 hover:text-brand-700">
+        <button type="button" onClick={downloadTemplate} className="self-start text-sm font-medium text-brand-ink hover:text-brand-ink-strong">
           ⬇ ดาวน์โหลดไฟล์ตัวอย่าง
         </button>
 

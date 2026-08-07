@@ -264,7 +264,7 @@ export default function DashboardPage() {
                       ))}
                     </ul>
                   )}
-                  <Link href="/approvals" className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700">
+                  <Link href="/approvals" className="mt-3 inline-block text-sm font-medium text-brand-ink hover:text-brand-ink-strong">
                     ดูทั้งหมด →
                   </Link>
                 </Card>
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                   <p className="py-8 text-center text-sm text-ink-3">ไม่มีวันหยุดที่กำหนดไว้ล่วงหน้า</p>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
-                    <p className="text-3xl font-semibold text-brand-600">
+                    <p className="text-3xl font-semibold text-brand-ink">
                       {new Date(upcomingHoliday.holidayDate).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}
                     </p>
                     <p className="text-sm text-ink-2">{upcomingHoliday.name}</p>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 )}
-                <Link href="/holidays" className="mt-3 inline-block text-sm font-medium text-brand-600 hover:text-brand-700">
+                <Link href="/holidays" className="mt-3 inline-block text-sm font-medium text-brand-ink hover:text-brand-ink-strong">
                   ดูปฏิทินทั้งหมด →
                 </Link>
               </Card>

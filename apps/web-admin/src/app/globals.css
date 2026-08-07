@@ -94,6 +94,12 @@
   --info: #2a5f9e;     --info-bg: #dbe7f4;     --info-fg: #183a64;
   --quiet: #a19786;    --quiet-bg: #efe8dc;    --quiet-fg: #5d564c;
 
+  /* Brand-colored TEXT on a theme surface. The brand-* ramp is fixed, so
+     brand-600 ink lands at 1.9:1 once the surface goes dark — use this instead
+     and reserve the raw ramp for fills, borders, and ink on fixed brand chips. */
+  --brand-ink: #204b80;
+  --brand-ink-strong: #183a64;
+
   /* hover for the one solid status fill that is clickable (destructive buttons) */
   --rejected-hover: #a63a31;
 
@@ -129,6 +135,8 @@
   --quiet-bg: rgb(243 236 224 / .08);   --quiet-fg: #b6ab9b;
 
   --rejected-hover: #d1504a;
+  --brand-ink: #8bacd6;
+  --brand-ink-strong: #b8cde8;
 }
 
 @theme inline {
@@ -163,6 +171,8 @@
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
   --color-info-fg: var(--info-fg);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-ink-strong: var(--brand-ink-strong);
   --color-quiet: var(--quiet);
   --color-quiet-bg: var(--quiet-bg);
   --color-quiet-fg: var(--quiet-fg);

@@ -253,7 +253,7 @@ function WorkflowCard({
         ))}
         <button
           onClick={addStep}
-          className="flex w-40 items-center justify-center rounded-md border border-dashed border-hairline-strong text-sm font-medium text-ink-3 hover:border-brand-400 hover:text-brand-600"
+          className="flex w-40 items-center justify-center rounded-md border border-dashed border-hairline-strong text-sm font-medium text-ink-3 hover:border-brand-400 hover:text-brand-ink"
         >
           + เพิ่มขั้นตอน
         </button>

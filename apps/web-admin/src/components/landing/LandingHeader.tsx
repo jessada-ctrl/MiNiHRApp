@@ -32,14 +32,14 @@ export default function LandingHeader() {
 
         <nav className="hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-brand-600">
+            <a key={link.href} href={link.href} className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-brand-ink">
               {link.label}
             </a>
           ))}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login" className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-brand-600">
+          <Link href="/login" className="text-sm font-medium text-ink-2 transition-colors duration-150 hover:text-brand-ink">
             เข้าสู่ระบบ
           </Link>
           <a

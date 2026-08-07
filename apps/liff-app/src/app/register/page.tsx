@@ -187,7 +187,7 @@ export default function RegisterPage() {
 
         <p className="mt-4 text-center text-xs text-ink-3">
           มีบัญชีอยู่แล้ว?{" "}
-          <Link href="/login" className="text-brand-600 underline">
+          <Link href="/login" className="text-brand-ink underline">
             เข้าสู่ระบบด้วยอีเมล (ทดสอบ)
           </Link>
         </p>

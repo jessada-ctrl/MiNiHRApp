@@ -110,7 +110,7 @@ export default function OrganizationPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {canManage ? (
-                        <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                        <button onClick={() => setEditingBranch(b)} className="text-sm font-medium text-brand-ink hover:text-brand-ink-strong">
                           แก้ไข
                         </button>
                       ) : (
@@ -170,7 +170,7 @@ export default function OrganizationPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {canManage ? (
-                        <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                        <button onClick={() => setEditingDept(d)} className="text-sm font-medium text-brand-ink hover:text-brand-ink-strong">
                           แก้ไข
                         </button>
                       ) : (
@@ -395,7 +395,7 @@ function QrCodeSection({ branchId }: { branchId: string }) {
           type="button"
           onClick={handleGenerate}
           disabled={generating}
-          className="rounded-md border border-brand-200 bg-surface px-2.5 py-1 text-xs font-medium text-brand-600 hover:bg-brand-50 disabled:opacity-60"
+          className="rounded-md border border-brand-200 bg-surface px-2.5 py-1 text-xs font-medium text-brand-ink hover:bg-brand-50 disabled:opacity-60"
         >
           {generating ? "กำลังสร้าง..." : qrCode ? "สุ่มรหัสใหม่" : "สร้าง QR Code วันนี้"}
         </button>

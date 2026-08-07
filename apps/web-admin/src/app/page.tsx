@@ -184,7 +184,7 @@ export default function LandingPage() {
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
                       {i + 1}
                     </div>
-                    <step.icon className="h-5 w-5 text-brand-600" />
+                    <step.icon className="h-5 w-5 text-brand-ink" />
                   </div>
                   <h3 className="mt-4 text-sm font-semibold text-ink">{step.title}</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-ink-3">{step.desc}</p>
@@ -251,7 +251,7 @@ export default function LandingPage() {
                 <ul className="mt-6 flex flex-1 flex-col gap-3">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-ink-2">
-                      <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                      <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-ink" />
                       {f}
                     </li>
                   ))}
@@ -328,24 +328,24 @@ export default function LandingPage() {
           <div>
             <p className="text-sm font-semibold text-ink">ผลิตภัณฑ์</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-3">
-              <li><a href="#features" className="hover:text-brand-600">ฟีเจอร์</a></li>
-              <li><a href="#how-it-works" className="hover:text-brand-600">วิธีการทำงาน</a></li>
-              <li><a href="#security" className="hover:text-brand-600">ความปลอดภัย</a></li>
-              <li><a href="#pricing" className="hover:text-brand-600">แพ็กเกจ</a></li>
+              <li><a href="#features" className="hover:text-brand-ink">ฟีเจอร์</a></li>
+              <li><a href="#how-it-works" className="hover:text-brand-ink">วิธีการทำงาน</a></li>
+              <li><a href="#security" className="hover:text-brand-ink">ความปลอดภัย</a></li>
+              <li><a href="#pricing" className="hover:text-brand-ink">แพ็กเกจ</a></li>
             </ul>
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">บริษัท</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-3">
-              <li><a href="#faq" className="hover:text-brand-600">คำถามที่พบบ่อย</a></li>
-              <li><a href="#contact" className="hover:text-brand-600">ติดต่อเรา</a></li>
-              <li><Link href="/login" className="hover:text-brand-600">เข้าสู่ระบบ</Link></li>
+              <li><a href="#faq" className="hover:text-brand-ink">คำถามที่พบบ่อย</a></li>
+              <li><a href="#contact" className="hover:text-brand-ink">ติดต่อเรา</a></li>
+              <li><Link href="/login" className="hover:text-brand-ink">เข้าสู่ระบบ</Link></li>
             </ul>
           </div>
           <div>
             <p className="text-sm font-semibold text-ink">ติดต่อ</p>
             <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-3">
-              <li><a href="mailto:hello@lala.app" className="hover:text-brand-600">hello@lala.app</a></li>
+              <li><a href="mailto:hello@lala.app" className="hover:text-brand-ink">hello@lala.app</a></li>
             </ul>
           </div>
         </div>

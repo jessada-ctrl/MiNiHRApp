@@ -103,7 +103,7 @@ export default function LeaveTypesPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-ink">ประเภทการลา</h1>
         <p className="mt-1 text-sm text-ink-3">
           การแก้ไขโควตามาตรฐานที่นี่มีผลกับพนักงานที่เพิ่มใหม่เท่านั้น ไม่ย้อนเปลี่ยนโควตาของพนักงานปัจจุบัน — ปรับรายบุคคลได้ที่หน้า{" "}
-          <Link href="/employees" className="text-brand-600 underline">
+          <Link href="/employees" className="text-brand-ink underline">
             พนักงาน
           </Link>
         </p>
