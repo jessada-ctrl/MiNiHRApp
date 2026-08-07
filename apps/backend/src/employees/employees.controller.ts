@@ -8,6 +8,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { UpdateSelfDto } from './dto/update-self.dto';
 import { UpdateQuotasDto } from './dto/update-quotas.dto';
 import { BulkImportEmployeesDto } from './dto/bulk-import-employees.dto';
 
@@ -15,6 +16,18 @@ import { BulkImportEmployeesDto } from './dto/bulk-import-employees.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EmployeesController {
   constructor(private readonly employees: EmployeesService) {}
+
+  // Registered ahead of the `:id` routes below — Nest matches routes in
+  // declaration order, and "me" would otherwise be captured as an :id.
+  @Get('me')
+  getSelf(@CurrentUser() user: AuthenticatedUser) {
+    return this.employees.getSelf(user.id);
+  }
+
+  @Patch('me')
+  updateSelf(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateSelfDto) {
+    return this.employees.updateSelf(user.id, dto);
+  }
 
   @Get()
   @Roles('tenant_admin', 'approver')
