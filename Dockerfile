@@ -50,11 +50,26 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001
 
-# Needed again here, not just in the build stage — docker-entrypoint.sh runs
-# `prisma migrate deploy` in THIS container at boot, which does its own
-# OpenSSL detection independent of whatever engine binary `prisma generate`
-# already picked at build time.
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# openssl: needed again here, not just in the build stage — docker-entrypoint.sh
+#   runs `prisma migrate deploy` in THIS container at boot, which does its own
+#   OpenSSL detection independent of whatever engine binary `prisma generate`
+#   already picked at build time.
+# postgresql-client-17: pg_dump/pg_restore for BackupService. Taken from PGDG
+#   rather than Debian's own postgresql-client (15 on bookworm) because
+#   pg_dump refuses to run against a *newer* server, which would leave
+#   backups silently impossible the moment the managed Postgres is 16 or 17.
+#   A newer client against an older server is supported, so 17 covers
+#   everything the hosting provider is likely to offer.
+# ca-certificates: TLS to managed Postgres and to S3-compatible storage.
+RUN apt-get update -y \
+  && apt-get install -y --no-install-recommends openssl ca-certificates curl gnupg \
+  && install -d /usr/share/postgresql-common/pgdg \
+  && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+  && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+  && apt-get update -y \
+  && apt-get install -y --no-install-recommends postgresql-client-17 \
+  && apt-get purge -y gnupg && apt-get autoremove -y \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app /app
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
