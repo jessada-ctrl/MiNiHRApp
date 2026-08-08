@@ -3,12 +3,19 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { AppModule } from './app.module';
+import { JsonLogger } from './observability/json.logger';
 
 async function bootstrap() {
   // rawBody: true — LineSignatureGuard (NFR-3) needs the exact raw bytes LINE
   // signed, not the re-serialized parsed JSON (which can differ byte-for-byte
   // from what was actually sent and would make every signature check fail).
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+    // Structured, one-line-per-event logs in production so an incident is a
+    // filter on requestId rather than a scroll through interleaved output
+    // from three processes sharing one container. See JsonLogger.
+    logger: new JsonLogger(),
+  });
 
   // In every real deployment this process sits behind a reverse proxy
   // (Easypanel/Traefik, Fly, ngrok in dev). Without this, req.ip is the
