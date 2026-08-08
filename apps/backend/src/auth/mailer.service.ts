@@ -109,6 +109,23 @@ export class MailerService implements OnModuleInit {
     });
   }
 
+  /**
+   * Operator alerts (AlertService), not customer mail — plain text, no
+   * branding, subject prefixed so it can be filtered into its own folder.
+   */
+  async sendOperatorAlert(to: string[], severity: string, title: string, detail: string): Promise<void> {
+    await this.send({
+      to: to.join(', '),
+      subject: `[LaLa' ${severity.toUpperCase()}] ${title}`,
+      text: `${title}\n\n${detail}\n\nHost: ${process.env.HOSTNAME ?? 'unknown'}\nTime: ${new Date().toISOString()}`,
+      html: this.wrap(
+        `<p><strong>${this.escape(title)}</strong></p><pre style="white-space:pre-wrap;font-size:13px">${this.escape(detail)}</pre>` +
+          `<p style="color:#5a6a7d;font-size:12px">Host: ${this.escape(process.env.HOSTNAME ?? 'unknown')}<br>Time: ${new Date().toISOString()}</p>`,
+      ),
+      logLabel: `ALERT ${severity}: ${title} — ${detail}`,
+    });
+  }
+
   private async send(message: { to: string; subject: string; text: string; html: string; logLabel: string }): Promise<void> {
     if (!this.transporter) {
       this.logger.log(`[MOCK EMAIL] ${message.logLabel}`);

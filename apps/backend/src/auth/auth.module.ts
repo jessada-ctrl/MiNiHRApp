@@ -27,7 +27,8 @@ import { RolesGuard } from './roles.guard';
   ],
   controllers: [AuthController],
   providers: [AuthService, LineAuthService, MailerService, PasswordService, JwtStrategy, RolesGuard],
-  // PasswordService is exported for EmployeesController's HR-initiated reset.
-  exports: [RolesGuard, PasswordService],
+  // PasswordService is exported for EmployeesController's HR-initiated reset;
+  // MailerService for AlertService, which delivers operator alerts by email.
+  exports: [RolesGuard, PasswordService, MailerService],
 })
 export class AuthModule {}
