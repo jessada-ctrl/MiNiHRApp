@@ -93,6 +93,93 @@ belongs to a real account, and the link it emails is built from the request's
 own `Host` — never from anything in the request body, which would make it a
 way to send genuine company-branded email containing an attacker's link.
 
+## Operations
+
+### Monitoring
+
+| Endpoint | Answers | Point it at |
+|---|---|---|
+| `GET /health` | Is the process alive? Touches nothing. | A container liveness probe |
+| `GET /health/ready` | Can it actually serve? Checks the database and the attachments volume. **503 when not.** | Your uptime monitor |
+
+Use `/health/ready`, not `/health`. The failure it exists to catch is the
+database being unreachable, and a monitor keyed on the status code has to
+see a non-200 to notice — the earlier single endpoint returned 200 with
+`{"status": "degraded"}`, so the dashboard stayed green while the app could
+serve nothing. The 503 body names which dependency is down, so the alert
+says *what* broke.
+
+Liveness stays 200 in that situation on purpose: restarting the app does not
+fix a database outage, it just adds downtime to a bad moment.
+
+Logs are one JSON object per line in production (`LOG_FORMAT=json`), each
+carrying `requestId` and `tenant`. Every response echoes `X-Request-Id`, and
+an inbound one is reused, so a report of "it failed at 14:32" becomes a
+filter rather than a scroll.
+
+### Backups
+
+A nightly job (02:00 by default) dumps the database with `pg_dump -Fc` and
+tars the attachments volume, then uploads both and prunes past
+`BACKUP_RETENTION_DAYS`.
+
+This does **not** replace the hosting provider's own Postgres snapshots — it
+covers what they don't. A provider snapshot lives with the provider, is
+restorable only through the provider, and says nothing about the attachments
+volume, where every uploaded medical certificate lives. Those are not
+recoverable from a database dump at all, because the rows hold only
+references.
+
+Set `BACKUP_S3_BUCKET` and friends. Without them archives are written to
+local disk, which survives "I dropped the wrong table" and does not survive
+losing the machine — the app warns about this at boot and says which mode
+it is in.
+
+Two things watch the backups, because a job that fails and a job that
+silently stops are different failures:
+
+- a failed run alerts immediately (`backup.failed`)
+- an hourly check alerts when the newest archive is over 36h old
+  (`backup.stale`) — the case where the cron isn't running at all, which
+  produces no failures to alert on
+
+Retention never deletes the newest 3 archives regardless of age, so a wrong
+clock or a mistyped retention window can't empty the bucket.
+
+```bash
+# Take one right now — worth doing before a risky migration
+npm run --workspace=apps/backend backup:now
+
+# Prove an archive actually restores. Do this on a schedule, not just once.
+npm run --workspace=apps/backend verify:backup -- ./lala-db-2026-08-08.dump
+```
+
+`verify:backup` restores into a throwaway database, checks the core tables
+came back populated and that the `audit_logs` immutability triggers survived,
+then drops it. The nightly job only checks its archive is structurally
+readable (`pg_restore --list`), which catches truncated uploads but cannot
+tell you the dump would come back as a working database. Set
+`VERIFY_DATABASE_URL` to run it against a scratch server instead of
+production.
+
+### Restoring
+
+```bash
+createdb lala_restored
+pg_restore --no-owner --no-privileges --dbname lala_restored lala-db-<stamp>.dump
+tar -xzf lala-attachments-<stamp>.tar.gz -C "$ATTACHMENTS_DIR"
+```
+
+Restore the attachments archive too, or every leave request will reference a
+certificate that no longer exists.
+
+### Alerts
+
+Failures reach the team by email (`ALERT_EMAIL_TO`) and LINE
+(`ALERT_LINE_*`, the platform's own OA — never a tenant's channel). The same
+alert key stays quiet for an hour after firing: a broken dependency fails on
+a schedule, and the first incident must not bury the next one.
+
 ## Multi-tenant deployment
 
 One built image serves every customer. Nothing tenant-specific is baked in at
